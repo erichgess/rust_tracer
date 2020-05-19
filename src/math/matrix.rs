@@ -1,3 +1,4 @@
+use std::f32::*;
 
 /// Row Major matrix
 pub struct Matrix {
@@ -51,6 +52,51 @@ impl Matrix {
             mat: [[x, 0., 0., 0.],
                   [0., y, 0., 0.],
                   [0., 0., z, 0.],
+                  [0., 0., 0., 1.]],
+        }
+    }
+
+    pub fn translate(x: f32, y: f32, z: f32) -> Matrix {
+        Matrix{
+            mat: [[1., 0., 0., x],
+                  [0., 1., 0., y],
+                  [0., 0., 1., z],
+                  [0., 0., 0., 1.]],
+        }
+    }
+
+    pub fn rotate_x(angle: f32) -> Matrix {
+        let pi = consts::PI;
+        let rads = angle / 180.0 * pi;
+        
+        Matrix{
+            mat: [[1., 0., 0., 0.],
+                  [0., rads.cos(), -rads.sin(), 0.],
+                  [0., rads.sin(), rads.cos(), 0.],
+                  [0., 0., 0., 1.]],
+        }
+    }
+
+    pub fn rotate_y(angle: f32) -> Matrix {
+        let pi = consts::PI;
+        let rads = angle / 180.0 * pi;
+        
+        Matrix{
+            mat: [[rads.cos(), 0., rads.sin(), 0.],
+                  [0., 1., 0., 0.],
+                  [-rads.sin(), 0., rads.cos(), 0.],
+                  [0., 0., 0., 1.]],
+        }
+    }
+
+    pub fn rotate_z(angle: f32) -> Matrix {
+        let pi = consts::PI;
+        let rads = angle / 180.0 * pi;
+        
+        Matrix{
+            mat: [[rads.cos(), -rads.sin(), 0., 0.],
+                  [rads.sin(), rads.cos(), 0., 0.],
+                  [0., 0., 1., 0.],
                   [0., 0., 0., 1.]],
         }
     }
@@ -109,6 +155,15 @@ mod tests {
                 [[2., 0., 0., 0.],
                 [0., 3., 0., 0.],
                 [0., 0., 4., 0.],
+                [0., 0., 0., 1.]], 
+                m.mat);
+        }
+        {
+            let m = Matrix::translate(2., 3., 4.);
+            assert_eq!(
+                [[1., 0., 0., 2.],
+                [0., 1., 0., 3.],
+                [0., 0., 1., 4.],
                 [0., 0., 0., 1.]], 
                 m.mat);
         }
