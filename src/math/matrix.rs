@@ -1,5 +1,6 @@
 use std::f32::*;
 use super::Vector4;
+use super::point::Point3;
 
 /// Row Major matrix
 pub struct Matrix {
@@ -114,6 +115,14 @@ impl Matrix {
             w: v.x*self.get(3,0) + v.y*self.get(3,1) + v.z*self.get(3,2) + v.w*self.get(3,3),
         }
     }
+
+    pub fn pt_mul(&self, p: &Point3) -> Point3 {
+        Point3::new(
+            p.x()*self.get(0,0) + p.y()*self.get(0,1) + p.z()*self.get(0,2) + self.get(0,3),
+            p.x()*self.get(1,0) + p.y()*self.get(1,1) + p.z()*self.get(1,2) + self.get(1,3),
+            p.x()*self.get(2,0) + p.y()*self.get(2,1) + p.z()*self.get(2,2) + self.get(2,3),
+        )
+    }
 }
 
 #[cfg(test)]
@@ -128,6 +137,15 @@ mod tests {
         assert_eq!(true, diff.y.abs() < f32::EPSILON);
         assert_eq!(true, diff.z.abs() < f32::EPSILON);
         assert_eq!(true, diff.w.abs() < f32::EPSILON);
+    }
+
+    // Test that two vectors differ by no more than
+    // f32::EPSILON in each dimension
+    fn pt_assert_within_eps(a: &Point3, b: &Point3) {
+        let diff = a.sub(b);
+        assert_eq!(true, diff.x.abs() < f32::EPSILON);
+        assert_eq!(true, diff.y.abs() < f32::EPSILON);
+        assert_eq!(true, diff.z.abs() < f32::EPSILON);
     }
 
     #[test]
@@ -194,7 +212,7 @@ mod tests {
     }
 
     #[test]
-    fn scale() {
+    fn vec_scale() {
         let v1 = Vector4::new(1., 1., 1., 1.);
         let scale = Matrix::scale(2., 3., 4.);
 
@@ -203,7 +221,7 @@ mod tests {
     }
 
     #[test]
-    fn translate() {
+    fn vec_translate() {
         let v1 = Vector4::new(1., 1., 1., 1.);
         let translate = Matrix::translate(2., 3., 4.);
 
@@ -212,7 +230,7 @@ mod tests {
     }
 
     #[test]
-    fn rotate() {
+    fn vec_rotate() {
         let v1 = Vector4::new(1., 1., 1., 1.);
         {
             let rotx = Matrix::rotate_x(90.);
@@ -228,6 +246,44 @@ mod tests {
             let rotz = Matrix::rotate_z(90.);
             let r = rotz.vec_mul(&v1);
             assert_within_eps(&Vector4::new(-1., 1., 1., 1.), &r);
+        }
+    }
+
+    #[test]
+    fn pt_scale() {
+        let p = Point3::new(1., 1., 1.);
+        let scale = Matrix::scale(2., 3., 4.);
+
+        let r = scale.pt_mul(&p);
+        assert_eq!(Point3::new(2., 3., 4.), r);
+    }
+
+    #[test]
+    fn pt_translate() {
+        let p = Point3::new(1., 1., 1.);
+        let translate = Matrix::translate(2., 3., 4.);
+
+        let r = translate.pt_mul(&p);
+        assert_eq!(Point3::new(3., 4., 5.), r);
+    }
+
+    #[test]
+    fn pt_rotate() {
+        let p = Point3::new(1., 1., 1.);
+        {
+            let rotx = Matrix::rotate_x(90.);
+            let r = rotx.pt_mul(&p);
+            pt_assert_within_eps(&Point3::new(1., -1., 1.), &r);
+        }
+        {
+            let roty = Matrix::rotate_y(90.);
+            let r = roty.pt_mul(&p);
+            pt_assert_within_eps(&Point3::new(1., 1.,-1.), &r);
+        }
+        {
+            let rotz = Matrix::rotate_z(90.);
+            let r = rotz.pt_mul(&p);
+            pt_assert_within_eps(&Point3::new(-1., 1., 1.), &r);
         }
     }
 }
