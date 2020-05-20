@@ -1,5 +1,6 @@
 mod matrix;
 mod point;
+mod ray;
 
 use matrix::Matrix;
 
@@ -14,6 +15,14 @@ impl Vector3 {
     pub fn new(x: f32, y: f32, z: f32) -> Vector3 {
         Vector3{
             x, y, z
+        }
+    }
+
+    pub fn neg(&self) -> Vector3 {
+        Vector3{
+            x: -self.x,
+            y: -self.y,
+            z: -self.z,
         }
     }
 
@@ -78,6 +87,14 @@ impl Vector3 {
             z: self.x*v.y - self.y*v.x,
         }
     }
+
+    pub fn mat_mul(&self, mat: &Matrix) -> Vector3 {
+        Vector3 {
+            x: self.x*mat.get(0,0) + self.y*mat.get(1,0) + self.z*mat.get(2,0),
+            y: self.x*mat.get(0,1) + self.y*mat.get(1,1) + self.z*mat.get(2,1),
+            z: self.x*mat.get(0,2) + self.y*mat.get(1,2) + self.z*mat.get(2,2),
+        }
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -106,6 +123,15 @@ impl Vector4 {
 
     pub fn vec3(&self) -> Vector3 {
         Vector3::new(self.x, self.y, self.z)
+    }
+
+    pub fn neg(&self) -> Vector4 {
+        Vector4{
+            x: -self.x,
+            y: -self.y,
+            z: -self.z,
+            w: -self.w,
+        }
     }
 
     pub fn scalar_mul(&self, a: f32) -> Vector4 {
@@ -182,6 +208,14 @@ impl Vector4 {
 #[cfg(test)]
 mod vector3_tests {
     use super::*;
+    // Test that two vectors differ by no more than
+    // f32::EPSILON in each dimension
+    fn assert_within_eps(a: &Vector3, b: &Vector3) {
+        let diff = a.sub(b);
+        assert_eq!(true, diff.x.abs() < f32::EPSILON);
+        assert_eq!(true, diff.y.abs() < f32::EPSILON);
+        assert_eq!(true, diff.z.abs() < f32::EPSILON);
+    }
 
     #[test]
     fn basic() {
@@ -204,6 +238,45 @@ mod vector3_tests {
         let y = Vector3::new(0., 1., 0.);
         let z = x.cross(&y);
         assert_eq!(Vector3::new(0., 0., 1.), z);
+    }
+
+    #[test]
+    fn scale() {
+        let v1 = Vector3::new(1., 1., 1.);
+        let scale = Matrix::scale(2., 3., 4.);
+
+        let r = v1.mat_mul(&scale);
+        assert_eq!(Vector3::new(2., 3., 4.), r);
+    }
+
+    #[test]
+    fn translate() {
+        // Should do nothing to a Vector3
+        let v1 = Vector3::new(1., 1., 1.);
+        let translate = Matrix::translate(2., 3., 4.);
+
+        let r = v1.mat_mul(&translate);
+        assert_eq!(Vector3::new(1., 1., 1.), r);
+    }
+
+    #[test]
+    fn rotate() {
+        let p = Vector3::new(1., 1., 1.);
+        {
+            let rotx = Matrix::rotate_x(90.);
+            let r = p.mat_mul(&rotx);
+            assert_within_eps(&Vector3::new(1., 1., -1.), &r);
+        }
+        {
+            let roty = Matrix::rotate_y(90.);
+            let r = p.mat_mul(&roty);
+            assert_within_eps(&Vector3::new(-1., 1.,1.), &r);
+        }
+        {
+            let rotz = Matrix::rotate_z(90.);
+            let r = p.mat_mul(&rotz);
+            assert_within_eps(&Vector3::new(1., -1., 1.), &r);
+        }
     }
 }
 
