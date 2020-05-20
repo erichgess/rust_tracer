@@ -4,7 +4,7 @@ mod ray;
 
 use matrix::Matrix;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Vector3 {
     x: f32,
     y: f32,

@@ -1,7 +1,7 @@
 use super::Vector3;
 use super::matrix::Matrix;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Point3{
     x: f32,
     y: f32,
