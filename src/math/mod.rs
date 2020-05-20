@@ -2,6 +2,8 @@ mod matrix;
 mod point;
 mod ray;
 
+use std::ops;
+
 use matrix::Matrix;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
@@ -99,6 +101,22 @@ impl Vector3 {
             y: self.x*mat.get(0,1) + self.y*mat.get(1,1) + self.z*mat.get(2,1),
             z: self.x*mat.get(0,2) + self.y*mat.get(1,2) + self.z*mat.get(2,2),
         }
+    }
+}
+
+impl ops::Mul<Matrix> for Vector3 {
+    type Output = Vector3;
+
+    fn mul(self, _rhs: Matrix) -> Vector3 {
+        self.mat_mul(&_rhs)
+    }
+}
+
+impl ops::Mul<Vector3> for Matrix {
+    type Output = Vector3;
+
+    fn mul(self, _rhs: Vector3) -> Vector3 {
+        self.vec3_mul(&_rhs)
     }
 }
 
@@ -210,6 +228,22 @@ impl Vector4 {
     }
 }
 
+impl ops::Mul<Matrix> for Vector4 {
+    type Output = Vector4;
+
+    fn mul(self, _rhs: Matrix) -> Vector4 {
+        self.mat_mul(&_rhs)
+    }
+}
+
+impl ops::Mul<Vector4> for Matrix {
+    type Output = Vector4;
+
+    fn mul(self, _rhs: Vector4) -> Vector4 {
+        self.vec_mul(&_rhs)
+    }
+}
+
 #[cfg(test)]
 mod vector3_tests {
     use super::*;
@@ -250,7 +284,8 @@ mod vector3_tests {
         let v1 = Vector3::new(1., 1., 1.);
         let scale = Matrix::scale(2., 3., 4.);
 
-        let r = v1.mat_mul(&scale);
+        //let r = v1.mat_mul(&scale);
+        let r = v1 * scale;
         assert_eq!(Vector3::new(2., 3., 4.), r);
     }
 
@@ -260,7 +295,8 @@ mod vector3_tests {
         let v1 = Vector3::new(1., 1., 1.);
         let translate = Matrix::translate(2., 3., 4.);
 
-        let r = v1.mat_mul(&translate);
+        //let r = v1.mat_mul(&translate);
+        let r = v1 * translate;
         assert_eq!(Vector3::new(1., 1., 1.), r);
     }
 
@@ -269,18 +305,30 @@ mod vector3_tests {
         let p = Vector3::new(1., 1., 1.);
         {
             let rotx = Matrix::rotate_x(90.);
-            let r = p.mat_mul(&rotx);
+            let r = p * rotx;
             assert_within_eps(&Vector3::new(1., 1., -1.), &r);
+            
+            let rotx = Matrix::rotate_x(90.);
+            let r = rotx * p;
+            assert_within_eps(&Vector3::new(1., -1., 1.), &r);
         }
         {
             let roty = Matrix::rotate_y(90.);
-            let r = p.mat_mul(&roty);
+            let r = p * roty;
             assert_within_eps(&Vector3::new(-1., 1.,1.), &r);
+            
+            let roty = Matrix::rotate_y(90.);
+            let r = roty * p;
+            assert_within_eps(&Vector3::new(1., 1.,-1.), &r);
         }
         {
             let rotz = Matrix::rotate_z(90.);
-            let r = p.mat_mul(&rotz);
+            let r = p * rotz;
             assert_within_eps(&Vector3::new(1., -1., 1.), &r);
+            
+            let rotz = Matrix::rotate_z(90.);
+            let r = rotz * p;
+            assert_within_eps(&Vector3::new(-1., 1., 1.), &r);
         }
     }
 }
@@ -288,6 +336,16 @@ mod vector3_tests {
 #[cfg(test)]
 mod vector4_tests {
     use super::*;
+    
+    // Test that two vectors differ by no more than
+    // f32::EPSILON in each dimension
+    fn assert_within_eps(a: &Vector4, b: &Vector4) {
+        let diff = a.sub(b);
+        assert_eq!(true, diff.x.abs() < f32::EPSILON);
+        assert_eq!(true, diff.y.abs() < f32::EPSILON);
+        assert_eq!(true, diff.z.abs() < f32::EPSILON);
+        assert_eq!(true, diff.w.abs() < f32::EPSILON);
+    }
 
     #[test]
     fn basic() {
@@ -312,7 +370,8 @@ mod vector4_tests {
         let v1 = Vector4::new(1., 1., 1., 1.);
         let scale = Matrix::scale(2., 3., 4.);
 
-        let r = v1.mat_mul(&scale);
+        //let r = v1.mat_mul(&scale);
+        let r = v1 * scale;
         assert_eq!(Vector4::new(2., 3., 4., 1.), r);
     }
 
@@ -321,7 +380,44 @@ mod vector4_tests {
         let v1 = Vector4::new(1., 1., 1., 1.);
         let translate = Matrix::translate(2., 3., 4.);
 
-        let r = v1.mat_mul(&translate);
+        let r = v1 * translate;
         assert_eq!(Vector4::new(1., 1., 1., 10.), r);
+    }
+
+    #[test]
+    fn rotate() {
+        {
+            let p = Vector4::new(1., 1., 1., 1.);
+            let rotx = Matrix::rotate_x(90.);
+            let r = p * rotx;
+            assert_within_eps(&Vector4::new(1., 1., -1., 1.), &r);
+            
+            let p = Vector4::new(1., 1., 1., 1.);
+            let rotx = Matrix::rotate_x(90.);
+            let r = rotx * p;
+            assert_within_eps(&Vector4::new(1., -1., 1., 1.), &r);
+        }
+        {
+            let p = Vector4::new(1., 1., 1., 1.);
+            let roty = Matrix::rotate_y(90.);
+            let r = p * roty;
+            assert_within_eps(&Vector4::new(-1., 1.,1., 1.), &r);
+            
+            let p = Vector4::new(1., 1., 1., 1.);
+            let roty = Matrix::rotate_y(90.);
+            let r = roty * p;
+            assert_within_eps(&Vector4::new(1., 1.,-1., 1.), &r);
+        }
+        {
+            let p = Vector4::new(1., 1., 1., 1.);
+            let rotz = Matrix::rotate_z(90.);
+            let r = p * rotz;
+            assert_within_eps(&Vector4::new(1., -1., 1., 1.), &r);
+            
+            let p = Vector4::new(1., 1., 1., 1.);
+            let rotz = Matrix::rotate_z(90.);
+            let r = rotz * p;
+            assert_within_eps(&Vector4::new(-1., 1., 1., 1.), &r);
+        }
     }
 }

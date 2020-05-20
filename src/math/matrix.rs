@@ -1,5 +1,5 @@
 use std::f32::*;
-use super::Vector4;
+use super::{Vector3, Vector4};
 use super::point::Point3;
 
 /// Row Major matrix
@@ -113,6 +113,14 @@ impl Matrix {
             y: v.x*self.get(1,0) + v.y*self.get(1,1) + v.z*self.get(1,2) + v.w*self.get(1,3),
             z: v.x*self.get(2,0) + v.y*self.get(2,1) + v.z*self.get(2,2) + v.w*self.get(2,3),
             w: v.x*self.get(3,0) + v.y*self.get(3,1) + v.z*self.get(3,2) + v.w*self.get(3,3),
+        }
+    }
+
+    pub fn vec3_mul(&self, v: &Vector3) -> Vector3 {
+        Vector3 {
+            x: v.x*self.get(0,0) + v.y*self.get(0,1) + v.z*self.get(0,2),
+            y: v.x*self.get(1,0) + v.y*self.get(1,1) + v.z*self.get(1,2),
+            z: v.x*self.get(2,0) + v.y*self.get(2,1) + v.z*self.get(2,2),
         }
     }
 
