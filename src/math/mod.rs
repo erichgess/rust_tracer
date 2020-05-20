@@ -15,13 +15,11 @@ pub struct Vector3 {
 
 impl Vector3 {
     pub fn new(x: f32, y: f32, z: f32) -> Vector3 {
-        Vector3{
-            x, y, z
-        }
+        Vector3 { x, y, z }
     }
 
     pub fn neg(&self) -> Vector3 {
-        Vector3{
+        Vector3 {
             x: -self.x,
             y: -self.y,
             z: -self.z,
@@ -29,8 +27,8 @@ impl Vector3 {
     }
 
     // Scalar multiply
-    pub fn mul(&self, a: f32) -> Vector3 {
-        Vector3{
+    pub fn scalar_mul(&self, a: f32) -> Vector3 {
+        Vector3 {
             x: self.x * a,
             y: self.y * a,
             z: self.z * a,
@@ -38,8 +36,8 @@ impl Vector3 {
     }
 
     // Scalar multiply
-    pub fn div(&self, d: f32) -> Vector3 {
-        Vector3{
+    pub fn scalar_div(&self, d: f32) -> Vector3 {
+        Vector3 {
             x: self.x / d,
             y: self.y / d,
             z: self.z / d,
@@ -48,7 +46,7 @@ impl Vector3 {
 
     // Vector Add
     pub fn add(&self, v: &Vector3) -> Vector3 {
-        Vector3{
+        Vector3 {
             x: self.x + v.x,
             y: self.y + v.y,
             z: self.z + v.z,
@@ -57,7 +55,7 @@ impl Vector3 {
 
     // Vector Subtract
     pub fn sub(&self, v: &Vector3) -> Vector3 {
-        Vector3{
+        Vector3 {
             x: self.x - v.x,
             y: self.y - v.y,
             z: self.z - v.z,
@@ -66,7 +64,7 @@ impl Vector3 {
 
     // length squared
     pub fn len2(&self) -> f32 {
-        self.x*self.x + self.y*self.y + self.z*self.z
+        self.x * self.x + self.y * self.y + self.z * self.z
     }
 
     // length
@@ -77,37 +75,77 @@ impl Vector3 {
 
     // Dot product
     pub fn dot(&self, v: &Vector3) -> f32 {
-        self.x*v.x + self.y*v.y + self.z*v.z
+        self.x * v.x + self.y * v.y + self.z * v.z
     }
 
     // Normalize
     pub fn norm(&self) -> Vector3 {
         let len = self.len();
-        self.div(len)
+        self.scalar_div(len)
     }
 
     // Cross product
     pub fn cross(&self, v: &Vector3) -> Vector3 {
-        Vector3{
-            x: self.y*v.z - self.z*v.y,
-            y: self.z*v.x - self.x*v.z,
-            z: self.x*v.y - self.y*v.x,
+        Vector3 {
+            x: self.y * v.z - self.z * v.y,
+            y: self.z * v.x - self.x * v.z,
+            z: self.x * v.y - self.y * v.x,
         }
     }
 
     pub fn mat_mul(&self, mat: &Matrix) -> Vector3 {
         Vector3 {
-            x: self.x*mat.get(0,0) + self.y*mat.get(1,0) + self.z*mat.get(2,0),
-            y: self.x*mat.get(0,1) + self.y*mat.get(1,1) + self.z*mat.get(2,1),
-            z: self.x*mat.get(0,2) + self.y*mat.get(1,2) + self.z*mat.get(2,2),
+            x: self.x * mat.get(0, 0) + self.y * mat.get(1, 0) + self.z * mat.get(2, 0),
+            y: self.x * mat.get(0, 1) + self.y * mat.get(1, 1) + self.z * mat.get(2, 1),
+            z: self.x * mat.get(0, 2) + self.y * mat.get(1, 2) + self.z * mat.get(2, 2),
         }
+    }
+}
+
+impl ops::Neg for Vector3 {
+    type Output = Vector3;
+
+    fn neg(self) -> Self::Output {
+        Vector3::neg(&self)
+    }
+}
+
+impl ops::Add for Vector3 {
+    type Output = Vector3;
+
+    fn add(self, rhs: Vector3) -> Self::Output {
+        Vector3::add(&self, &rhs)
+    }
+}
+
+impl ops::Sub for Vector3 {
+    type Output = Vector3;
+
+    fn sub(self, rhs: Vector3) -> Self::Output {
+        Vector3::sub(&self, &rhs)
+    }
+}
+
+impl ops::Mul<f32> for Vector3 {
+    type Output = Vector3;
+
+    fn mul(self, rhs: f32) -> Self::Output {
+        self.scalar_mul(rhs)
+    }
+}
+
+impl ops::Mul<Vector3> for f32 {
+    type Output = Vector3;
+
+    fn mul(self, rhs: Vector3) -> Self::Output {
+        rhs.scalar_mul(self)
     }
 }
 
 impl ops::Mul<Matrix> for Vector3 {
     type Output = Vector3;
 
-    fn mul(self, _rhs: Matrix) -> Vector3 {
+    fn mul(self, _rhs: Matrix) -> Self::Output {
         self.mat_mul(&_rhs)
     }
 }
@@ -115,12 +153,12 @@ impl ops::Mul<Matrix> for Vector3 {
 impl ops::Mul<Vector3> for Matrix {
     type Output = Vector3;
 
-    fn mul(self, _rhs: Vector3) -> Vector3 {
+    fn mul(self, _rhs: Vector3) -> Self::Output {
         self.vec3_mul(&_rhs)
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Vector4 {
     x: f32,
     y: f32,
@@ -130,15 +168,13 @@ pub struct Vector4 {
 
 impl Vector4 {
     pub fn new(x: f32, y: f32, z: f32, w: f32) -> Vector4 {
-        Vector4 {
-            x, y, z, w,
-        }
+        Vector4 { x, y, z, w }
     }
 
     pub fn from(v: &Vector3) -> Vector4 {
         Vector4 {
-            x: v.x, 
-            y: v.y, 
+            x: v.x,
+            y: v.y,
             z: v.z,
             w: 1.,
         }
@@ -149,7 +185,7 @@ impl Vector4 {
     }
 
     pub fn neg(&self) -> Vector4 {
-        Vector4{
+        Vector4 {
             x: -self.x,
             y: -self.y,
             z: -self.z,
@@ -158,7 +194,7 @@ impl Vector4 {
     }
 
     pub fn scalar_mul(&self, a: f32) -> Vector4 {
-        Vector4{
+        Vector4 {
             x: self.x * a,
             y: self.y * a,
             z: self.z * a,
@@ -167,7 +203,7 @@ impl Vector4 {
     }
 
     pub fn scalar_div(&self, a: f32) -> Vector4 {
-        Vector4{
+        Vector4 {
             x: self.x / a,
             y: self.y / a,
             z: self.z / a,
@@ -176,7 +212,7 @@ impl Vector4 {
     }
 
     pub fn negate(&self) -> Vector4 {
-        Vector4{
+        Vector4 {
             x: -self.x,
             y: -self.y,
             z: -self.z,
@@ -211,7 +247,7 @@ impl Vector4 {
     }
 
     pub fn dot(&self, v: &Vector4) -> f32 {
-        self.x * v.x + self.y * v.y + self.z*v.z + self.w*v.w
+        self.x * v.x + self.y * v.y + self.z * v.z + self.w * v.w
     }
 
     pub fn norm(&self) -> Vector4 {
@@ -220,18 +256,70 @@ impl Vector4 {
 
     pub fn mat_mul(&self, mat: &Matrix) -> Vector4 {
         Vector4 {
-            x: self.x*mat.get(0,0) + self.y*mat.get(1,0) + self.z*mat.get(2,0) + self.w*mat.get(3,0),
-            y: self.x*mat.get(0,1) + self.y*mat.get(1,1) + self.z*mat.get(2,1) + self.w*mat.get(3,1),
-            z: self.x*mat.get(0,2) + self.y*mat.get(1,2) + self.z*mat.get(2,2) + self.w*mat.get(3,2),
-            w: self.x*mat.get(0,3) + self.y*mat.get(1,3) + self.z*mat.get(2,3) + self.w*mat.get(3,3),
+            x: self.x * mat.get(0, 0)
+                + self.y * mat.get(1, 0)
+                + self.z * mat.get(2, 0)
+                + self.w * mat.get(3, 0),
+            y: self.x * mat.get(0, 1)
+                + self.y * mat.get(1, 1)
+                + self.z * mat.get(2, 1)
+                + self.w * mat.get(3, 1),
+            z: self.x * mat.get(0, 2)
+                + self.y * mat.get(1, 2)
+                + self.z * mat.get(2, 2)
+                + self.w * mat.get(3, 2),
+            w: self.x * mat.get(0, 3)
+                + self.y * mat.get(1, 3)
+                + self.z * mat.get(2, 3)
+                + self.w * mat.get(3, 3),
         }
+    }
+}
+
+impl ops::Neg for Vector4 {
+    type Output = Vector4;
+
+    fn neg(self) -> Self::Output {
+        Vector4::neg(&self)
+    }
+}
+
+impl ops::Add for Vector4 {
+    type Output = Vector4;
+
+    fn add(self, rhs: Vector4) -> Self::Output {
+        Vector4::add(&self, &rhs)
+    }
+}
+
+impl ops::Sub for Vector4 {
+    type Output = Vector4;
+
+    fn sub(self, rhs: Vector4) -> Self::Output {
+        Vector4::sub(&self, &rhs)
+    }
+}
+
+impl ops::Mul<f32> for Vector4 {
+    type Output = Vector4;
+
+    fn mul(self, rhs: f32) -> Self::Output {
+        self.scalar_mul(rhs)
+    }
+}
+
+impl ops::Mul<Vector4> for f32 {
+    type Output = Vector4;
+
+    fn mul(self, rhs: Vector4) -> Self::Output {
+        rhs.scalar_mul(self)
     }
 }
 
 impl ops::Mul<Matrix> for Vector4 {
     type Output = Vector4;
 
-    fn mul(self, _rhs: Matrix) -> Vector4 {
+    fn mul(self, _rhs: Matrix) -> Self::Output {
         self.mat_mul(&_rhs)
     }
 }
@@ -239,7 +327,7 @@ impl ops::Mul<Matrix> for Vector4 {
 impl ops::Mul<Vector4> for Matrix {
     type Output = Vector4;
 
-    fn mul(self, _rhs: Vector4) -> Vector4 {
+    fn mul(self, _rhs: Vector4) -> Self::Output {
         self.vec_mul(&_rhs)
     }
 }
@@ -261,10 +349,10 @@ mod vector3_tests {
         let v1 = Vector3::new(1., 1., 1.);
         let v2 = Vector3::new(2., 0., 2.);
 
-        assert_eq!(Vector3::new(2., 2., 2.), v1.mul(2.));
-        assert_eq!(Vector3::new(0.5, 0.5, 0.5), v1.div(2.));
-        assert_eq!(Vector3::new(3., 1., 3.), v1.add(&v2));
-        assert_eq!(Vector3::new(-1., 1., -1.), v1.sub(&v2));
+        assert_eq!(Vector3::new(2., 2., 2.), v1 * 2.);
+        assert_eq!(Vector3::new(0.5, 0.5, 0.5), v1.scalar_div(2.));
+        assert_eq!(Vector3::new(3., 1., 3.), v1 + v2);
+        assert_eq!(Vector3::new(-1., 1., -1.), v1 - v2);
         assert_eq!(4., v1.dot(&v2));
         let len = 3f32;
         assert_eq!(len.sqrt(), v1.len());
@@ -307,7 +395,7 @@ mod vector3_tests {
             let rotx = Matrix::rotate_x(90.);
             let r = p * rotx;
             assert_within_eps(&Vector3::new(1., 1., -1.), &r);
-            
+
             let rotx = Matrix::rotate_x(90.);
             let r = rotx * p;
             assert_within_eps(&Vector3::new(1., -1., 1.), &r);
@@ -315,17 +403,17 @@ mod vector3_tests {
         {
             let roty = Matrix::rotate_y(90.);
             let r = p * roty;
-            assert_within_eps(&Vector3::new(-1., 1.,1.), &r);
-            
+            assert_within_eps(&Vector3::new(-1., 1., 1.), &r);
+
             let roty = Matrix::rotate_y(90.);
             let r = roty * p;
-            assert_within_eps(&Vector3::new(1., 1.,-1.), &r);
+            assert_within_eps(&Vector3::new(1., 1., -1.), &r);
         }
         {
             let rotz = Matrix::rotate_z(90.);
             let r = p * rotz;
             assert_within_eps(&Vector3::new(1., -1., 1.), &r);
-            
+
             let rotz = Matrix::rotate_z(90.);
             let r = rotz * p;
             assert_within_eps(&Vector3::new(-1., 1., 1.), &r);
@@ -336,7 +424,7 @@ mod vector3_tests {
 #[cfg(test)]
 mod vector4_tests {
     use super::*;
-    
+
     // Test that two vectors differ by no more than
     // f32::EPSILON in each dimension
     fn assert_within_eps(a: &Vector4, b: &Vector4) {
@@ -352,10 +440,10 @@ mod vector4_tests {
         let v1 = Vector4::new(1., 1., 1., 1.);
         let v2 = Vector4::new(2., 0., 2., 1.);
 
-        assert_eq!(Vector4::new(2., 2., 2., 2.), v1.scalar_mul(2.));
+        assert_eq!(Vector4::new(2., 2., 2., 2.), v1 * 2.);
         assert_eq!(Vector4::new(0.5, 0.5, 0.5, 0.5), v1.scalar_div(2.));
-        assert_eq!(Vector4::new(3., 1., 3., 2.), v1.add(&v2));
-        assert_eq!(Vector4::new(-1., 1., -1., 0.), v1.sub(&v2));
+        assert_eq!(Vector4::new(3., 1., 3., 2.), v1 + v2);
+        assert_eq!(Vector4::new(-1., 1., -1., 0.), v1 - v2);
         assert_eq!(5., v1.dot(&v2));
         let len = 4f32;
         assert_eq!(len.sqrt(), v1.len());
@@ -370,7 +458,6 @@ mod vector4_tests {
         let v1 = Vector4::new(1., 1., 1., 1.);
         let scale = Matrix::scale(2., 3., 4.);
 
-        //let r = v1.mat_mul(&scale);
         let r = v1 * scale;
         assert_eq!(Vector4::new(2., 3., 4., 1.), r);
     }
@@ -391,7 +478,7 @@ mod vector4_tests {
             let rotx = Matrix::rotate_x(90.);
             let r = p * rotx;
             assert_within_eps(&Vector4::new(1., 1., -1., 1.), &r);
-            
+
             let p = Vector4::new(1., 1., 1., 1.);
             let rotx = Matrix::rotate_x(90.);
             let r = rotx * p;
@@ -401,19 +488,19 @@ mod vector4_tests {
             let p = Vector4::new(1., 1., 1., 1.);
             let roty = Matrix::rotate_y(90.);
             let r = p * roty;
-            assert_within_eps(&Vector4::new(-1., 1.,1., 1.), &r);
-            
+            assert_within_eps(&Vector4::new(-1., 1., 1., 1.), &r);
+
             let p = Vector4::new(1., 1., 1., 1.);
             let roty = Matrix::rotate_y(90.);
             let r = roty * p;
-            assert_within_eps(&Vector4::new(1., 1.,-1., 1.), &r);
+            assert_within_eps(&Vector4::new(1., 1., -1., 1.), &r);
         }
         {
             let p = Vector4::new(1., 1., 1., 1.);
             let rotz = Matrix::rotate_z(90.);
             let r = p * rotz;
             assert_within_eps(&Vector4::new(1., -1., 1., 1.), &r);
-            
+
             let p = Vector4::new(1., 1., 1., 1.);
             let rotz = Matrix::rotate_z(90.);
             let r = rotz * p;

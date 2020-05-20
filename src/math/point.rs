@@ -73,7 +73,7 @@ impl Point3 {
 impl ops::Mul<Point3> for f32 {
     type Output = Point3;
 
-    fn mul(self, _rhs: Point3) -> Point3 {
+    fn mul(self, _rhs: Point3) -> Self::Output {
         _rhs.scalar_mul(self)
     }
 }
@@ -81,7 +81,7 @@ impl ops::Mul<Point3> for f32 {
 impl ops::Mul<f32> for Point3 {
     type Output = Point3;
 
-    fn mul(self, _rhs: f32) -> Point3 {
+    fn mul(self, _rhs: f32) -> Self::Output {
         self.scalar_mul(_rhs)
     }
 }
@@ -90,7 +90,7 @@ impl ops::Mul<f32> for Point3 {
 impl ops::Sub for Point3 {
     type Output = Vector3;
 
-    fn sub(self, _rhs: Point3) -> Vector3 {
+    fn sub(self, _rhs: Point3) -> Self::Output {
         Point3::sub(&self, &_rhs)
     }
 }
@@ -99,7 +99,7 @@ impl ops::Sub for Point3 {
 impl ops::Add<Vector3> for Point3 {
     type Output = Point3;
 
-    fn add(self, _rhs: Vector3) -> Point3 {
+    fn add(self, _rhs: Vector3) -> Self::Output {
         Point3::add(&self, &_rhs)
     }
 }
@@ -107,7 +107,7 @@ impl ops::Add<Vector3> for Point3 {
 impl ops::Add<Point3> for Vector3 {
     type Output = Point3;
 
-    fn add(self, _rhs: Point3) -> Point3 {
+    fn add(self, _rhs: Point3) -> Self::Output {
         Point3::add(&_rhs, &self)
     }
 }
@@ -116,7 +116,7 @@ impl ops::Add<Point3> for Vector3 {
 impl ops::Mul<Point3> for Matrix {
     type Output = Point3;
 
-    fn mul(self, _rhs: Point3) -> Point3 {
+    fn mul(self, _rhs: Point3) -> Self::Output {
         self.pt_mul(&_rhs)
     }
 }
@@ -125,7 +125,7 @@ impl ops::Mul<Point3> for Matrix {
 impl ops::Mul<Matrix> for Point3 {
     type Output = Point3;
 
-    fn mul(self, _rhs: Matrix) -> Point3 {
+    fn mul(self, _rhs: Matrix) -> Self::Output {
         self.mat_mul(&_rhs)
     }
 }
