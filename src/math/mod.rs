@@ -1,6 +1,8 @@
 mod matrix;
 mod point;
 
+use matrix::Matrix;
+
 #[derive(Debug, PartialEq)]
 pub struct Vector3 {
     x: f32,
@@ -102,6 +104,10 @@ impl Vector4 {
         }
     }
 
+    pub fn vec3(&self) -> Vector3 {
+        Vector3::new(self.x, self.y, self.z)
+    }
+
     pub fn scalar_mul(&self, a: f32) -> Vector4 {
         Vector4{
             x: self.x * a,
@@ -162,6 +168,15 @@ impl Vector4 {
     pub fn norm(&self) -> Vector4 {
         self.scalar_div(self.len())
     }
+
+    pub fn mat_mul(&self, mat: &Matrix) -> Vector4 {
+        Vector4 {
+            x: self.x*mat.get(0,0) + self.y*mat.get(1,0) + self.z*mat.get(2,0) + self.w*mat.get(3,0),
+            y: self.x*mat.get(0,1) + self.y*mat.get(1,1) + self.z*mat.get(2,1) + self.w*mat.get(3,1),
+            z: self.x*mat.get(0,2) + self.y*mat.get(1,2) + self.z*mat.get(2,2) + self.w*mat.get(3,2),
+            w: self.x*mat.get(0,3) + self.y*mat.get(1,3) + self.z*mat.get(2,3) + self.w*mat.get(3,3),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -212,5 +227,23 @@ mod vector4_tests {
         let norm = v1.norm();
         let diff = 1.0 - norm.len();
         assert_eq!(true, diff.abs() < std::f32::EPSILON);
+    }
+
+    #[test]
+    fn scale() {
+        let v1 = Vector4::new(1., 1., 1., 1.);
+        let scale = Matrix::scale(2., 3., 4.);
+
+        let r = v1.mat_mul(&scale);
+        assert_eq!(Vector4::new(2., 3., 4., 1.), r);
+    }
+
+    #[test]
+    fn translate() {
+        let v1 = Vector4::new(1., 1., 1., 1.);
+        let translate = Matrix::translate(2., 3., 4.);
+
+        let r = v1.mat_mul(&translate);
+        assert_eq!(Vector4::new(1., 1., 1., 10.), r);
     }
 }

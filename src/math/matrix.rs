@@ -1,4 +1,5 @@
 use std::f32::*;
+use super::Vector4;
 
 /// Row Major matrix
 pub struct Matrix {
@@ -10,6 +11,10 @@ impl Matrix {
         Matrix {
             mat: [[0.;4];4],
         }
+    }
+
+    pub fn get(&self, row: usize, col: usize) -> f32 {
+        self.mat[row][col]
     }
 
     pub fn identity() -> Matrix {
@@ -100,11 +105,30 @@ impl Matrix {
                   [0., 0., 0., 1.]],
         }
     }
+
+    pub fn vec_mul(&self, v: &Vector4) -> Vector4 {
+        Vector4 {
+            x: v.x*self.get(0,0) + v.y*self.get(0,1) + v.z*self.get(0,2) + v.w*self.get(0,3),
+            y: v.x*self.get(1,0) + v.y*self.get(1,1) + v.z*self.get(1,2) + v.w*self.get(1,3),
+            z: v.x*self.get(2,0) + v.y*self.get(2,1) + v.z*self.get(2,2) + v.w*self.get(2,3),
+            w: v.x*self.get(3,0) + v.y*self.get(3,1) + v.z*self.get(3,2) + v.w*self.get(3,3),
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // Test that two vectors differ by no more than
+    // f32::EPSILON in each dimension
+    fn assert_within_eps(a: &Vector4, b: &Vector4) {
+        let diff = a.sub(b);
+        assert_eq!(true, diff.x.abs() < f32::EPSILON);
+        assert_eq!(true, diff.y.abs() < f32::EPSILON);
+        assert_eq!(true, diff.z.abs() < f32::EPSILON);
+        assert_eq!(true, diff.w.abs() < f32::EPSILON);
+    }
 
     #[test]
     pub fn creation() {
@@ -166,6 +190,44 @@ mod tests {
                 [0., 0., 1., 4.],
                 [0., 0., 0., 1.]], 
                 m.mat);
+        }
+    }
+
+    #[test]
+    fn scale() {
+        let v1 = Vector4::new(1., 1., 1., 1.);
+        let scale = Matrix::scale(2., 3., 4.);
+
+        let r = scale.vec_mul(&v1);
+        assert_eq!(Vector4::new(2., 3., 4., 1.), r);
+    }
+
+    #[test]
+    fn translate() {
+        let v1 = Vector4::new(1., 1., 1., 1.);
+        let translate = Matrix::translate(2., 3., 4.);
+
+        let r = translate.vec_mul(&v1);
+        assert_eq!(Vector4::new(3., 4., 5., 1.), r);
+    }
+
+    #[test]
+    fn rotate() {
+        let v1 = Vector4::new(1., 1., 1., 1.);
+        {
+            let rotx = Matrix::rotate_x(90.);
+            let r = rotx.vec_mul(&v1);
+            assert_within_eps(&Vector4::new(1., -1., 1., 1.), &r);
+        }
+        {
+            let roty = Matrix::rotate_y(90.);
+            let r = roty.vec_mul(&v1);
+            assert_within_eps(&Vector4::new(1., 1.,-1., 1.), &r);
+        }
+        {
+            let rotz = Matrix::rotate_z(90.);
+            let r = rotz.vec_mul(&v1);
+            assert_within_eps(&Vector4::new(-1., 1., 1., 1.), &r);
         }
     }
 }
