@@ -62,15 +62,20 @@ impl Vector3 {
         }
     }
 
-    // Dot product
-    pub fn dot(&self, v: &Vector3) -> f32 {
-        self.x*v.x + self.y*v.y + self.z*v.z
+    // length squared
+    pub fn len2(&self) -> f32 {
+        self.x*self.x + self.y*self.y + self.z*self.z
     }
 
     // length
     pub fn len(&self) -> f32 {
-        let len2 = self.dot(&self);
+        let len2 = self.len2();
         len2.sqrt()
+    }
+
+    // Dot product
+    pub fn dot(&self, v: &Vector3) -> f32 {
+        self.x*v.x + self.y*v.y + self.z*v.z
     }
 
     // Normalize
