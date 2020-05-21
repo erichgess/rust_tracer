@@ -11,8 +11,6 @@ fn main() {
     let x_res = 50;
     let y_res = 25;
     let camera = Camera::new(x_res, y_res);
-
-    //let mut buffer = [[false; 25]; 50];
     let mut buffer = vec![vec![None; y_res]; x_res];
 
     render(&camera, x_res, y_res, &mut buffer);
