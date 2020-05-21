@@ -109,12 +109,12 @@ impl Matrix {
     }
 
     pub fn vec_mul(&self, v: &Vector4) -> Vector4 {
-        Vector4 {
-            x: v.x*self.get(0,0) + v.y*self.get(0,1) + v.z*self.get(0,2) + v.w*self.get(0,3),
-            y: v.x*self.get(1,0) + v.y*self.get(1,1) + v.z*self.get(1,2) + v.w*self.get(1,3),
-            z: v.x*self.get(2,0) + v.y*self.get(2,1) + v.z*self.get(2,2) + v.w*self.get(2,3),
-            w: v.x*self.get(3,0) + v.y*self.get(3,1) + v.z*self.get(3,2) + v.w*self.get(3,3),
-        }
+        Vector4::new(
+            v.x()*self.get(0,0) + v.y()*self.get(0,1) + v.z()*self.get(0,2) + v.w()*self.get(0,3),
+            v.x()*self.get(1,0) + v.y()*self.get(1,1) + v.z()*self.get(1,2) + v.w()*self.get(1,3),
+            v.x()*self.get(2,0) + v.y()*self.get(2,1) + v.z()*self.get(2,2) + v.w()*self.get(2,3),
+            v.x()*self.get(3,0) + v.y()*self.get(3,1) + v.z()*self.get(3,2) + v.w()*self.get(3,3),
+                )
     }
 
     pub fn vec3_mul(&self, v: &Vector3) -> Vector3 {
@@ -142,10 +142,10 @@ mod tests {
     // f32::EPSILON in each dimension
     fn assert_within_eps(a: &Vector4, b: &Vector4) {
         let diff = a.sub(b);
-        assert_eq!(true, diff.x.abs() < f32::EPSILON);
-        assert_eq!(true, diff.y.abs() < f32::EPSILON);
-        assert_eq!(true, diff.z.abs() < f32::EPSILON);
-        assert_eq!(true, diff.w.abs() < f32::EPSILON);
+        assert_eq!(true, diff.x().abs() < f32::EPSILON);
+        assert_eq!(true, diff.y().abs() < f32::EPSILON);
+        assert_eq!(true, diff.z().abs() < f32::EPSILON);
+        assert_eq!(true, diff.w().abs() < f32::EPSILON);
     }
 
     // Test that two vectors differ by no more than
