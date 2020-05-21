@@ -4,29 +4,41 @@ mod math;
 mod scene;
 
 use math::{Matrix, Point3, Ray};
-use scene::Sphere;
 use scene::Renderable;
+use scene::Sphere;
 
 fn main() {
-    let mut sph = Sphere::new();
-    let transform = Matrix::scale(1.0, 2.25, 1.0);
-    sph.set_transform(&transform);
-
     let x_res = 50;
     let y_res = 25;
     let camera = Camera::new(x_res, y_res);
 
+    let mut buffer = [[false; 25]; 50];
+
+    render(&camera, x_res, y_res, &mut buffer);
+
     for v in 0..y_res {
         for u in 0..x_res {
-            let ray = camera.get_ray(u, v);
-            let hit = sph.intersect(&ray);
-            if hit.is_some() {
+            if buffer[u][v] {
                 print!("x");
             } else {
                 print!(".");
             }
         }
         println!();
+    }
+}
+
+fn render(camera: &Camera, x_res: usize, y_res: usize, buffer: &mut [[bool; 25]; 50]) {
+    let mut sph = Sphere::new();
+    let transform = Matrix::scale(1.0, 2.25, 1.0);
+    sph.set_transform(&transform);
+
+    for v in 0..y_res {
+        for u in 0..x_res {
+            let ray = camera.get_ray(u, v);
+            let hit = sph.intersect(&ray);
+            buffer[u][v] = hit.is_some();
+        }
     }
 }
 
@@ -42,7 +54,7 @@ struct Camera {
 
 impl Camera {
     pub fn new(x_res: usize, y_res: usize) -> Camera {
-        Camera{
+        Camera {
             origin: Point3::new(0., 0., -8.),
             x_min: -3.,
             x_max: 3.,
@@ -60,5 +72,24 @@ impl Camera {
         let y = self.y_max as f32 - v as f32 * y_delta;
         let viewpoint = Point3::new(x, y, 0.);
         Ray::new(&self.origin, &(viewpoint - self.origin).norm())
+    }
+}
+
+#[cfg(test)]
+mod benchmarks {
+    extern crate test;
+    use test::Bencher;
+
+    use super::*;
+
+    #[bench]
+    fn render(b: &mut Bencher) {
+        let x_res = 50;
+        let y_res = 25;
+        let camera = Camera::new(x_res, y_res);
+
+        let mut buffer = [[false; 25]; 50];
+
+        b.iter(||super::render(&camera, x_res, y_res, &mut buffer));
     }
 }
