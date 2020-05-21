@@ -54,6 +54,26 @@ impl Matrix {
         m
     }
 
+    pub fn mat_mul(&self, a: &Matrix) -> Matrix {
+        let s = &self.mat;
+        let a = &a.mat;
+        let help = move|row:usize, col:usize| {
+            let mut sum = 0.;
+            for i in 0..4 {
+                sum += s[row][i]*a[i][col];
+            }
+            sum
+        };
+        Matrix{
+            mat:[
+                [help(0,0), help(0,1), help(0,2), help(0,3)],
+                [help(1,0), help(1,1), help(1,2), help(1,3)],
+                [help(2,0), help(2,1), help(2,2), help(2,3)],
+                [help(3,0), help(3,1), help(3,2), help(3,3)],
+            ]
+        }
+    }
+
     pub fn transpose(&self) -> Matrix {
         let mut mat = Matrix::new();
         for row in 0..4 {
@@ -63,6 +83,59 @@ impl Matrix {
         }
 
         mat
+    }
+
+    pub fn inverse(&self) -> Matrix {
+        let mut copy = *self;
+        copy.invert();
+        copy
+    }
+
+    pub fn invert(&mut self) {
+        let mut inverse = Matrix::identity();
+
+        for col in 0..4 {
+            if self.mat[col][col].abs() < EPSILON {
+                let mut big_row = col;
+                for row in 0..4 {
+                    if self.mat[row][col].abs() > self.mat[big_row][col].abs() { big_row = row; }
+                }
+                if big_row == col {panic!("Singular Matrix");}
+                else {
+                    for j in 0..4 {
+                        let tmp = self.mat[big_row][j];
+                        self.mat[big_row][j] = self.mat[col][j];
+                        self.mat[col][j] = tmp;
+
+                        let tmp = inverse.mat[big_row][j];
+                        inverse.mat[big_row][j] = inverse.mat[col][j];
+                        inverse.mat[col][j] = tmp;
+                    }
+                }
+            }
+
+            for row in 0..4 {
+                if row != col {
+                    let coeff = self.mat[row][col] / self.mat[col][col];
+                    if coeff.abs() >= EPSILON {
+                        for j in 0..4 {
+                            self.mat[row][j] -= coeff * self.mat[col][j];
+                            inverse.mat[row][j] -= coeff * inverse.mat[col][j];
+                        }
+
+                        self.mat[row][col] = 0.;
+                    }
+                }
+            }
+        }
+
+        for row in 0..4 {
+            for col in 0..4 {
+                inverse.mat[row][col] /= self.mat[row][row];
+            }
+        }
+
+        self.mat = inverse.mat;
     }
 
     pub fn scale(x: f32, y: f32, z: f32) -> Matrix {
@@ -145,14 +218,22 @@ impl Matrix {
     }
 }
 
+impl std::ops::Mul for Matrix {
+    type Output = Matrix;
+
+    fn mul(self, rhs: Matrix) -> Self::Output {
+        Matrix::mat_mul(&self, &rhs)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    fn mat_equal(a: &Matrix, b: &Matrix) {
+    fn mat_equal(a: &Matrix, b: &Matrix, eps: f32) {
         for row in 0..4 {
             for col in 0..4 {
-                let eq = (a.mat[row][col] - b.mat[row][col]).abs() < EPSILON;
+                let eq = (a.mat[row][col] - b.mat[row][col]).abs() < eps;
                 assert!(eq, "[{}][{}] unequal.  left is {} and right is {}", row, col, a.mat[row][col], b.mat[row][col]);
             }
         }
@@ -232,15 +313,66 @@ mod tests {
         }
         {
             let rotx = Matrix::rotate_x(90.).transpose();
-            mat_equal(&Matrix::rotate_x(270.), &rotx);
+            mat_equal(&Matrix::rotate_x(270.), &rotx, EPSILON);
         }
         {
             let roty = Matrix::rotate_y(90.).transpose();
-            mat_equal(&Matrix::rotate_y(270.), &roty);
+            mat_equal(&Matrix::rotate_y(270.), &roty, EPSILON);
         }
         {
             let rotz = Matrix::rotate_z(90.).transpose();
-            mat_equal(&Matrix::rotate_z(270.), &rotz);
+            mat_equal(&Matrix::rotate_z(270.), &rotz, EPSILON);
+        }
+    }
+
+    #[test]
+    pub fn matrix_mul() {
+        {
+            let scale = Matrix::scale(2., 2., 2.);
+            let product = scale * Matrix::identity();
+            mat_equal(&scale, &product, EPSILON);
+        }
+        {
+            let scale = Matrix::scale(2., 2., 2.);
+            let scale2 = Matrix::scale(2., 2., 2.);
+            let product = scale * scale2;
+            mat_equal(&Matrix::scale(4., 4., 4.), &product, EPSILON);
+        }
+    }
+
+    #[test]
+    pub fn inverse() {
+        {
+            let scale = Matrix::scale(2., 3., 4.);
+            let inverse = scale.inverse();
+            let product = scale * inverse;
+            mat_equal(&Matrix::identity(), &product, 2.*EPSILON);
+        }
+        {
+            let mat = Matrix::identity();
+            let inverse = mat.inverse();
+            mat_equal(&Matrix::identity(), &inverse, 2.*EPSILON);
+        }
+        {
+            let translate = Matrix::translate(2., 2., -4.);
+            let inverse = translate.inverse();
+            let product = inverse * translate;
+            mat_equal(&Matrix::identity(), &product, 2.*EPSILON);
+        }
+        {
+            let mut mat = Matrix::identity();
+            mat.mat[1][3] = 4.;
+            let inverse = mat.inverse();
+            let product = inverse * mat;
+            mat_equal(&Matrix::identity(), &product, 2.*EPSILON);
+        }
+        {
+            let rotx = Matrix::rotate_x(82.);
+            let inverse = rotx.inverse();
+            let product = rotx * inverse;
+            println!("{:?}", rotx);
+            println!("{:?}", inverse);
+            mat_equal(&Matrix::identity(), &product, 2.*EPSILON);
         }
     }
 
