@@ -108,7 +108,6 @@ mod benchmarks {
         let y_res = 128;
         let camera = Camera::new(x_res, y_res);
 
-       // let mut buffer = [[false; 25]; 50];
         let mut buffer = vec![vec![None; y_res]; x_res];
 
         b.iter(||super::render(&camera, x_res, y_res, &mut buffer));
