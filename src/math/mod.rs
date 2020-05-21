@@ -424,15 +424,13 @@ mod vector3_tests {
 #[cfg(test)]
 mod vector4_tests {
     use super::*;
-
-    // Test that two vectors differ by no more than
     // f32::EPSILON in each dimension
     fn assert_within_eps(a: &Vector4, b: &Vector4) {
         let diff = a.sub(b);
-        assert_eq!(true, diff.x.abs() < f32::EPSILON);
-        assert_eq!(true, diff.y.abs() < f32::EPSILON);
-        assert_eq!(true, diff.z.abs() < f32::EPSILON);
-        assert_eq!(true, diff.w.abs() < f32::EPSILON);
+        assert_eq!(true, diff.x.abs() < f32::EPSILON, "X differs by more than epsilon");
+        assert_eq!(true, diff.y.abs() < f32::EPSILON, "Y differs by more than epsilon");
+        assert_eq!(true, diff.z.abs() < f32::EPSILON, "Z differs by more than epsilon");
+        assert_eq!(true, diff.w.abs() < f32::EPSILON, "W differs by more than epsilon");
     }
 
     #[test]
