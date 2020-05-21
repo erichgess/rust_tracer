@@ -527,3 +527,41 @@ mod tests {
         }
     }
 }
+
+#[cfg(test)]
+mod benchmarks {
+    extern crate test;
+    use super::*;
+
+    #[bench]
+    fn bench_invert(b: &mut test::Bencher) {
+        let mut rotx = Matrix::rotate_x(82.);
+
+        b.iter(||rotx.invert());
+
+    }
+
+    #[bench]
+    fn bench_inverse(b: &mut test::Bencher) {
+        let rotx = Matrix::rotate_x(82.);
+
+        b.iter(||rotx.inverse());
+
+    }
+
+    #[bench]
+    fn bench_matrix_multiplication(b: &mut test::Bencher) {
+        let rotx = Matrix::rotate_x(82.);
+        let tr = Matrix::translate(2., 3., -2.);
+
+        b.iter(||rotx*tr);
+    }
+
+    #[bench]
+    fn bench_transpose(b: &mut test::Bencher) {
+        let rotx = Matrix::rotate_x(82.);
+
+        b.iter(||rotx.transpose());
+
+    }
+}

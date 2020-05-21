@@ -71,6 +71,17 @@ impl ops::Mul<Ray> for Matrix {
     }
 }
 
+impl ops::Mul<&Ray> for Matrix {
+    type Output = Ray;
+
+    fn mul(self, rhs: &Ray) -> Self::Output {
+        Ray{
+            origin: self * rhs.origin,
+            direction: self * rhs.direction,
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
