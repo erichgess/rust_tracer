@@ -20,7 +20,7 @@ fn main() {
 
 fn render(camera: &Camera, x_res: usize, y_res: usize, buffer: &mut Vec<Vec<Option<Intersection>>>) {
     let mut sph = Sphere::new();
-    sph.set_color(&Color::new(0.5, 0.5, 0.7));
+    sph.set_color(&Color::red());
     let transform = Matrix::scale(1.0, 2.25, 1.0);
     sph.set_transform(&transform);
 
