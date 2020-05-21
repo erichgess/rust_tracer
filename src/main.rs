@@ -12,7 +12,8 @@ fn main() {
     let y_res = 25;
     let camera = Camera::new(x_res, y_res);
 
-    let mut buffer = [[false; 25]; 50];
+    //let mut buffer = [[false; 25]; 50];
+    let mut buffer = vec![vec![false; y_res]; x_res];
 
     render(&camera, x_res, y_res, &mut buffer);
 
@@ -28,7 +29,7 @@ fn main() {
     }
 }
 
-fn render(camera: &Camera, x_res: usize, y_res: usize, buffer: &mut [[bool; 25]; 50]) {
+fn render(camera: &Camera, x_res: usize, y_res: usize, buffer: &mut Vec<Vec<bool>>) {
     let mut sph = Sphere::new();
     let transform = Matrix::scale(1.0, 2.25, 1.0);
     sph.set_transform(&transform);
@@ -84,11 +85,12 @@ mod benchmarks {
 
     #[bench]
     fn render(b: &mut Bencher) {
-        let x_res = 50;
-        let y_res = 25;
+        let x_res = 512;
+        let y_res = 512;
         let camera = Camera::new(x_res, y_res);
 
-        let mut buffer = [[false; 25]; 50];
+       // let mut buffer = [[false; 25]; 50];
+        let mut buffer = vec![vec![false; y_res]; x_res];
 
         b.iter(||super::render(&camera, x_res, y_res, &mut buffer));
     }
