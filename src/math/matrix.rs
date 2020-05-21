@@ -149,9 +149,7 @@ impl Matrix {
 mod tests {
     use super::*;
 
-    fn compare(a: &Matrix, b: &Matrix) {
-        use std::f32::EPSILON;
-
+    fn mat_equal(a: &Matrix, b: &Matrix) {
         for row in 0..4 {
             for col in 0..4 {
                 let eq = (a.mat[row][col] - b.mat[row][col]).abs() < EPSILON;
@@ -234,15 +232,15 @@ mod tests {
         }
         {
             let rotx = Matrix::rotate_x(90.).transpose();
-            compare(&Matrix::rotate_x(270.), &rotx);
+            mat_equal(&Matrix::rotate_x(270.), &rotx);
         }
         {
             let roty = Matrix::rotate_y(90.).transpose();
-            compare(&Matrix::rotate_y(270.), &roty);
+            mat_equal(&Matrix::rotate_y(270.), &roty);
         }
         {
             let rotz = Matrix::rotate_z(90.).transpose();
-            compare(&Matrix::rotate_z(270.), &rotz);
+            mat_equal(&Matrix::rotate_z(270.), &rotz);
         }
     }
 
