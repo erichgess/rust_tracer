@@ -69,7 +69,7 @@ impl Camera {
 mod terminal {
     extern crate termion;
 
-    use termion::{color, style, color::Rgb};
+    use termion::{color, color::Rgb};
     use super::scene::{Color, Intersection};
 
     fn to_rgb(c: &Color) -> Rgb {
@@ -109,7 +109,7 @@ mod benchmarks {
         let camera = Camera::new(x_res, y_res);
 
        // let mut buffer = [[false; 25]; 50];
-        let mut buffer = vec![vec![false; y_res]; x_res];
+        let mut buffer = vec![vec![None; y_res]; x_res];
 
         b.iter(||super::render(&camera, x_res, y_res, &mut buffer));
     }
