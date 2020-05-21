@@ -77,16 +77,16 @@ mod test {
     
     fn assert_within_eps(a: &Vector3, b: &Vector3) {
         let diff = a.sub(b);
-        assert_eq!(true, diff.x.abs() < f32::EPSILON, "X is not within epsilon: {}", b.x());
-        assert_eq!(true, diff.y.abs() < f32::EPSILON, "Y is not within epsilon: {}", b.y());
-        assert_eq!(true, diff.z.abs() < f32::EPSILON, "Z is not within epsilon: {}", b.z());
+        assert_eq!(true, diff.x().abs() < f32::EPSILON, "X is not within epsilon: {}", b.x());
+        assert_eq!(true, diff.y().abs() < f32::EPSILON, "Y is not within epsilon: {}", b.y());
+        assert_eq!(true, diff.z().abs() < f32::EPSILON, "Z is not within epsilon: {}", b.z());
     }
     
     fn pt_assert_within_eps(a: &Point3, b: &Point3) {
         let diff = a.sub(b);
-        assert_eq!(true, diff.x.abs() < f32::EPSILON, "X is not within epsilon: {}", b.x());
-        assert_eq!(true, diff.y.abs() < f32::EPSILON, "Y is not with epsilon");
-        assert_eq!(true, diff.z.abs() < f32::EPSILON, "Z is not within epsilon");
+        assert_eq!(true, diff.x().abs() < f32::EPSILON, "X is not within epsilon: {}", b.x());
+        assert_eq!(true, diff.y().abs() < f32::EPSILON, "Y is not with epsilon");
+        assert_eq!(true, diff.z().abs() < f32::EPSILON, "Z is not within epsilon");
     }
 
     #[test]

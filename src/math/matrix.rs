@@ -118,11 +118,11 @@ impl Matrix {
     }
 
     pub fn vec3_mul(&self, v: &Vector3) -> Vector3 {
-        Vector3 {
-            x: v.x*self.get(0,0) + v.y*self.get(0,1) + v.z*self.get(0,2),
-            y: v.x*self.get(1,0) + v.y*self.get(1,1) + v.z*self.get(1,2),
-            z: v.x*self.get(2,0) + v.y*self.get(2,1) + v.z*self.get(2,2),
-        }
+        Vector3::new(
+            v.x()*self.get(0,0) + v.y()*self.get(0,1) + v.z()*self.get(0,2),
+            v.x()*self.get(1,0) + v.y()*self.get(1,1) + v.z()*self.get(1,2),
+            v.x()*self.get(2,0) + v.y()*self.get(2,1) + v.z()*self.get(2,2),
+        )
     }
 
     pub fn pt_mul(&self, p: &Point3) -> Point3 {
@@ -152,9 +152,9 @@ mod tests {
     // f32::EPSILON in each dimension
     fn pt_assert_within_eps(a: &Point3, b: &Point3) {
         let diff = a.sub(b);
-        assert_eq!(true, diff.x.abs() < f32::EPSILON);
-        assert_eq!(true, diff.y.abs() < f32::EPSILON);
-        assert_eq!(true, diff.z.abs() < f32::EPSILON);
+        assert_eq!(true, diff.x().abs() < f32::EPSILON);
+        assert_eq!(true, diff.y().abs() < f32::EPSILON);
+        assert_eq!(true, diff.z().abs() < f32::EPSILON);
     }
 
     #[test]

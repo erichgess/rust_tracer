@@ -36,18 +36,18 @@ impl Point3 {
     }
 
     pub fn sub(&self, q: &Point3) -> Vector3 {
-        Vector3 {
-            x: self.x - q.x,
-            y: self.y - q.y,
-            z: self.z - q.z,
-        }
+        Vector3::new(
+            self.x - q.x,
+            self.y - q.y,
+            self.z - q.z,
+            )
     }
 
     pub fn add(&self, v: &Vector3) -> Point3 {
         Point3 {
-            x: self.x + v.x,
-            y: self.y + v.y,
-            z: self.z + v.z,
+            x: self.x() + v.x(),
+            y: self.y() + v.y(),
+            z: self.z() + v.z(),
         }
     }
 
@@ -138,9 +138,9 @@ mod test {
     // f32::EPSILON in each dimension
     fn pt_assert_within_eps(a: &Point3, b: &Point3) {
         let diff = a.sub(b);
-        assert_eq!(true, diff.x.abs() < f32::EPSILON);
-        assert_eq!(true, diff.y.abs() < f32::EPSILON);
-        assert_eq!(true, diff.z.abs() < f32::EPSILON);
+        assert_eq!(true, diff.x().abs() < f32::EPSILON);
+        assert_eq!(true, diff.y().abs() < f32::EPSILON);
+        assert_eq!(true, diff.z().abs() < f32::EPSILON);
     }
 
     #[test]
