@@ -3,6 +3,7 @@ use super::{Vector3, Vector4};
 use super::point::Point3;
 
 /// Row Major matrix
+#[derive(Copy, Clone)]
 pub struct Matrix {
     mat: [[f32;4];4],
 }

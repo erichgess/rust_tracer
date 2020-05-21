@@ -17,6 +17,18 @@ impl Vector3 {
     pub fn new(x: f32, y: f32, z: f32) -> Vector3 {
         Vector3 { x, y, z }
     }
+    
+    pub fn x(&self) -> f32 {
+        self.x
+    }
+
+    pub fn y(&self) -> f32 {
+        self.y
+    }
+
+    pub fn z(&self) -> f32 {
+        self.z
+    }
 
     pub fn neg(&self) -> Vector3 {
         Vector3 {
