@@ -4,11 +4,6 @@ mod sphere;
 
 pub use sphere::Sphere;
 
-#[derive(Debug, PartialEq)]
-pub struct Intersection {
-    t: f32,
-}
-
 /**
  * A `Renderable` is anything which exists as an actual entity on the scene
  * that will be rendered in the final image.  For example: a sphere or a
@@ -25,4 +20,34 @@ pub trait Renderable {
     // Set the transformation matrix which will be used to position
     // and scale the sphere within the scene
     fn set_transform(&mut self, mat: &Matrix);
+
+    // Sets the color of the object
+    fn set_color(&mut self, color: &Color);
+}
+
+#[derive(Debug, PartialEq, Copy, Clone)]
+pub struct Intersection {
+    pub t: f32,
+    pub color: Color,
+}
+
+#[derive(Debug, PartialEq, Copy, Clone)]
+pub struct Color {
+    pub r: f32,
+    pub g: f32,
+    pub b: f32,
+}
+
+impl Color {
+    pub fn new(r: f32, g: f32, b: f32) -> Color {
+        Color {r, g, b}
+    }
+
+    pub fn red() -> Color {
+        Color {
+            r: 1.,
+            g: 0.,
+            b: 0.,
+        }
+    }
 }

@@ -2,10 +2,12 @@ use crate::math::{Matrix, Point3, Ray};
 
 use super::Renderable;
 use super::Intersection;
+use super::Color;
 
 pub struct Sphere {
     transform: Matrix,
     inv_transform: Matrix,
+    color: Color,
 }
 
 impl Sphere {
@@ -13,6 +15,7 @@ impl Sphere {
         Sphere{
             transform: Matrix::identity(),
             inv_transform: Matrix::identity(),
+            color: Color::new(1., 1., 1.),
         }
     }
 }
@@ -45,6 +48,7 @@ impl Renderable for Sphere {
                 let t = t0;
                 Some(Intersection{
                     t,
+                    color: self.color,
                 })
             }
         }
@@ -53,6 +57,10 @@ impl Renderable for Sphere {
     fn set_transform(&mut self, mat: &Matrix) {
         self.transform = *mat;
         self.inv_transform = self.transform.inverse();
+    }
+
+    fn set_color(&mut self, color: &Color) {
+        self.color = *color;
     }
 }
 

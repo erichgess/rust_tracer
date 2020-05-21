@@ -4,7 +4,7 @@ mod math;
 mod scene;
 
 use math::{Matrix, Point3, Ray};
-use scene::Renderable;
+use scene::{Color, Intersection, Renderable};
 use scene::Sphere;
 
 fn main() {
@@ -13,24 +13,16 @@ fn main() {
     let camera = Camera::new(x_res, y_res);
 
     //let mut buffer = [[false; 25]; 50];
-    let mut buffer = vec![vec![false; y_res]; x_res];
+    let mut buffer = vec![vec![None; y_res]; x_res];
 
     render(&camera, x_res, y_res, &mut buffer);
 
-    for v in 0..y_res {
-        for u in 0..x_res {
-            if buffer[u][v] {
-                print!("x");
-            } else {
-                print!(".");
-            }
-        }
-        println!();
-    }
+    terminal::draw(x_res, y_res, &buffer);
 }
 
-fn render(camera: &Camera, x_res: usize, y_res: usize, buffer: &mut Vec<Vec<bool>>) {
+fn render(camera: &Camera, x_res: usize, y_res: usize, buffer: &mut Vec<Vec<Option<Intersection>>>) {
     let mut sph = Sphere::new();
+    sph.set_color(&Color::new(0.5, 0.5, 0.7));
     let transform = Matrix::scale(1.0, 2.25, 1.0);
     sph.set_transform(&transform);
 
@@ -38,7 +30,7 @@ fn render(camera: &Camera, x_res: usize, y_res: usize, buffer: &mut Vec<Vec<bool
         for u in 0..x_res {
             let ray = camera.get_ray(u, v);
             let hit = sph.intersect(&ray);
-            buffer[u][v] = hit.is_some();
+            buffer[u][v] = hit;
         }
     }
 }
@@ -73,6 +65,35 @@ impl Camera {
         let y = self.y_max as f32 - v as f32 * y_delta;
         let viewpoint = Point3::new(x, y, 0.);
         Ray::new(&self.origin, &(viewpoint - self.origin).norm())
+    }
+}
+
+mod terminal {
+    extern crate termion;
+
+    use termion::{color, style, color::Rgb};
+    use super::scene::{Color, Intersection};
+
+    fn to_rgb(c: &Color) -> Rgb {
+        let r = 255. * c.r;
+        let g = 255. * c.g;
+        let b = 255. * c.b;
+
+        Rgb(r as u8, g as u8, b as u8)
+    }
+
+    pub fn draw(x_res: usize, y_res: usize, buffer: &Vec<Vec<Option<Intersection>>>) {
+        for v in 0..y_res {
+            for u in 0..x_res {
+                match buffer[u][v] {
+                    None => print!("{}.", color::Fg(color::White)),
+                    Some(i) => {
+                        print!("{}x", color::Fg(to_rgb(&i.color)));
+                    }
+                }
+            }
+            println!();
+        }
     }
 }
 
