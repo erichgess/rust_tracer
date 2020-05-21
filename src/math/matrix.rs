@@ -54,6 +54,17 @@ impl Matrix {
         m
     }
 
+    pub fn transpose(&self) -> Matrix {
+        let mut mat = Matrix::new();
+        for row in 0..4 {
+            for col in 0..4 {
+                mat.mat[row][col] = self.mat[col][row];
+            }
+        }
+
+        mat
+    }
+
     pub fn scale(x: f32, y: f32, z: f32) -> Matrix {
         Matrix{
             mat: [[x, 0., 0., 0.],
@@ -138,6 +149,17 @@ impl Matrix {
 mod tests {
     use super::*;
 
+    fn compare(a: &Matrix, b: &Matrix) {
+        use std::f32::EPSILON;
+
+        for row in 0..4 {
+            for col in 0..4 {
+                let eq = (a.mat[row][col] - b.mat[row][col]).abs() < EPSILON;
+                assert!(eq, "[{}][{}] unequal.  left is {} and right is {}", row, col, a.mat[row][col], b.mat[row][col]);
+            }
+        }
+    }
+
     // Test that two vectors differ by no more than
     // f32::EPSILON in each dimension
     fn assert_within_eps(a: &Vector4, b: &Vector4) {
@@ -195,6 +217,32 @@ mod tests {
                 [0., 0., 0.5, 0.],
                 [0., 0., 0., 0.5]], 
                 m.mat);
+        }
+    }
+
+    #[test]
+    pub fn transpose() {
+        {
+            let scale = Matrix::scale(2., 3., 4.).transpose();
+            assert_eq!(Matrix::scale(2., 3., 4.), scale);
+        }
+        {
+            let translate = Matrix::translate(1., 2., 3.);
+            let transpose = translate.transpose();
+            assert_ne!(translate, transpose);
+            assert_eq!(translate, transpose.transpose());
+        }
+        {
+            let rotx = Matrix::rotate_x(90.).transpose();
+            compare(&Matrix::rotate_x(270.), &rotx);
+        }
+        {
+            let roty = Matrix::rotate_y(90.).transpose();
+            compare(&Matrix::rotate_y(270.), &roty);
+        }
+        {
+            let rotz = Matrix::rotate_z(90.).transpose();
+            compare(&Matrix::rotate_z(270.), &rotz);
         }
     }
 
