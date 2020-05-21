@@ -85,8 +85,8 @@ mod benchmarks {
 
     #[bench]
     fn render(b: &mut Bencher) {
-        let x_res = 512;
-        let y_res = 512;
+        let x_res = 128;
+        let y_res = 128;
         let camera = Camera::new(x_res, y_res);
 
        // let mut buffer = [[false; 25]; 50];

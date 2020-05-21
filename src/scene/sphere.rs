@@ -1,4 +1,4 @@
-use crate::math::{Matrix, Point3, Ray, Vector3};
+use crate::math::{Matrix, Point3, Ray};
 
 use super::Renderable;
 use super::Intersection;
@@ -20,6 +20,7 @@ impl Sphere {
 impl Renderable for Sphere {
     fn intersect(&self, ray: &Ray) -> Option<Intersection> {
         // apply transformation to the ray
+        //let transformed_ray = ray.mat_mul(&self.inv_transform);
         let transformed_ray = self.inv_transform * ray;
 
         let l = transformed_ray.origin() - Point3::new(0., 0., 0.);
@@ -43,7 +44,7 @@ impl Renderable for Sphere {
 
                 let t = t0;
                 Some(Intersection{
-                    t: t,
+                    t,
                 })
             }
         }
@@ -75,6 +76,7 @@ fn solve_quadratic(a: f32, b: f32, c: f32) -> Option<(f32,f32)> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::math::Vector3;
 
     #[test]
     fn basic() {
@@ -130,6 +132,7 @@ mod tests {
 mod benchmarks {
     extern crate test;
     use super::*;
+    use crate::math::Vector3;
 
     #[bench]
     fn intersection(b: &mut test::Bencher) {

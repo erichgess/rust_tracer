@@ -1,8 +1,8 @@
 use std::ops;
 
-use super::Vector3;
 use super::matrix::Matrix;
 use super::point::Point3;
+use super::Vector3;
 
 #[derive(Copy, Clone)]
 pub struct Ray {
@@ -12,7 +12,7 @@ pub struct Ray {
 
 impl Ray {
     pub fn new(origin: &Point3, direction: &Vector3) -> Ray {
-        Ray{
+        Ray {
             origin: *origin,
             direction: *direction,
         }
@@ -27,16 +27,23 @@ impl Ray {
     }
 
     pub fn neg(&self) -> Ray {
-        Ray{
+        Ray {
             origin: self.origin,
             direction: self.direction.neg(),
         }
     }
 
     pub fn norm(&self) -> Ray {
-        Ray{
+        Ray {
             origin: self.origin,
             direction: self.direction.norm(),
+        }
+    }
+
+    pub fn mat_mul(&self, m: &Matrix) -> Ray {
+        Ray {
+            origin: self.origin.mat_mul(&m),
+            direction: self.direction.mat_mul(&m),
         }
     }
 }
@@ -53,10 +60,15 @@ impl ops::Mul<Matrix> for Ray {
     type Output = Ray;
 
     fn mul(self, rhs: Matrix) -> Self::Output {
-        Ray {
-            origin: self.origin * rhs,
-            direction: self.direction * rhs,
-        }
+        self.mat_mul(&rhs)
+    }
+}
+
+impl ops::Mul<&Matrix> for Ray {
+    type Output = Ray;
+
+    fn mul(self, rhs: &Matrix) -> Self::Output {
+        self.mat_mul(rhs)
     }
 }
 
@@ -64,10 +76,7 @@ impl ops::Mul<Ray> for Matrix {
     type Output = Ray;
 
     fn mul(self, rhs: Ray) -> Self::Output {
-        Ray{
-            origin: self * rhs.origin,
-            direction: self * rhs.direction,
-        }
+        self.ray_mul(&rhs)
     }
 }
 
@@ -75,29 +84,50 @@ impl ops::Mul<&Ray> for Matrix {
     type Output = Ray;
 
     fn mul(self, rhs: &Ray) -> Self::Output {
-        Ray{
-            origin: self * rhs.origin,
-            direction: self * rhs.direction,
-        }
+        self.ray_mul(rhs)
     }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    
+
     fn assert_within_eps(a: &Vector3, b: &Vector3) {
         let diff = a.sub(b);
-        assert_eq!(true, diff.x().abs() < f32::EPSILON, "X is not within epsilon: {}", b.x());
-        assert_eq!(true, diff.y().abs() < f32::EPSILON, "Y is not within epsilon: {}", b.y());
-        assert_eq!(true, diff.z().abs() < f32::EPSILON, "Z is not within epsilon: {}", b.z());
+        assert_eq!(
+            true,
+            diff.x().abs() < f32::EPSILON,
+            "X is not within epsilon: {}",
+            b.x()
+        );
+        assert_eq!(
+            true,
+            diff.y().abs() < f32::EPSILON,
+            "Y is not within epsilon: {}",
+            b.y()
+        );
+        assert_eq!(
+            true,
+            diff.z().abs() < f32::EPSILON,
+            "Z is not within epsilon: {}",
+            b.z()
+        );
     }
-    
+
     fn pt_assert_within_eps(a: &Point3, b: &Point3) {
         let diff = a.sub(b);
-        assert_eq!(true, diff.x().abs() < f32::EPSILON, "X is not within epsilon: {}", b.x());
+        assert_eq!(
+            true,
+            diff.x().abs() < f32::EPSILON,
+            "X is not within epsilon: {}",
+            b.x()
+        );
         assert_eq!(true, diff.y().abs() < f32::EPSILON, "Y is not with epsilon");
-        assert_eq!(true, diff.z().abs() < f32::EPSILON, "Z is not within epsilon");
+        assert_eq!(
+            true,
+            diff.z().abs() < f32::EPSILON,
+            "Z is not within epsilon"
+        );
     }
 
     #[test]
@@ -173,5 +203,51 @@ mod test {
         let ray_rotz = rotz * ray;
         pt_assert_within_eps(&Point3::new(-1., 1., 1.), &ray_rotz.origin());
         assert_within_eps(&Vector3::new(-1., 1., 1.), &ray_rotz.direction());
+    }
+}
+
+#[cfg(test)]
+mod benchmarks {
+    extern crate test;
+    use super::*;
+    use test::Bencher;
+
+    #[bench]
+    fn matrix_times_ray(b: &mut Bencher) {
+        let ray = Ray::new(&Point3::new(1., 1., 1.), &Vector3::new(1., 1., 1.));
+
+        let translate = Matrix::translate(1., 1., 1.);
+        b.iter(|| translate * ray);
+    }
+
+    #[bench]
+    fn matrix_times_ray_ref(b: &mut Bencher) {
+        let ray = &Ray::new(&Point3::new(1., 1., 1.), &Vector3::new(1., 1., 1.));
+
+        let translate = Matrix::translate(1., 1., 1.);
+        b.iter(|| translate * ray);
+    }
+
+    #[bench]
+    fn ray_times_matrix(b: &mut Bencher) {
+        let ray = Ray::new(&Point3::new(1., 1., 1.), &Vector3::new(1., 1., 1.));
+
+        let translate = Matrix::translate(1., 1., 1.);
+        b.iter(|| ray * translate);
+    }
+
+    #[bench]
+    fn ray_times_matrix_ref(b: &mut Bencher) {
+        let ray = Ray::new(&Point3::new(1., 1., 1.), &Vector3::new(1., 1., 1.));
+
+        let translate = &Matrix::translate(1., 1., 1.);
+        b.iter(|| ray * translate);
+    }
+
+    #[bench]
+    fn norm(b: &mut Bencher) {
+        let ray = Ray::new(&Point3::new(1., 1., 1.), &Vector3::new(1., 1., 1.));
+
+        b.iter(|| ray.norm());
     }
 }

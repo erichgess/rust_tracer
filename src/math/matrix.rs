@@ -1,5 +1,5 @@
 use super::point::Point3;
-use super::{Vector3, Vector4};
+use super::{Ray, Vector3, Vector4};
 use std::f32::*;
 
 /// Row Major matrix
@@ -248,6 +248,13 @@ impl Matrix {
                 + p.y() * self.get(2, 1)
                 + p.z() * self.get(2, 2)
                 + self.get(2, 3),
+        )
+    }
+
+    pub fn ray_mul(&self, r: &Ray) -> Ray {
+        Ray::new(
+            &self.pt_mul(&(r.origin())),
+            &self.vec3_mul(&r.direction()),
         )
     }
 }
