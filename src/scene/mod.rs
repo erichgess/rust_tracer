@@ -2,6 +2,8 @@ use crate::math::{Ray, Matrix};
 
 mod sphere;
 
+pub use sphere::Sphere;
+
 #[derive(Debug, PartialEq)]
 pub struct Intersection {
     t: f32,
