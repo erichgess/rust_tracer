@@ -1,4 +1,4 @@
-use crate::math::{Ray, Vector3, Point3, Matrix};
+use crate::math::{Ray, Matrix};
 
 mod sphere;
 

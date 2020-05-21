@@ -1,3 +1,5 @@
+#![feature(test)]
+
 mod math;
 mod scene;
 
