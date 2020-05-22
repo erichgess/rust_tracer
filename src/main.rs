@@ -8,8 +8,8 @@ use scene::Sphere;
 use scene::{Color, Intersection, Light, Renderable, Scene};
 
 fn main() {
-    let x_res = 128;
-    let y_res = 128;
+    let x_res = 50;
+    let y_res = 25;
     let camera = Camera::new(x_res, y_res);
     let mut buffer = vec![vec![None; y_res]; x_res];
 
@@ -17,10 +17,17 @@ fn main() {
     let mut scene = Scene::new();
     let mut sph = Sphere::new();
     sph.set_color(&Color::red());
-    let transform = Matrix::scale(1.0, 2.25, 1.0);
+    let transform = Matrix::scale(1.0, 2.25, 1.0)*Matrix::translate(-1.0, 0., 0.);
     sph.set_transform(&transform);
-
     scene.add_shape(Box::new(sph));
+   
+    let mut sph2 = Sphere::new();
+    sph2.set_color(&Color::blue());
+    let transform = Matrix::translate(2., 0., 0.);
+    sph2.set_transform(&transform);
+    scene.add_shape(Box::new(sph2));
+
+
     render(&camera, &scene, &mut buffer);
     let duration = start.elapsed();
     terminal::draw(x_res, y_res, &buffer);
@@ -33,7 +40,8 @@ fn render(camera: &Camera, scene: &Scene, buffer: &mut Vec<Vec<Option<Intersecti
     for v in 0..camera.y_res {
         for u in 0..camera.x_res {
             let ray = camera.get_ray(u, v);
-            let hit = scene.shapes()[0].intersect(&ray);
+            //let hit = scene.shapes()[0].intersect(&ray);
+            let hit = scene.intersect(&ray);
             let hit = match hit {
                 None => None,
                 Some(mut i) => match light(&(i.point + i.normal * 0.0002), &i.normal, &scene) {
@@ -50,7 +58,7 @@ fn render(camera: &Camera, scene: &Scene, buffer: &mut Vec<Vec<Option<Intersecti
 }
 
 fn light(p: &Point3, n: &Vector3, scene: &Scene) -> Color {
-    let light = Light::new(Point3::new(4., 4.0, -2.), Color::new(1., 1., 1.));
+    let light = Light::new(Point3::new(1., 4.0, -2.), Color::new(1., 1., 1.));
     let light_dir = (light.pos() - p).norm();
     let ray = Ray::new(p, &light_dir);
     if scene.shapes()[0].intersect(&ray).is_none() {

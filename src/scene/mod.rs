@@ -36,6 +36,33 @@ impl Scene {
     }
 }
 
+impl Renderable for Scene {
+    fn set_transform(&mut self, mat: &Matrix) {
+        
+    }
+
+    fn set_color(&mut self, color: &Color) {
+        
+    }
+
+    fn intersect(&self, ray: &Ray) -> Option<Intersection> {
+        let mut nearest_intersection = None;
+        for shape in self.shapes.iter() {
+            match shape.intersect(ray){
+                None => (),
+                Some(intersection) => {
+                    if nearest_intersection.is_none() {
+                        nearest_intersection = Some(intersection);
+                    } else if intersection.t < nearest_intersection.unwrap().t{
+                        nearest_intersection = Some(intersection);
+                    }
+                },
+            }
+        }
+        nearest_intersection
+    }
+}
+
 /**
  * A `Renderable` is anything which exists as an actual entity on the scene
  * that will be rendered in the final image.  For example: a sphere or a

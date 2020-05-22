@@ -18,6 +18,14 @@ impl Color {
         }
     }
 
+    pub fn blue() -> Color {
+        Color {
+            r: 0.,
+            g: 0.,
+            b: 1.,
+        }
+    }
+
     pub fn black() -> Color {
         Color {
             r: 0.,
