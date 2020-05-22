@@ -7,7 +7,7 @@ pub use color::Color;
 pub use sphere::Sphere;
 
 pub struct Scene {
-    lights: Vec<Light>,
+    lights: Vec<Box<dyn LightSource>>,
     shapes: Vec<Box<dyn Renderable>>,
 }
 
@@ -23,7 +23,7 @@ impl Scene {
         self.shapes.push(shape);
     }
 
-    pub fn add_light(&mut self, light: Light) {
+    pub fn add_light(&mut self, light: Box<dyn LightSource>) {
         self.lights.push(light);
     }
 
@@ -31,32 +31,37 @@ impl Scene {
         &self.shapes
     }
 
-    pub fn lights(&self) -> &Vec<Light> {
+    pub fn lights(&self) -> &Vec<Box<dyn LightSource>> {
         &self.lights
+    }
+
+    pub fn get_incoming_energy(&self, intersection: &Intersection) -> Color {
+        let p = intersection.point + 0.0002 * intersection.normal;
+        let mut total_energy = Color::black();
+        for light in self.lights.iter() {
+            total_energy += light.get_energy(&self, &p, &intersection.normal);
+        }
+        total_energy
     }
 }
 
 impl Renderable for Scene {
-    fn set_transform(&mut self, mat: &Matrix) {
-        
-    }
+    fn set_transform(&mut self, mat: &Matrix) {}
 
-    fn set_color(&mut self, color: &Color) {
-        
-    }
+    fn set_color(&mut self, color: &Color) {}
 
     fn intersect(&self, ray: &Ray) -> Option<Intersection> {
         let mut nearest_intersection = None;
         for shape in self.shapes.iter() {
-            match shape.intersect(ray){
+            match shape.intersect(ray) {
                 None => (),
                 Some(intersection) => {
                     if nearest_intersection.is_none() {
                         nearest_intersection = Some(intersection);
-                    } else if intersection.t < nearest_intersection.unwrap().t{
+                    } else if intersection.t < nearest_intersection.unwrap().t {
                         nearest_intersection = Some(intersection);
                     }
-                },
+                }
             }
         }
         nearest_intersection
@@ -92,18 +97,22 @@ pub struct Intersection {
     pub normal: Vector3,
 }
 
+pub trait LightSource {
+    fn get_energy(&self, scene: &Scene, point: &Point3, normal: &Vector3) -> Color;
+}
+
 /**
- A single point light in the scene: it radiates energy with the
- intensity of `Color` equally in all directions.
- */
-pub struct Light {
+A single point light in the scene: it radiates energy with the
+intensity of `Color` equally in all directions.
+*/
+pub struct PointLight {
     pos: Point3,
     color: Color,
 }
 
-impl Light {
-    pub fn new(pos: Point3, color: Color) -> Light {
-        Light { pos, color }
+impl PointLight {
+    pub fn new(pos: Point3, color: Color) -> PointLight {
+        PointLight { pos, color }
     }
     pub fn pos(&self) -> Point3 {
         self.pos
@@ -111,5 +120,20 @@ impl Light {
 
     pub fn color(&self) -> Color {
         self.color
+    }
+}
+
+impl LightSource for PointLight {
+    fn get_energy(&self, scene: &Scene, point: &Point3, normal: &Vector3) -> Color {
+        let dir_to_light = (self.pos - point).norm();
+        let ray = Ray::new(&point, &dir_to_light);
+        let total_energy = match scene.intersect(&ray) {
+            Some(_) => Color::black(),
+            None => {
+                dir_to_light.dot(normal) * self.color
+                //light.get_energy(&dir_to_light, &intersection.normal)
+            }
+        };
+        total_energy
     }
 }
