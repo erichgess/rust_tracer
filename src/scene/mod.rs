@@ -27,14 +27,6 @@ impl Scene {
         self.lights.push(light);
     }
 
-    pub fn shapes(&self) -> &Vec<Box<dyn Renderable>> {
-        &self.shapes
-    }
-
-    pub fn lights(&self) -> &Vec<Box<dyn LightSource>> {
-        &self.lights
-    }
-
     pub fn get_incoming_energy(&self, intersection: &Intersection) -> Color {
         // Move slightly away from the surface of intersection because rounding
         // errors in floating point arithmetic can easily cause the ray to intersect
@@ -50,9 +42,9 @@ impl Scene {
 }
 
 impl Renderable for Scene {
-    fn set_transform(&mut self, mat: &Matrix) {}
+    fn set_transform(&mut self, _: &Matrix) {}
 
-    fn set_color(&mut self, color: &Color) {}
+    fn set_color(&mut self, _: &Color) {}
 
     fn intersect(&self, ray: &Ray) -> Option<Intersection> {
         let mut nearest_intersection = None;
@@ -117,13 +109,6 @@ pub struct PointLight {
 impl PointLight {
     pub fn new(pos: Point3, color: Color) -> PointLight {
         PointLight { pos, color }
-    }
-    pub fn pos(&self) -> Point3 {
-        self.pos
-    }
-
-    pub fn color(&self) -> Color {
-        self.color
     }
 }
 

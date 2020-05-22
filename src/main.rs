@@ -3,7 +3,7 @@
 mod math;
 mod scene;
 
-use math::{Matrix, Point3, Ray, Vector3};
+use math::{Matrix, Point3, Ray};
 use scene::Sphere;
 use scene::{Color, Intersection, AmbientLight, PointLight, Renderable, Scene};
 
@@ -11,7 +11,7 @@ fn main() {
     let x_res = 50;
     let y_res = 25;
     let camera = Camera::new(x_res, y_res);
-    let mut buffer = vec![vec![None; y_res]; x_res];
+    let mut buffer = vec![vec![Color::black(); y_res]; x_res];
 
     let mut scene = Scene::new();
     let mut sph = Sphere::new();
@@ -21,15 +21,15 @@ fn main() {
     scene.add_shape(Box::new(sph));
 
     let mut sph2 = Sphere::new();
-    sph2.set_color(&Color::blue());
-    let transform = Matrix::translate(2., 0., 0.);
+    sph2.set_color(&Color::new(0.9, 0.9, 0.9));
+    let transform = Matrix::translate(1., 0., 0.);
     sph2.set_transform(&transform);
     scene.add_shape(Box::new(sph2));
 
     let light = PointLight::new(Point3::new(1., 4.0, -2.), Color::new(1., 1., 1.));
     scene.add_light(Box::new(light));
 
-    let ambient = AmbientLight::new(&Color::new(0.1, 0.1, 0.1));
+    let ambient = AmbientLight::new(&Color::new(0.4, 0.4, 0.4));
     scene.add_light(Box::new(ambient));
 
     let start = std::time::Instant::now();
@@ -40,23 +40,44 @@ fn main() {
     println!("Render and draw time: {}ms", duration.as_millis());
 }
 
-fn render(camera: &Camera, scene: &Scene, buffer: &mut Vec<Vec<Option<Intersection>>>) {
+fn render(camera: &Camera, scene: &Scene, buffer: &mut Vec<Vec<Color>>) {
     for v in 0..camera.y_res {
         for u in 0..camera.x_res {
             let ray = camera.get_ray(u, v);
-            let hit = scene.intersect(&ray);
-            let hit = match hit {
-                None => None,
-                Some(mut i) => {
-                    let energy = scene.get_incoming_energy(&i);
-                    i.color = energy * i.color;
-                    i.color.r += 0.1;
-                    Some(i)
-                }
-            };
-            buffer[u][v] = hit;
+            buffer[u][v] = get_energy(scene, &ray);
         }
     }
+}
+
+fn get_energy(scene: &Scene, ray: &Ray) -> Color {
+    let hit = scene.intersect(&ray);
+    let diffuse = match hit {
+        None => Color::black(),
+        Some(mut i) => {
+            let energy = scene.get_incoming_energy(&i);
+            i.color = energy * i.color;
+            i.color
+        }
+    };
+
+    let reflected = match hit {
+        None => Color::black(),
+        Some(i) => {
+            // compute reflection vector
+            let reflected_dir = -ray.direction().reflect(&i.normal);
+            let p = i.point + 0.0002 * i.normal;
+            let reflect_ray = Ray::new(&p, &reflected_dir);
+            // compute incoming energy from the direction of the reflected ray
+            match scene.intersect(&reflect_ray) {
+                None => Color::black(),
+                Some(ri) => {
+                    let energy = scene.get_incoming_energy(&ri);
+                    energy
+                }
+            }
+        }
+    };
+    0.4* diffuse + 0.4 * reflected
 }
 
 struct Camera {
@@ -106,13 +127,13 @@ mod terminal {
         Rgb(r as u8, g as u8, b as u8)
     }
 
-    pub fn draw(x_res: usize, y_res: usize, buffer: &Vec<Vec<Option<Intersection>>>) {
+    pub fn draw(x_res: usize, y_res: usize, buffer: &Vec<Vec<Color>>) {
         for v in 0..y_res {
             for u in 0..x_res {
                 match buffer[u][v] {
-                    None => print!("{}.", color::Fg(color::White)),
-                    Some(i) => {
-                        print!("{}x", color::Fg(to_rgb(&i.color)));
+                    Color{r: 0., g: 0., b: 0.} => print!("{}.", color::Fg(color::White)),
+                    c => {
+                        print!("{}x", color::Fg(to_rgb(&c)));
                     }
                 }
             }

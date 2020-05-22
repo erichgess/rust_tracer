@@ -109,6 +109,10 @@ impl Vector3 {
             z: self.x * mat.get(0, 2) + self.y * mat.get(1, 2) + self.z * mat.get(2, 2),
         }
     }
+
+    pub fn reflect(&self, about: &Vector3) -> Vector3 {
+        2. * (self.dot(about)) * about - self
+    }
 }
 
 impl From<Point3> for Vector3 {
@@ -145,6 +149,14 @@ impl ops::Sub for Vector3 {
     }
 }
 
+impl ops::Sub<&Vector3> for Vector3 {
+    type Output = Vector3;
+
+    fn sub(self, rhs: &Vector3) -> Self::Output {
+        Vector3::sub(&self, rhs)
+    }
+}
+
 impl ops::Mul<f32> for Vector3 {
     type Output = Vector3;
 
@@ -157,6 +169,14 @@ impl ops::Mul<Vector3> for f32 {
     type Output = Vector3;
 
     fn mul(self, rhs: Vector3) -> Self::Output {
+        rhs.scalar_mul(self)
+    }
+}
+
+impl ops::Mul<&Vector3> for f32 {
+    type Output = Vector3;
+
+    fn mul(self, rhs: &Vector3) -> Self::Output {
         rhs.scalar_mul(self)
     }
 }
