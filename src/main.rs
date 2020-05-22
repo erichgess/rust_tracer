@@ -8,8 +8,8 @@ use scene::{Color, Intersection, Renderable};
 use scene::Sphere;
 
 fn main() {
-    let x_res = 50;
-    let y_res = 25;
+    let x_res = 60;
+    let y_res = 30;
     let camera = Camera::new(x_res, y_res);
     let mut buffer = vec![vec![None; y_res]; x_res];
 
@@ -21,8 +21,10 @@ fn main() {
 fn render(camera: &Camera, x_res: usize, y_res: usize, buffer: &mut Vec<Vec<Option<Intersection>>>) {
     let mut sph = Sphere::new();
     sph.set_color(&Color::red());
-    //let transform = Matrix::scale(1.0, 2.25, 1.0);
-    //sph.set_transform(&transform);
+    let transform = Matrix::scale(1.0, 2.25, 1.0);
+    sph.set_transform(&transform);
+
+    let ambient = Color::new(0.1, 0.1, 0.1);
 
     for v in 0..y_res {
         for u in 0..x_res {
@@ -31,9 +33,13 @@ fn render(camera: &Camera, x_res: usize, y_res: usize, buffer: &mut Vec<Vec<Opti
             let hit = match hit {
                 None => None,
                 Some(mut i) => match light(&(i.point + i.normal*0.0002), &i.normal, &sph) {
-                    None => None,
+                    None => {
+                        i.color = i.color * ambient;
+                        Some(i)
+                    },
                     Some(shade) => {
-                        i.color = Color::new(shade*i.color.r, shade*i.color.g, shade*i.color.b);
+                        i.color = shade * i.color + ambient * i.color;
+                        i.color.r += 0.1;
                         Some(i)
                     },
                 }
@@ -44,7 +50,7 @@ fn render(camera: &Camera, x_res: usize, y_res: usize, buffer: &mut Vec<Vec<Opti
 }
 
 fn light(p: &Point3, n: &Vector3, sph: &Sphere) -> Option<f32> {
-    let light_pos = Point3::new(4., 8., -8.);
+    let light_pos = Point3::new(4., 4., -2.);
     let light_dir = (light_pos - p).norm();
     let ray = Ray::new(p, &light_dir);
     if sph.intersect(&ray).is_none() {
