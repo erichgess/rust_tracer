@@ -21,7 +21,7 @@ fn main() {
     scene.add_shape(Box::new(sph));
 
     let mut sph2 = Sphere::new();
-    sph2.set_color(&Color::blue());
+    sph2.set_color(&Color::white());
     let transform = Matrix::translate(1., 0., 0.);
     sph2.set_transform(&transform);
     scene.add_shape(Box::new(sph2));
@@ -44,12 +44,12 @@ fn render(camera: &Camera, scene: &Scene, buffer: &mut Vec<Vec<Color>>) {
     for v in 0..camera.y_res {
         for u in 0..camera.x_res {
             let ray = camera.get_ray(u, v);
-            buffer[u][v] = get_energy(scene, &ray);
+            buffer[u][v] = get_energy(scene, &ray, 2);
         }
     }
 }
 
-fn get_energy(scene: &Scene, ray: &Ray) -> Color {
+fn get_energy(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
     let hit = scene.intersect(&ray);
     let diffuse = match hit {
         None => Color::black(),
@@ -60,24 +60,23 @@ fn get_energy(scene: &Scene, ray: &Ray) -> Color {
         }
     };
 
-    let reflected = match hit {
-        None => Color::black(),
-        Some(i) => {
-            // compute reflection vector
-            let reflected_dir = -ray.direction().reflect(&i.normal);
-            let p = i.point + 0.0002 * i.normal;
-            let reflect_ray = Ray::new(&p, &reflected_dir);
-            // compute incoming energy from the direction of the reflected ray
-            match scene.intersect(&reflect_ray) {
-                None => Color::black(),
-                Some(ri) => {
-                    let energy = scene.get_incoming_energy(&ri);
-                    energy * ri.color
-                }
+    let reflected = if reflections > 0 {
+        match hit {
+            None => Color::black(),
+            Some(i) => {
+                // compute reflection vector
+                let reflected_dir = -ray.direction().reflect(&i.normal);
+                let p = i.point + 0.0002 * i.normal;
+                let reflect_ray = Ray::new(&p, &reflected_dir);
+                // compute incoming energy from the direction of the reflected ray
+                get_energy(scene, &reflect_ray, reflections-1)
             }
         }
+    } else {
+        Color::black()
     };
-    0.4 * diffuse + 0.6 * reflected
+
+    0.4 * diffuse + 0.8*reflected
 }
 
 struct Camera {

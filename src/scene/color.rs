@@ -10,6 +10,14 @@ impl Color {
         Color { r, g, b }
     }
 
+    pub fn white() -> Color {
+        Color {
+            r: 1.,
+            g: 1.,
+            b: 1.,
+        }
+    }
+
     pub fn red() -> Color {
         Color {
             r: 1.,
