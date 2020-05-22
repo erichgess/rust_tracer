@@ -8,14 +8,16 @@ use scene::{Color, Intersection, Renderable};
 use scene::Sphere;
 
 fn main() {
-    let x_res = 60;
-    let y_res = 30;
+    let x_res = 128;
+    let y_res = 128;
     let camera = Camera::new(x_res, y_res);
     let mut buffer = vec![vec![None; y_res]; x_res];
 
+    let start = std::time::Instant::now();
     render(&camera, x_res, y_res, &mut buffer);
-
+    let duration = start.elapsed();
     terminal::draw(x_res, y_res, &buffer);
+    println!("Render and draw time: {}ms", duration.as_millis());
 }
 
 fn render(camera: &Camera, x_res: usize, y_res: usize, buffer: &mut Vec<Vec<Option<Intersection>>>) {
@@ -130,7 +132,7 @@ mod benchmarks {
     use super::*;
 
     #[bench]
-    fn render(b: &mut Bencher) {
+    fn render_128x128(b: &mut Bencher) {
         let x_res = 128;
         let y_res = 128;
         let camera = Camera::new(x_res, y_res);
