@@ -1,8 +1,10 @@
 use crate::math::{Point3, Ray, Matrix, Vector3};
 
 mod sphere;
+mod color;
 
 pub use sphere::Sphere;
+pub use color::Color;
 
 /**
  * A `Renderable` is anything which exists as an actual entity on the scene
@@ -33,59 +35,3 @@ pub struct Intersection {
     pub normal: Vector3
 }
 
-#[derive(Debug, PartialEq, Copy, Clone)]
-pub struct Color {
-    pub r: f32,
-    pub g: f32,
-    pub b: f32,
-}
-
-impl Color {
-    pub fn new(r: f32, g: f32, b: f32) -> Color {
-        Color {r, g, b}
-    }
-
-    pub fn red() -> Color {
-        Color {
-            r: 1.,
-            g: 0.,
-            b: 0.,
-        }
-    }
-}
-
-impl std::ops::Add for Color {
-    type Output = Color;
-
-    fn add(self, rhs: Color) -> Self::Output {
-        Color {
-            r: self.r + rhs.r,
-            g: self.g + rhs.g,
-            b: self.b + rhs.b,
-        }
-    }
-}
-
-impl std::ops::Mul for Color {
-    type Output = Color;
-
-    fn mul(self, rhs: Color) -> Self::Output {
-        Color {
-            r: self.r * rhs.r,
-            g: self.g * rhs.g,
-            b: self.b * rhs.b,
-        }
-    }
-}
-
-impl std::ops::Mul<Color> for f32 {
-    type Output = Color;
-
-    fn mul(self, rhs: Color) -> Self::Output {
-        Color {
-            r: self * rhs.r,
-            g: self * rhs.g,
-            b: self * rhs.b,
-        }
-    }
-}
