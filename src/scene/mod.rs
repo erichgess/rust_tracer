@@ -1,4 +1,4 @@
-use crate::math::{Ray, Matrix};
+use crate::math::{Point3, Ray, Matrix, Vector3};
 
 mod sphere;
 
@@ -29,6 +29,8 @@ pub trait Renderable {
 pub struct Intersection {
     pub t: f32,
     pub color: Color,
+    pub point: Point3,
+    pub normal: Vector3
 }
 
 #[derive(Debug, PartialEq, Copy, Clone)]

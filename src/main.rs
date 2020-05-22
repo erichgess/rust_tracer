@@ -28,6 +28,9 @@ fn render(camera: &Camera, x_res: usize, y_res: usize, buffer: &mut Vec<Vec<Opti
         for u in 0..x_res {
             let ray = camera.get_ray(u, v);
             let hit = sph.intersect(&ray);
+            if hit.is_some() {
+                println!("{:?}", hit);
+            }
             buffer[u][v] = hit;
         }
     }

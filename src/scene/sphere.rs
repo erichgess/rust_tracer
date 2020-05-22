@@ -1,4 +1,4 @@
-use crate::math::{Matrix, Point3, Ray};
+use crate::math::{Matrix, Point3, Ray, Vector3};
 
 use super::Renderable;
 use super::Intersection;
@@ -46,9 +46,14 @@ impl Renderable for Sphere {
                 }
 
                 let t = t0;
+                let point = t * ray;
+                let normal = t * transformed_ray;
+                let normal = (self.inv_transform.transpose() * Vector3::from(normal)).norm();
                 Some(Intersection{
                     t,
                     color: self.color,
+                    point,
+                    normal,
                 })
             }
         }

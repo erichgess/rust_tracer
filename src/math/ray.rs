@@ -46,6 +46,10 @@ impl Ray {
             direction: self.direction.mat_mul(&m),
         }
     }
+
+    pub fn scalar_mul(&self, a: f32) -> Point3 {
+        self.origin + self.direction * a
+    }
 }
 
 impl ops::Neg for Ray {
@@ -53,6 +57,22 @@ impl ops::Neg for Ray {
 
     fn neg(self) -> Self::Output {
         Ray::neg(&self)
+    }
+}
+
+impl ops::Mul<Ray> for f32 {
+    type Output = Point3;
+
+    fn mul(self, rhs: Ray) -> Self::Output {
+        rhs.scalar_mul(self)
+    }
+}
+
+impl ops::Mul<&Ray> for f32 {
+    type Output = Point3;
+
+    fn mul(self, rhs: &Ray) -> Self::Output {
+        rhs.scalar_mul(self)
     }
 }
 

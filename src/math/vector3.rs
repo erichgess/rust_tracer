@@ -1,6 +1,7 @@
 use std::ops;
 
 use super::matrix::Matrix;
+use super::point::Point3;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Vector3 {
@@ -106,6 +107,16 @@ impl Vector3 {
             x: self.x * mat.get(0, 0) + self.y * mat.get(1, 0) + self.z * mat.get(2, 0),
             y: self.x * mat.get(0, 1) + self.y * mat.get(1, 1) + self.z * mat.get(2, 1),
             z: self.x * mat.get(0, 2) + self.y * mat.get(1, 2) + self.z * mat.get(2, 2),
+        }
+    }
+}
+
+impl From<Point3> for Vector3 {
+    fn from(p: Point3) -> Vector3 {
+        Vector3{
+            x: p.x(),
+            y: p.y(),
+            z: p.z(),
         }
     }
 }
