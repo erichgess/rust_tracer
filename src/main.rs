@@ -13,7 +13,6 @@ fn main() {
     let camera = Camera::new(x_res, y_res);
     let mut buffer = vec![vec![None; y_res]; x_res];
 
-    let start = std::time::Instant::now();
     let mut scene = Scene::new();
     let mut sph = Sphere::new();
     sph.set_color(&Color::red());
@@ -27,9 +26,10 @@ fn main() {
     sph2.set_transform(&transform);
     scene.add_shape(Box::new(sph2));
 
-
+    let start = std::time::Instant::now();
     render(&camera, &scene, &mut buffer);
     let duration = start.elapsed();
+
     terminal::draw(x_res, y_res, &buffer);
     println!("Render and draw time: {}ms", duration.as_millis());
 }
