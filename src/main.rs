@@ -21,7 +21,7 @@ fn main() {
     scene.add_shape(Box::new(sph));
 
     let mut sph2 = Sphere::new();
-    sph2.set_color(&Color::new(0.9, 0.9, 0.9));
+    sph2.set_color(&Color::blue());
     let transform = Matrix::translate(1., 0., 0.);
     sph2.set_transform(&transform);
     scene.add_shape(Box::new(sph2));
@@ -72,12 +72,13 @@ fn get_energy(scene: &Scene, ray: &Ray) -> Color {
                 None => Color::black(),
                 Some(ri) => {
                     let energy = scene.get_incoming_energy(&ri);
-                    energy
+                    println!("{:?}", energy);
+                    energy * ri.color
                 }
             }
         }
     };
-    0.4* diffuse + 0.4 * reflected
+    0.4* diffuse + 0.6 * reflected
 }
 
 struct Camera {
@@ -131,7 +132,7 @@ mod terminal {
         for v in 0..y_res {
             for u in 0..x_res {
                 match buffer[u][v] {
-                    Color{r: 0., g: 0., b: 0.} => print!("{}.", color::Fg(color::White)),
+                    c if c == Color::black() => print!("{}.", color::Fg(color::White)),
                     c => {
                         print!("{}x", color::Fg(to_rgb(&c)));
                     }
@@ -154,7 +155,7 @@ mod benchmarks {
         let x_res = 128;
         let y_res = 128;
         let camera = Camera::new(x_res, y_res);
-        let mut buffer = vec![vec![None; y_res]; x_res];
+        let mut buffer = vec![vec![Color::black(); y_res]; x_res];
 
         let mut scene = Scene::new();
         let mut sph = Sphere::new();
