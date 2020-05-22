@@ -5,7 +5,7 @@ mod scene;
 
 use math::{Matrix, Point3, Ray, Vector3};
 use scene::Sphere;
-use scene::{Color, Intersection, PointLight, Renderable, Scene};
+use scene::{Color, Intersection, AmbientLight, PointLight, Renderable, Scene};
 
 fn main() {
     let x_res = 50;
@@ -29,6 +29,9 @@ fn main() {
     let light = PointLight::new(Point3::new(1., 4.0, -2.), Color::new(1., 1., 1.));
     scene.add_light(Box::new(light));
 
+    let ambient = AmbientLight::new(&Color::new(0.1, 0.1, 0.1));
+    scene.add_light(Box::new(ambient));
+
     let start = std::time::Instant::now();
     render(&camera, &scene, &mut buffer);
     let duration = start.elapsed();
@@ -38,8 +41,6 @@ fn main() {
 }
 
 fn render(camera: &Camera, scene: &Scene, buffer: &mut Vec<Vec<Option<Intersection>>>) {
-    let ambient = Color::new(0.1, 0.1, 0.1);
-
     for v in 0..camera.y_res {
         for u in 0..camera.x_res {
             let ray = camera.get_ray(u, v);
@@ -48,7 +49,7 @@ fn render(camera: &Camera, scene: &Scene, buffer: &mut Vec<Vec<Option<Intersecti
                 None => None,
                 Some(mut i) => {
                     let energy = scene.get_incoming_energy(&i);
-                    i.color = energy * i.color + ambient * i.color;
+                    i.color = energy * i.color;
                     i.color.r += 0.1;
                     Some(i)
                 }

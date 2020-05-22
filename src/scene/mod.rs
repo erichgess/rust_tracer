@@ -137,3 +137,23 @@ impl LightSource for PointLight {
         total_energy
     }
 }
+
+/// Ambient light that radiates all points in a scene with a constant
+/// amount of energy.
+pub struct AmbientLight {
+    color: Color,
+}
+
+impl AmbientLight {
+    pub fn new(c: &Color) -> AmbientLight {
+        AmbientLight {
+            color: *c,
+        }
+    }
+}
+
+impl LightSource for AmbientLight {
+    fn get_energy(&self, _: &Scene, _: &Point3, _: &Vector3) -> Color {
+        self.color
+    }
+}
