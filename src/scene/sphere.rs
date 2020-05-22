@@ -1,8 +1,8 @@
 use crate::math::{Matrix, Point3, Ray, Vector3};
 
-use super::Renderable;
-use super::Intersection;
 use super::Color;
+use super::Intersection;
+use super::Renderable;
 
 pub struct Sphere {
     transform: Matrix,
@@ -11,8 +11,8 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    pub fn new() -> Sphere{
-        Sphere{
+    pub fn new() -> Sphere {
+        Sphere {
             transform: Matrix::identity(),
             inv_transform: Matrix::identity(),
             color: Color::new(1., 1., 1.),
@@ -32,7 +32,7 @@ impl Renderable for Sphere {
         let c = l.len2() - 1.;
         match solve_quadratic(a, b, c) {
             None => None,
-            Some((mut t0,mut t1)) => {
+            Some((mut t0, mut t1)) => {
                 if t0 > t1 {
                     let tmp = t1;
                     t1 = t0;
@@ -41,7 +41,7 @@ impl Renderable for Sphere {
                 if t0 < 0. {
                     t0 = t1;
                     if t0 < 0. {
-                        return None
+                        return None;
                     }
                 }
 
@@ -49,7 +49,7 @@ impl Renderable for Sphere {
                 let point = t * ray;
                 let normal = t * transformed_ray;
                 let normal = (self.inv_transform.transpose() * Vector3::from(normal)).norm();
-                Some(Intersection{
+                Some(Intersection {
                     t,
                     color: self.color,
                     point,
@@ -69,19 +69,23 @@ impl Renderable for Sphere {
     }
 }
 
-fn solve_quadratic(a: f32, b: f32, c: f32) -> Option<(f32,f32)> {
+fn solve_quadratic(a: f32, b: f32, c: f32) -> Option<(f32, f32)> {
     use std::f32::EPSILON;
 
-    let discr = b*b - 4.*a*c;
-    if discr < 0.  {
+    let discr = b * b - 4. * a * c;
+    if discr < 0. {
         None
-    } else if discr.abs() < EPSILON{
-        let x = -0.5 * b/a;
+    } else if discr.abs() < EPSILON {
+        let x = -0.5 * b / a;
         Some((x, x))
     } else {
-        let q = if b > 0. {-0.5 * (b + discr.sqrt())} else {-0.5 * (b-discr.sqrt())};
-        let x0 = q/a;
-        let x1 = c/q;
+        let q = if b > 0. {
+            -0.5 * (b + discr.sqrt())
+        } else {
+            -0.5 * (b - discr.sqrt())
+        };
+        let x0 = q / a;
+        let x1 = c / q;
         Some((x0, x1))
     }
 }
@@ -95,10 +99,18 @@ mod tests {
     fn basic() {
         let mut sph = Sphere::new();
 
-        assert_eq!(Matrix::identity(), sph.transform, "A new sphere should have the identity matrix for its transform");
+        assert_eq!(
+            Matrix::identity(),
+            sph.transform,
+            "A new sphere should have the identity matrix for its transform"
+        );
 
         sph.set_transform(&Matrix::scale(2., 2., 2.));
-        assert_eq!(Matrix::scale(2., 2., 2.), sph.transform, "Sphere did not scale as expected");
+        assert_eq!(
+            Matrix::scale(2., 2., 2.),
+            sph.transform,
+            "Sphere did not scale as expected"
+        );
     }
 
     #[test]
@@ -122,7 +134,7 @@ mod tests {
     #[test]
     fn intersection_transform() {
         let mut sph = Sphere::new();
-        let transform = Matrix::translate(0., 2., -2.)*Matrix::scale(2., 2., 2.);
+        let transform = Matrix::translate(0., 2., -2.) * Matrix::scale(2., 2., 2.);
         sph.set_transform(&transform);
 
         let ray = Ray::new(&Point3::new(0., 0., 2.), &Vector3::new(0., 0., -1.));
@@ -152,7 +164,7 @@ mod benchmarks {
         let sph = Sphere::new();
         let ray = Ray::new(&Point3::new(0., 0., 2.), &Vector3::new(0., 0., -1.));
 
-        b.iter( || sph.intersect(&ray));
+        b.iter(|| sph.intersect(&ray));
     }
 
     #[bench]
@@ -160,6 +172,6 @@ mod benchmarks {
         let a = 1.;
         let b = 4.;
         let c = 1.;
-        bch.iter(||super::solve_quadratic(a, b, c));
+        bch.iter(|| super::solve_quadratic(a, b, c));
     }
 }

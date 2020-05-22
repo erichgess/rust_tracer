@@ -118,9 +118,7 @@ impl LightSource for PointLight {
         let ray = Ray::new(&point, &dir_to_light);
         let total_energy = match scene.intersect(&ray) {
             Some(_) => Color::black(),
-            None => {
-                dir_to_light.dot(normal) * self.color
-            }
+            None => dir_to_light.dot(normal) * self.color,
         };
         total_energy
     }
@@ -134,9 +132,7 @@ pub struct AmbientLight {
 
 impl AmbientLight {
     pub fn new(c: &Color) -> AmbientLight {
-        AmbientLight {
-            color: *c,
-        }
+        AmbientLight { color: *c }
     }
 }
 

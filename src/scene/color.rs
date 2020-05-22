@@ -7,7 +7,7 @@ pub struct Color {
 
 impl Color {
     pub fn new(r: f32, g: f32, b: f32) -> Color {
-        Color {r, g, b}
+        Color { r, g, b }
     }
 
     pub fn red() -> Color {
@@ -100,31 +100,43 @@ mod tests {
         let c1 = Color::new(0.2, 0.2, 0.2);
         let c2 = Color::new(0.1, 0.2, 0.3);
 
-        assert_eq!(Color::new(0.02, 0.04, 0.06), c1 * c2, "Incorrect product for Color * Color");
-        assert_eq!(Color::new(0.01, 0.02, 0.03), 0.1 * c2, "Incorrect product for f32 * Color");
-        assert_eq!(Color::new(0.3, 0.4, 0.5), c1 + c2, "Incorrect sum for Color + Color");
+        assert_eq!(
+            Color::new(0.02, 0.04, 0.06),
+            c1 * c2,
+            "Incorrect product for Color * Color"
+        );
+        assert_eq!(
+            Color::new(0.01, 0.02, 0.03),
+            0.1 * c2,
+            "Incorrect product for f32 * Color"
+        );
+        assert_eq!(
+            Color::new(0.3, 0.4, 0.5),
+            c1 + c2,
+            "Incorrect sum for Color + Color"
+        );
     }
 }
 
 #[cfg(test)]
 mod bench {
     extern crate test;
-    use test::Bencher;
     use super::*;
+    use test::Bencher;
 
     #[bench]
     fn color_times_color(b: &mut Bencher) {
         let c1 = Color::new(0.2, 0.2, 0.2);
         let c2 = Color::new(0.1, 0.2, 0.3);
 
-        b.iter(||c1 * c2);
+        b.iter(|| c1 * c2);
     }
 
     #[bench]
     fn f32_times_color(b: &mut Bencher) {
         let c1 = Color::new(0.2, 0.2, 0.2);
 
-        b.iter(||0.2 * c1);
+        b.iter(|| 0.2 * c1);
     }
 
     #[bench]
@@ -132,6 +144,6 @@ mod bench {
         let c1 = Color::new(0.2, 0.2, 0.2);
         let c2 = Color::new(0.1, 0.2, 0.3);
 
-        b.iter(||c1 + c2);
+        b.iter(|| c1 + c2);
     }
 }

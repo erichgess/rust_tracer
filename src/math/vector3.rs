@@ -14,7 +14,7 @@ impl Vector3 {
     pub fn new(x: f32, y: f32, z: f32) -> Vector3 {
         Vector3 { x, y, z }
     }
-    
+
     pub fn x(&self) -> f32 {
         self.x
     }
@@ -117,7 +117,7 @@ impl Vector3 {
 
 impl From<Point3> for Vector3 {
     fn from(p: Point3) -> Vector3 {
-        Vector3{
+        Vector3 {
             x: p.x(),
             y: p.y(),
             z: p.z(),

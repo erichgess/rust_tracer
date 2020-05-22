@@ -252,10 +252,7 @@ impl Matrix {
     }
 
     pub fn ray_mul(&self, r: &Ray) -> Ray {
-        Ray::new(
-            &self.pt_mul(&(r.origin())),
-            &self.vec3_mul(&r.direction()),
-        )
+        Ray::new(&self.pt_mul(&(r.origin())), &self.vec3_mul(&r.direction()))
     }
 }
 
@@ -544,16 +541,14 @@ mod benchmarks {
     fn bench_invert(b: &mut test::Bencher) {
         let mut rotx = Matrix::rotate_x(82.);
 
-        b.iter(||rotx.invert());
-
+        b.iter(|| rotx.invert());
     }
 
     #[bench]
     fn bench_inverse(b: &mut test::Bencher) {
         let rotx = Matrix::rotate_x(82.);
 
-        b.iter(||rotx.inverse());
-
+        b.iter(|| rotx.inverse());
     }
 
     #[bench]
@@ -561,14 +556,13 @@ mod benchmarks {
         let rotx = Matrix::rotate_x(82.);
         let tr = Matrix::translate(2., 3., -2.);
 
-        b.iter(||rotx*tr);
+        b.iter(|| rotx * tr);
     }
 
     #[bench]
     fn bench_transpose(b: &mut test::Bencher) {
         let rotx = Matrix::rotate_x(82.);
 
-        b.iter(||rotx.transpose());
-
+        b.iter(|| rotx.transpose());
     }
 }

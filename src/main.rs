@@ -5,11 +5,11 @@ mod scene;
 
 use math::{Matrix, Point3, Ray};
 use scene::Sphere;
-use scene::{Color, Intersection, AmbientLight, PointLight, Renderable, Scene};
+use scene::{AmbientLight, Color, PointLight, Renderable, Scene};
 
 fn main() {
-    let x_res = 50;
-    let y_res = 25;
+    let x_res = 60;
+    let y_res = 30;
     let camera = Camera::new(x_res, y_res);
     let mut buffer = vec![vec![Color::black(); y_res]; x_res];
 
@@ -72,13 +72,12 @@ fn get_energy(scene: &Scene, ray: &Ray) -> Color {
                 None => Color::black(),
                 Some(ri) => {
                     let energy = scene.get_incoming_energy(&ri);
-                    println!("{:?}", energy);
                     energy * ri.color
                 }
             }
         }
     };
-    0.4* diffuse + 0.6 * reflected
+    0.4 * diffuse + 0.6 * reflected
 }
 
 struct Camera {
@@ -117,7 +116,7 @@ impl Camera {
 mod terminal {
     extern crate termion;
 
-    use super::scene::{Color, Intersection};
+    use super::scene::Color;
     use termion::{color, color::Rgb};
 
     fn to_rgb(c: &Color) -> Rgb {
