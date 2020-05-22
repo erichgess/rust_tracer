@@ -4,7 +4,7 @@ mod math;
 mod scene;
 
 use math::{Matrix, Point3, Ray, Vector3};
-use scene::{Color, Intersection, Renderable};
+use scene::{Color, Intersection, Renderable, Scene};
 use scene::Sphere;
 
 fn main() {
@@ -21,20 +21,23 @@ fn main() {
 }
 
 fn render(camera: &Camera, x_res: usize, y_res: usize, buffer: &mut Vec<Vec<Option<Intersection>>>) {
+    let mut scene = Scene::new();
     let mut sph = Sphere::new();
     sph.set_color(&Color::red());
     let transform = Matrix::scale(1.0, 2.25, 1.0);
     sph.set_transform(&transform);
+
+    scene.add_shape(Box::new(sph));
 
     let ambient = Color::new(0.1, 0.1, 0.1);
 
     for v in 0..y_res {
         for u in 0..x_res {
             let ray = camera.get_ray(u, v);
-            let hit = sph.intersect(&ray);
+            let hit = scene.shapes()[0].intersect(&ray);//sph.intersect(&ray);
             let hit = match hit {
                 None => None,
-                Some(mut i) => match light(&(i.point + i.normal*0.0002), &i.normal, &sph) {
+                Some(mut i) => match light(&(i.point + i.normal*0.0002), &i.normal, &scene) {
                     None => {
                         i.color = i.color * ambient;
                         Some(i)
@@ -51,11 +54,11 @@ fn render(camera: &Camera, x_res: usize, y_res: usize, buffer: &mut Vec<Vec<Opti
     }
 }
 
-fn light(p: &Point3, n: &Vector3, sph: &Sphere) -> Option<f32> {
+fn light(p: &Point3, n: &Vector3, scene: &Scene) -> Option<f32> {
     let light_pos = Point3::new(4., 4., -2.);
     let light_dir = (light_pos - p).norm();
     let ray = Ray::new(p, &light_dir);
-    if sph.intersect(&ray).is_none() {
+    if scene.shapes()[0].intersect(&ray).is_none() {
         Some(light_dir.dot(n))
     } else {
         None
