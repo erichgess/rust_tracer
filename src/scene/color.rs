@@ -10,6 +10,11 @@ impl Color {
         Color { r, g, b }
     }
 
+    pub fn as_u8(&self) -> (u8, u8, u8) {
+        let c8 = 255. * self;
+        (c8.r as u8, c8.g as u8, c8.b as u8)
+    }
+
     pub fn white() -> Color {
         Color {
             r: 1.,
@@ -79,6 +84,18 @@ impl std::ops::Mul<Color> for f32 {
     type Output = Color;
 
     fn mul(self, rhs: Color) -> Self::Output {
+        Color {
+            r: self * rhs.r,
+            g: self * rhs.g,
+            b: self * rhs.b,
+        }
+    }
+}
+
+impl std::ops::Mul<&Color> for f32 {
+    type Output = Color;
+
+    fn mul(self, rhs: &Color) -> Self::Output {
         Color {
             r: self * rhs.r,
             g: self * rhs.g,
