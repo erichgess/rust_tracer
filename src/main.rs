@@ -4,8 +4,8 @@ mod math;
 mod scene;
 
 use math::{Matrix, Point3, Ray, Vector3};
-use scene::{Color, Intersection, Light, Renderable, Scene};
 use scene::Sphere;
+use scene::{Color, Intersection, Light, Renderable, Scene};
 
 fn main() {
     let x_res = 128;
@@ -14,13 +14,6 @@ fn main() {
     let mut buffer = vec![vec![None; y_res]; x_res];
 
     let start = std::time::Instant::now();
-    render(&camera, x_res, y_res, &mut buffer);
-    let duration = start.elapsed();
-    terminal::draw(x_res, y_res, &buffer);
-    println!("Render and draw time: {}ms", duration.as_millis());
-}
-
-fn render(camera: &Camera, x_res: usize, y_res: usize, buffer: &mut Vec<Vec<Option<Intersection>>>) {
     let mut scene = Scene::new();
     let mut sph = Sphere::new();
     sph.set_color(&Color::red());
@@ -28,22 +21,28 @@ fn render(camera: &Camera, x_res: usize, y_res: usize, buffer: &mut Vec<Vec<Opti
     sph.set_transform(&transform);
 
     scene.add_shape(Box::new(sph));
+    render(&camera, &scene, &mut buffer);
+    let duration = start.elapsed();
+    terminal::draw(x_res, y_res, &buffer);
+    println!("Render and draw time: {}ms", duration.as_millis());
+}
 
+fn render(camera: &Camera, scene: &Scene, buffer: &mut Vec<Vec<Option<Intersection>>>) {
     let ambient = Color::new(0.1, 0.1, 0.1);
 
-    for v in 0..y_res {
-        for u in 0..x_res {
+    for v in 0..camera.y_res {
+        for u in 0..camera.x_res {
             let ray = camera.get_ray(u, v);
-            let hit = scene.shapes()[0].intersect(&ray);//sph.intersect(&ray);
+            let hit = scene.shapes()[0].intersect(&ray);
             let hit = match hit {
                 None => None,
-                Some(mut i) => match light(&(i.point + i.normal*0.0002), &i.normal, &scene) {
+                Some(mut i) => match light(&(i.point + i.normal * 0.0002), &i.normal, &scene) {
                     shade => {
                         i.color = shade * i.color + ambient * i.color;
                         i.color.r += 0.1;
                         Some(i)
-                    },
-                }
+                    }
+                },
             };
             buffer[u][v] = hit;
         }
@@ -97,8 +96,8 @@ impl Camera {
 mod terminal {
     extern crate termion;
 
-    use termion::{color, color::Rgb};
     use super::scene::{Color, Intersection};
+    use termion::{color, color::Rgb};
 
     fn to_rgb(c: &Color) -> Rgb {
         let r = 255. * c.r;
@@ -135,9 +134,16 @@ mod benchmarks {
         let x_res = 128;
         let y_res = 128;
         let camera = Camera::new(x_res, y_res);
-
         let mut buffer = vec![vec![None; y_res]; x_res];
 
-        b.iter(||super::render(&camera, x_res, y_res, &mut buffer));
+        let mut scene = Scene::new();
+        let mut sph = Sphere::new();
+        sph.set_color(&Color::red());
+        let transform = Matrix::scale(1.0, 2.25, 1.0);
+        sph.set_transform(&transform);
+
+        scene.add_shape(Box::new(sph));
+
+        b.iter(|| super::render(&camera, &scene, &mut buffer));
     }
 }
