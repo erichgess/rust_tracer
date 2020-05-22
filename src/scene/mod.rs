@@ -36,6 +36,10 @@ impl Scene {
     }
 
     pub fn get_incoming_energy(&self, intersection: &Intersection) -> Color {
+        // Move slightly away from the surface of intersection because rounding
+        // errors in floating point arithmetic can easily cause the ray to intersect
+        // with its surface.  This would cause random points to be colored as if
+        // they are in shadow even though they are visible to the light source.
         let p = intersection.point + 0.0002 * intersection.normal;
         let mut total_energy = Color::black();
         for light in self.lights.iter() {
@@ -131,7 +135,6 @@ impl LightSource for PointLight {
             Some(_) => Color::black(),
             None => {
                 dir_to_light.dot(normal) * self.color
-                //light.get_energy(&dir_to_light, &intersection.normal)
             }
         };
         total_energy
