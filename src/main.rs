@@ -4,7 +4,7 @@ mod math;
 mod scene;
 
 use math::{Matrix, Point3, Ray, Vector3};
-use scene::{Color, Intersection, Renderable, Scene};
+use scene::{Color, Intersection, Light, Renderable, Scene};
 use scene::Sphere;
 
 fn main() {
@@ -38,11 +38,7 @@ fn render(camera: &Camera, x_res: usize, y_res: usize, buffer: &mut Vec<Vec<Opti
             let hit = match hit {
                 None => None,
                 Some(mut i) => match light(&(i.point + i.normal*0.0002), &i.normal, &scene) {
-                    None => {
-                        i.color = i.color * ambient;
-                        Some(i)
-                    },
-                    Some(shade) => {
+                    shade => {
                         i.color = shade * i.color + ambient * i.color;
                         i.color.r += 0.1;
                         Some(i)
@@ -54,14 +50,14 @@ fn render(camera: &Camera, x_res: usize, y_res: usize, buffer: &mut Vec<Vec<Opti
     }
 }
 
-fn light(p: &Point3, n: &Vector3, scene: &Scene) -> Option<f32> {
-    let light_pos = Point3::new(4., 4., -2.);
-    let light_dir = (light_pos - p).norm();
+fn light(p: &Point3, n: &Vector3, scene: &Scene) -> Color {
+    let light = Light::new(Point3::new(4., 4.0, -2.), Color::new(1., 1., 1.));
+    let light_dir = (light.pos() - p).norm();
     let ray = Ray::new(p, &light_dir);
     if scene.shapes()[0].intersect(&ray).is_none() {
-        Some(light_dir.dot(n))
+        light_dir.dot(n) * light.color()
     } else {
-        None
+        Color::black()
     }
 }
 

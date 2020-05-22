@@ -17,6 +17,14 @@ impl Color {
             b: 0.,
         }
     }
+
+    pub fn black() -> Color {
+        Color {
+            r: 0.,
+            g: 0.,
+            b: 0.,
+        }
+    }
 }
 
 impl std::ops::Add for Color {
