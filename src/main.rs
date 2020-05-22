@@ -3,7 +3,7 @@
 mod math;
 mod scene;
 
-use math::{Matrix, Point3, Ray};
+use math::{Matrix, Point3, Ray, Vector3};
 use scene::{Color, Intersection, Renderable};
 use scene::Sphere;
 
@@ -21,18 +21,36 @@ fn main() {
 fn render(camera: &Camera, x_res: usize, y_res: usize, buffer: &mut Vec<Vec<Option<Intersection>>>) {
     let mut sph = Sphere::new();
     sph.set_color(&Color::red());
-    let transform = Matrix::scale(1.0, 2.25, 1.0);
-    sph.set_transform(&transform);
+    //let transform = Matrix::scale(1.0, 2.25, 1.0);
+    //sph.set_transform(&transform);
 
     for v in 0..y_res {
         for u in 0..x_res {
             let ray = camera.get_ray(u, v);
             let hit = sph.intersect(&ray);
-            if hit.is_some() {
-                println!("{:?}", hit);
-            }
+            let hit = match hit {
+                None => None,
+                Some(mut i) => match light(&(i.point + i.normal*0.0002), &i.normal, &sph) {
+                    None => None,
+                    Some(shade) => {
+                        i.color = Color::new(shade*i.color.r, shade*i.color.g, shade*i.color.b);
+                        Some(i)
+                    },
+                }
+            };
             buffer[u][v] = hit;
         }
+    }
+}
+
+fn light(p: &Point3, n: &Vector3, sph: &Sphere) -> Option<f32> {
+    let light_pos = Point3::new(4., 8., -8.);
+    let light_dir = (light_pos - p).norm();
+    let ray = Ray::new(p, &light_dir);
+    if sph.intersect(&ray).is_none() {
+        Some(light_dir.dot(n))
+    } else {
+        None
     }
 }
 

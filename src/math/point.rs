@@ -95,6 +95,15 @@ impl ops::Sub for Point3 {
     }
 }
 
+// Point3 - Point3
+impl ops::Sub<&Point3> for Point3 {
+    type Output = Vector3;
+
+    fn sub(self, _rhs: &Point3) -> Self::Output {
+        Point3::sub(&self, _rhs)
+    }
+}
+
 // Point3 + Vector3
 impl ops::Add<Vector3> for Point3 {
     type Output = Point3;
