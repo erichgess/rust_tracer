@@ -49,10 +49,12 @@ impl Renderable for Sphere {
                 let point = t * ray;
                 let normal = t * transformed_ray;
                 let normal = (self.inv_transform.transpose() * Vector3::from(normal)).norm();
+                let eye_dir = -ray.direction().norm();
                 Some(Intersection {
                     t,
                     color: self.color,
                     point,
+                    eye_dir,
                     normal,
                 })
             }

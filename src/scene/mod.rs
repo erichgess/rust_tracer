@@ -35,9 +35,20 @@ impl Scene {
         let p = intersection.point + 0.0002 * intersection.normal;
         let mut total_energy = Color::black();
         for light in self.lights.iter() {
-            total_energy += light.get_energy(&self, &p, &intersection.normal);
+            total_energy += light.get_energy(&self, &p, &intersection.eye_dir, &intersection.normal);
         }
         total_energy
+    }
+}
+
+fn phong(power: f32, eye_dir: &Vector3, light_dir: &Vector3, normal: &Vector3) -> f32 {
+    let h = (eye_dir.norm() + light_dir.norm()).norm();
+    let mDotH = normal.dot(&h);
+
+    if mDotH < 0. {
+        0.
+    } else {
+        mDotH.powf(power)
     }
 }
 
@@ -90,11 +101,12 @@ pub struct Intersection {
     pub t: f32,
     pub color: Color,
     pub point: Point3,
+    pub eye_dir: Vector3,
     pub normal: Vector3,
 }
 
 pub trait LightSource {
-    fn get_energy(&self, scene: &Scene, point: &Point3, normal: &Vector3) -> Color;
+    fn get_energy(&self, scene: &Scene, point: &Point3, eye_dir: &Vector3, normal: &Vector3) -> Color;
 }
 
 /**
@@ -113,14 +125,14 @@ impl PointLight {
 }
 
 impl LightSource for PointLight {
-    fn get_energy(&self, scene: &Scene, point: &Point3, normal: &Vector3) -> Color {
+    fn get_energy(&self, scene: &Scene, point: &Point3, eye_dir: &Vector3, normal: &Vector3) -> Color {
         let dir_to_light = (self.pos - point).norm();
         let ray = Ray::new(&point, &dir_to_light);
         let total_energy = match scene.intersect(&ray) {
             Some(_) => Color::black(),
             None => dir_to_light.dot(normal) * self.color,
         };
-        total_energy
+        total_energy + phong(60., eye_dir, &dir_to_light, normal) * self.color
     }
 }
 
@@ -137,7 +149,7 @@ impl AmbientLight {
 }
 
 impl LightSource for AmbientLight {
-    fn get_energy(&self, _: &Scene, _: &Point3, _: &Vector3) -> Color {
+    fn get_energy(&self, _: &Scene, _: &Point3, _: &Vector3, _: &Vector3) -> Color {
         self.color
     }
 }

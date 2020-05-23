@@ -33,8 +33,8 @@ fn main() {
     let mut scene = Scene::new();
     let mut sph = Sphere::new();
     sph.set_color(&Color::red());
-    let transform = Matrix::rotate_y(45.)
-        * Matrix::translate(-1.0, 0., 0.)
+    let transform = //Matrix::rotate_y(45.)
+        Matrix::translate(-1.0, 0., 0.)
         * Matrix::rotate_z(75.)
         * Matrix::scale(1.0, 0.25, 1.0);
     sph.set_transform(&transform);
@@ -45,6 +45,12 @@ fn main() {
     let transform = Matrix::translate(1., 0., 0.);
     sph2.set_transform(&transform);
     scene.add_shape(Box::new(sph2));
+
+    let mut sph3 = Sphere::new();
+    sph3.set_color(&(0.8 * Color::green()));
+    let transform = Matrix::translate(0., -2., 0.) * Matrix::scale(10., 1., 10.);
+    sph3.set_transform(&transform);
+    scene.add_shape(Box::new(sph3));
 
     let light = PointLight::new(Point3::new(1., 4.0, -2.), Color::new(1., 1., 1.));
     scene.add_light(Box::new(light));
