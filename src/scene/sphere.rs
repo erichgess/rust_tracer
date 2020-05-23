@@ -3,6 +3,7 @@ use crate::math::{Matrix, Point3, Ray, Vector3};
 use super::Color;
 use super::Intersection;
 use super::Renderable;
+use super::Material;
 
 pub struct Sphere {
     transform: Matrix,
@@ -52,7 +53,7 @@ impl Renderable for Sphere {
                 let eye_dir = -ray.direction().norm();
                 Some(Intersection {
                     t,
-                    color: self.color,
+                    material: Material::new(&self.color, 0.75, 0.),
                     point,
                     eye_dir,
                     normal,

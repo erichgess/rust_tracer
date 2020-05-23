@@ -33,13 +33,11 @@ impl Scene {
         // with its surface.  This would cause random points to be colored as if
         // they are in shadow even though they are visible to the light source.
         let p = intersection.point + 0.0002 * intersection.normal;
-        let mut total_energy = Color::black();
-        for light in self.lights.iter() {
-            let (light_dir, light_energy) = light.get_energy(&self, &p, &intersection.eye_dir, &intersection.normal);
-            total_energy += light_energy * lambert(&light_dir, &intersection.normal, &light_energy);
-            total_energy += phong(60., &intersection.eye_dir, &light_dir, &intersection.normal) * light_energy;
-        }
-        total_energy
+        self.lights
+            .iter()
+            .map(|l| l.get_energy(&self, &p, &intersection.eye_dir, &intersection.normal))
+            .map(|(ldir, lenergy)| intersection.material.get_reflected_energy(&intersection.eye_dir, &ldir, &intersection.normal, &lenergy))
+            .sum()
     }
 }
 
@@ -47,14 +45,20 @@ fn lambert(light_dir: &Vector3, normal: &Vector3, color: &Color) -> Color {
     light_dir.dot(normal) * color
 }
 
-fn phong(power: f32, eye_dir: &Vector3, light_dir: &Vector3, normal: &Vector3) -> f32 {
+fn phong(
+    power: f32,
+    eye_dir: &Vector3,
+    light_dir: &Vector3,
+    normal: &Vector3,
+    color: &Color,
+) -> Color {
     let h = (eye_dir.norm() + light_dir.norm()).norm();
     let m_dot_h = normal.dot(&h);
 
     if m_dot_h < 0. {
-        0.
+        0. * color
     } else {
-        m_dot_h.powf(power)
+        m_dot_h.powf(power) * color
     }
 }
 
@@ -105,14 +109,49 @@ pub trait Renderable {
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Intersection {
     pub t: f32,
-    pub color: Color,
+    pub material: Material,
     pub point: Point3,
     pub eye_dir: Vector3,
     pub normal: Vector3,
 }
 
+#[derive(Debug, PartialEq, Copy, Clone)]
+pub struct Material {
+    pub color: Color,
+    pub reflectivity: f32,
+    pub refraction_index: f32,
+}
+
+impl Material {
+    pub fn new(color: &Color, reflectivity: f32, refraction_index: f32) -> Material {
+        Material {
+            color: *color,
+            reflectivity,
+            refraction_index,
+        }
+    }
+
+    pub fn get_reflected_energy(
+        &self,
+        eye_dir: &Vector3,
+        light_dir: &Vector3,
+        normal: &Vector3,
+        incoming: &Color,
+    ) -> Color {
+        let mut total_energy = lambert(&light_dir, &normal, &incoming);
+        total_energy += phong(60., &eye_dir, &light_dir, &normal, &incoming);
+        total_energy
+    }
+}
+
 pub trait LightSource {
-    fn get_energy(&self, scene: &Scene, point: &Point3, eye_dir: &Vector3, normal: &Vector3) -> (Vector3, Color);
+    fn get_energy(
+        &self,
+        scene: &Scene,
+        point: &Point3,
+        eye_dir: &Vector3,
+        normal: &Vector3,
+    ) -> (Vector3, Color);
 }
 
 /**
@@ -131,7 +170,13 @@ impl PointLight {
 }
 
 impl LightSource for PointLight {
-    fn get_energy(&self, scene: &Scene, point: &Point3, eye_dir: &Vector3, normal: &Vector3) -> (Vector3, Color) {
+    fn get_energy(
+        &self,
+        scene: &Scene,
+        point: &Point3,
+        eye_dir: &Vector3,
+        normal: &Vector3,
+    ) -> (Vector3, Color) {
         let dir_to_light = (self.pos - point).norm();
         /*let ray = Ray::new(&point, &dir_to_light);
         let total_energy = match scene.intersect(&ray) {

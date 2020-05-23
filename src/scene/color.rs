@@ -76,6 +76,18 @@ impl std::ops::AddAssign for Color {
     }
 }
 
+impl std::iter::Sum for Color {
+    fn sum<I: Iterator<Item = Color>>(iter: I) -> Self {
+        let mut total = Color::black();
+
+        for c in iter {
+            total += c;
+        }
+
+        total
+    }
+}
+
 impl std::ops::Mul for Color {
     type Output = Color;
 

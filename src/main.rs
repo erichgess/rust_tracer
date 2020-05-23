@@ -80,10 +80,10 @@ fn get_energy(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
     let hit = scene.intersect(&ray);
     let diffuse = match hit {
         None => Color::black(),
-        Some(mut i) => {
+        Some(i) => {
             let energy = scene.get_incoming_energy(&i);
-            i.color = energy * i.color;
-            i.color
+            let color = energy * i.material.color;
+            color
         }
     };
 
@@ -96,7 +96,7 @@ fn get_energy(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
                 let p = i.point + 0.0002 * i.normal;
                 let reflect_ray = Ray::new(&p, &reflected_dir);
                 // compute incoming energy from the direction of the reflected ray
-                get_energy(scene, &reflect_ray, reflections - 1)
+                i.material.reflectivity * get_energy(scene, &reflect_ray, reflections - 1)
             }
         }
     } else {
