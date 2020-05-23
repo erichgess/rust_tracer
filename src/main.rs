@@ -52,11 +52,11 @@ fn main() {
     sph3.set_transform(&transform);
     scene.add_shape(Box::new(sph3));
 
-    let light = PointLight::new(Point3::new(1., 4.0, -2.), Color::new(1., 1., 1.));
+    let light = PointLight::new(Point3::new(1., 4.0, 0.), Color::new(1., 1., 1.));
     scene.add_light(Box::new(light));
 
-    let ambient = AmbientLight::new(&Color::new(0.4, 0.4, 0.4));
-    scene.add_light(Box::new(ambient));
+    let ambient = AmbientLight::new(&Color::new(0.2, 0.2, 0.2));
+    //scene.add_light(Box::new(ambient));
 
     let start = std::time::Instant::now();
     render(&camera, &scene, &mut buffer);
@@ -71,7 +71,7 @@ fn render(camera: &Camera, scene: &Scene, buffer: &mut RenderBuffer) {
     for v in 0..camera.y_res {
         for u in 0..camera.x_res {
             let ray = camera.get_ray(u, v);
-            buffer.buf[u][v] = get_energy(scene, &ray, 2);
+            buffer.buf[u][v] = get_energy(scene, &ray, 4);
         }
     }
 }
@@ -81,9 +81,8 @@ fn get_energy(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
     let diffuse = match hit {
         None => Color::black(),
         Some(i) => {
-            let energy = scene.get_incoming_energy(&i);
-            let color = energy * i.material.color;
-            color
+            scene.get_incoming_energy(&i)
+            //let color = energy * i.material.color;
         }
     };
 
@@ -96,14 +95,14 @@ fn get_energy(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
                 let p = i.point + 0.0002 * i.normal;
                 let reflect_ray = Ray::new(&p, &reflected_dir);
                 // compute incoming energy from the direction of the reflected ray
-                i.material.reflectivity * get_energy(scene, &reflect_ray, reflections - 1)
+                i.material.reflectivity * (Color::white() - i.material.color) * get_energy(scene, &reflect_ray, reflections - 1)
             }
         }
     } else {
         Color::black()
     };
 
-    0.4 * diffuse + 0.8 * reflected
+    0.4 * diffuse + reflected
 }
 
 struct Camera {

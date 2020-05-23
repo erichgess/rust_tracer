@@ -68,6 +68,22 @@ impl std::ops::Add for Color {
     }
 }
 
+impl std::ops::Sub for Color {
+    type Output = Color;
+
+    fn sub(self, rhs: Color) -> Self::Output {
+        let r = self.r - rhs.r;
+        let g = self.g - rhs.g;
+        let b = self.b - rhs.b;
+
+        Color { 
+            r: if r < 0. { 0.} else {r},
+            g: if g < 0. { 0.} else {g},
+            b: if b < 0. { 0.} else {b},
+        }
+    }
+}
+
 impl std::ops::AddAssign for Color {
     fn add_assign(&mut self, rhs: Color) {
         self.r += rhs.r;

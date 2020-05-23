@@ -125,6 +125,7 @@ pub struct Intersection {
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Material {
     pub color: Color,
+    pub specular_intensity: Color,
     pub reflectivity: f32,
     pub refraction_index: f32,
 }
@@ -133,6 +134,7 @@ impl Material {
     pub fn new(color: &Color, reflectivity: f32, refraction_index: f32) -> Material {
         Material {
             color: *color,
+            specular_intensity: Color::white(),
             reflectivity,
             refraction_index,
         }
@@ -145,8 +147,8 @@ impl Material {
         normal: &Vector3,
         incoming: &Color,
     ) -> Color {
-        let mut total_energy = lambert(&light_dir, &normal, &incoming);
-        total_energy += phong(60., &eye_dir, &light_dir, &normal, &incoming);
+        let mut total_energy = lambert(&light_dir, &normal, &incoming) * self.color;
+        total_energy += phong(60., &eye_dir, &light_dir, &normal, &incoming) * self.specular_intensity;
         total_energy
     }
 }
@@ -185,13 +187,13 @@ impl LightSource for PointLight {
         normal: &Vector3,
     ) -> (Vector3, Color) {
         let dir_to_light = (self.pos - point).norm();
-        /*let ray = Ray::new(&point, &dir_to_light);
+        let ray = Ray::new(&point, &dir_to_light);
         let total_energy = match scene.intersect(&ray) {
             Some(_) => Color::black(),
-            None => dir_to_light.dot(normal) * self.color,
+            None => self.color,
         };
-        total_energy + phong(60., eye_dir, &dir_to_light, normal) * self.color*/
-        (dir_to_light, self.color)
+        //total_energy + phong(60., eye_dir, &dir_to_light, normal) * self.color
+        (dir_to_light, total_energy)
     }
 }
 
