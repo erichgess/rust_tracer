@@ -36,7 +36,14 @@ impl Scene {
         self.lights
             .iter()
             .map(|l| l.get_energy(&self, &p, &intersection.eye_dir, &intersection.normal))
-            .map(|(ldir, lenergy)| intersection.material.get_reflected_energy(&intersection.eye_dir, &ldir, &intersection.normal, &lenergy))
+            .map(|(ldir, lenergy)| {
+                intersection.material.get_reflected_energy(
+                    &intersection.eye_dir,
+                    &ldir,
+                    &intersection.normal,
+                    &lenergy,
+                )
+            })
             .sum()
     }
 }
