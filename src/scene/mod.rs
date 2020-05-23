@@ -35,20 +35,26 @@ impl Scene {
         let p = intersection.point + 0.0002 * intersection.normal;
         let mut total_energy = Color::black();
         for light in self.lights.iter() {
-            total_energy += light.get_energy(&self, &p, &intersection.eye_dir, &intersection.normal);
+            let (light_dir, light_energy) = light.get_energy(&self, &p, &intersection.eye_dir, &intersection.normal);
+            total_energy += light_energy * lambert(&light_dir, &intersection.normal, &light_energy);
+            total_energy += phong(60., &intersection.eye_dir, &light_dir, &intersection.normal) * light_energy;
         }
         total_energy
     }
 }
 
+fn lambert(light_dir: &Vector3, normal: &Vector3, color: &Color) -> Color {
+    light_dir.dot(normal) * color
+}
+
 fn phong(power: f32, eye_dir: &Vector3, light_dir: &Vector3, normal: &Vector3) -> f32 {
     let h = (eye_dir.norm() + light_dir.norm()).norm();
-    let mDotH = normal.dot(&h);
+    let m_dot_h = normal.dot(&h);
 
-    if mDotH < 0. {
+    if m_dot_h < 0. {
         0.
     } else {
-        mDotH.powf(power)
+        m_dot_h.powf(power)
     }
 }
 
@@ -106,7 +112,7 @@ pub struct Intersection {
 }
 
 pub trait LightSource {
-    fn get_energy(&self, scene: &Scene, point: &Point3, eye_dir: &Vector3, normal: &Vector3) -> Color;
+    fn get_energy(&self, scene: &Scene, point: &Point3, eye_dir: &Vector3, normal: &Vector3) -> (Vector3, Color);
 }
 
 /**
@@ -125,14 +131,15 @@ impl PointLight {
 }
 
 impl LightSource for PointLight {
-    fn get_energy(&self, scene: &Scene, point: &Point3, eye_dir: &Vector3, normal: &Vector3) -> Color {
+    fn get_energy(&self, scene: &Scene, point: &Point3, eye_dir: &Vector3, normal: &Vector3) -> (Vector3, Color) {
         let dir_to_light = (self.pos - point).norm();
-        let ray = Ray::new(&point, &dir_to_light);
+        /*let ray = Ray::new(&point, &dir_to_light);
         let total_energy = match scene.intersect(&ray) {
             Some(_) => Color::black(),
             None => dir_to_light.dot(normal) * self.color,
         };
-        total_energy + phong(60., eye_dir, &dir_to_light, normal) * self.color
+        total_energy + phong(60., eye_dir, &dir_to_light, normal) * self.color*/
+        (dir_to_light, self.color)
     }
 }
 
@@ -149,7 +156,7 @@ impl AmbientLight {
 }
 
 impl LightSource for AmbientLight {
-    fn get_energy(&self, _: &Scene, _: &Point3, _: &Vector3, _: &Vector3) -> Color {
-        self.color
+    fn get_energy(&self, _: &Scene, _: &Point3, _: &Vector3, normal: &Vector3) -> (Vector3, Color) {
+        (*normal, self.color)
     }
 }
