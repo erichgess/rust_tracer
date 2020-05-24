@@ -86,7 +86,7 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
     match hit {
         None => Color::black(),
         Some(i) => {
-            let diffuse = calculate_light_illumination(scene, scene.lights(), &i);
+            let lights = calculate_light_illumination(scene, scene.lights(), &i);
 
             let reflected = if reflections > 0 {
                 // compute reflection vector
@@ -106,7 +106,7 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
 
             let ambient = i.material.color * scene.ambient();
 
-            diffuse + reflected + ambient
+            lights + reflected + ambient
         }
     }
 }
