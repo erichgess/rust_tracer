@@ -52,10 +52,19 @@ fn main() {
     sph3.set_transform(&transform);
     scene.add_shape(Box::new(sph3));
 
-    let light = PointLight::new(Point3::new(1., 4.0, 0.), Color::new(1., 1., 1.));
+    let mut sph4 = Sphere::new();
+    sph4.set_color(&(0.7 * Color::white()));
+    let transform = Matrix::translate(0., -0.5, -3.) * Matrix::scale(0.3, 0.3, 0.3);
+    sph4.set_transform(&transform);
+    scene.add_shape(Box::new(sph4));
+
+    let light = PointLight::new(Point3::new(4., 4.0, 0.), Color::new(1., 1., 1.));
     scene.add_light(Box::new(light));
 
-    let ambient = AmbientLight::new(&Color::new(0.2, 0.2, 0.2));
+    let light = PointLight::new(Point3::new(-1., 2.0, -4.), Color::new(0., 1., 1.));
+    scene.add_light(Box::new(light));
+
+    //let ambient = AmbientLight::new(&Color::new(0.2, 0.2, 0.2));
     //scene.add_light(Box::new(ambient));
 
     let start = std::time::Instant::now();

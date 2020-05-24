@@ -148,7 +148,7 @@ impl Material {
         incoming: &Color,
     ) -> Color {
         let mut total_energy = lambert(&light_dir, &normal, &incoming) * self.color;
-        total_energy += phong(60., &eye_dir, &light_dir, &normal, &incoming) * self.specular_intensity;
+        total_energy += phong(600., &eye_dir, &light_dir, &normal, &incoming) * self.specular_intensity;
         total_energy
     }
 }
