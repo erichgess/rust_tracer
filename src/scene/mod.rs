@@ -142,8 +142,6 @@ pub trait LightSource {
         &self,
         scene: &Scene,
         point: &Point3,
-        eye_dir: &Vector3,
-        normal: &Vector3,
     ) -> (Vector3, Color);
 }
 
@@ -167,8 +165,6 @@ impl LightSource for PointLight {
         &self,
         scene: &Scene,
         point: &Point3,
-        eye_dir: &Vector3,
-        normal: &Vector3,
     ) -> (Vector3, Color) {
         let dir_to_light = (self.pos - point).norm();
         let ray = Ray::new(&point, &dir_to_light);
@@ -176,7 +172,6 @@ impl LightSource for PointLight {
             Some(_) => Color::black(),
             None => self.color,
         };
-        //total_energy + phong(60., eye_dir, &dir_to_light, normal) * self.color
         (dir_to_light, total_energy)
     }
 }
@@ -188,13 +183,14 @@ pub struct AmbientLight {
 }
 
 impl AmbientLight {
+    #[allow(dead_code)]
     pub fn new(c: &Color) -> AmbientLight {
         AmbientLight { color: *c }
     }
 }
 
 impl LightSource for AmbientLight {
-    fn get_energy(&self, _: &Scene, _: &Point3, _: &Vector3, normal: &Vector3) -> (Vector3, Color) {
-        (*normal, self.color)
+    fn get_energy(&self, _: &Scene, _: &Point3) -> (Vector3, Color) {
+        (Vector3::new(0., 0., 0.), self.color)
     }
 }

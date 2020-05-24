@@ -90,8 +90,6 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
     let diffuse = match hit {
         None => Color::black(),
         Some(i) => {
-            //scene.get_incoming_energy(&i)
-            //let color = energy * i.material.color;
             calculate_light_illumination(scene, scene.lights(), &i)
         }
     };
@@ -128,7 +126,7 @@ fn calculate_light_illumination(
     let p = intersection.point + 0.0002 * intersection.normal;
     lights
         .iter()
-        .map(|l| l.get_energy(scene, &p, &intersection.eye_dir, &intersection.normal))
+        .map(|l| l.get_energy(scene, &p))
         .map(|(ldir, lenergy)| {
             intersection.material.get_reflected_energy(
                 &intersection.eye_dir,
@@ -180,6 +178,7 @@ mod terminal {
     use super::RenderBuffer;
     use termion::{color, color::Rgb};
 
+    #[allow(dead_code)]
     fn to_rgb(c: &Color) -> Rgb {
         let r = 255. * c.r;
         let g = 255. * c.g;
@@ -188,6 +187,7 @@ mod terminal {
         Rgb(r as u8, g as u8, b as u8)
     }
 
+    #[allow(dead_code)]
     pub fn draw(buffer: &RenderBuffer) {
         for v in 0..buffer.h {
             for u in 0..buffer.w {
