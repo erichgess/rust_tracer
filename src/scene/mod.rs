@@ -114,6 +114,7 @@ pub struct Intersection {
     pub point: Point3,
     pub eye_dir: Vector3,
     pub normal: Vector3,
+    pub entering: bool,
 }
 
 #[derive(Debug, PartialEq, Copy, Clone)]

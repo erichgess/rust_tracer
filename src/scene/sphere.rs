@@ -2,8 +2,8 @@ use crate::math::{Matrix, Point3, Ray, Vector3};
 
 use super::Color;
 use super::Intersection;
-use super::Renderable;
 use super::Material;
+use super::Renderable;
 
 pub struct Sphere {
     transform: Matrix,
@@ -41,24 +41,23 @@ impl Renderable for Sphere {
                     t1 = t0;
                     t0 = tmp;
                 }
-                if t0 < 0. {
-                    t0 = t1;
-                    if t0 < 0. {
-                        return None;
-                    }
+                if t0 < 0. && t1 < 0. {
+                    return None;
                 }
 
-                let t = t0;
+                let t = if t0 < 0. { t1 } else { t0 };
                 let point = t * ray;
                 let normal = t * transformed_ray;
                 let normal = (self.inv_transform.transpose() * Vector3::from(normal)).norm();
                 let eye_dir = -ray.direction().norm();
+                let entering = t0 > 0.;
                 Some(Intersection {
                     t,
                     material: self.material,
                     point,
                     eye_dir,
                     normal,
+                    entering,
                 })
             }
         }
