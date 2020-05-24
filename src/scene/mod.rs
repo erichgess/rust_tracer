@@ -131,9 +131,9 @@ impl Material {
         normal: &Vector3,
         incoming: &Color,
     ) -> Color {
-        let mut total_energy = (1. - self.reflectivity) * lambert(&light_dir, &normal, &incoming) * self.color;
-        total_energy += self.reflectivity * phong(600., &eye_dir, &light_dir, &normal, &incoming) * self.specular_intensity;
-        total_energy
+        let diffuse = lambert(&light_dir, &normal, &incoming) * self.color;
+        let specular = phong(600., &eye_dir, &light_dir, &normal, &incoming) * self.specular_intensity;
+        (1. - self.reflectivity) * diffuse + self.reflectivity * specular
     }
 }
 
