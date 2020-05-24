@@ -31,8 +31,7 @@ fn main() {
     let mut buffer = RenderBuffer::new(x_res, y_res);
 
     let mut scene = Scene::new();
-    let mut sph = Sphere::new();
-    sph.set_color(&Color::red());
+    let mut sph = Sphere::new(Color::red(), 0.5);
     let transform = //Matrix::rotate_y(45.)
         Matrix::translate(-1.0, 0., 0.)
         * Matrix::rotate_z(75.)
@@ -40,20 +39,17 @@ fn main() {
     sph.set_transform(&transform);
     scene.add_shape(Box::new(sph));
 
-    let mut sph2 = Sphere::new();
-    sph2.set_color(&Color::blue());
+    let mut sph2 = Sphere::new(Color::blue(), 0.8);
     let transform = Matrix::translate(1., 0., 0.);
     sph2.set_transform(&transform);
     scene.add_shape(Box::new(sph2));
 
-    let mut sph3 = Sphere::new();
-    sph3.set_color(&(0.8 * Color::green()));
+    let mut sph3 = Sphere::new(Color::green(), 0.2);
     let transform = Matrix::translate(0., -2., 0.) * Matrix::scale(10., 1., 10.);
     sph3.set_transform(&transform);
     scene.add_shape(Box::new(sph3));
 
-    let mut sph4 = Sphere::new();
-    sph4.set_color(&(0.7 * Color::white()));
+    let mut sph4 = Sphere::new(0.7 * Color::white(), 1.);
     let transform = Matrix::translate(0., -0.5, -3.) * Matrix::scale(0.3, 0.3, 0.3);
     sph4.set_transform(&transform);
     scene.add_shape(Box::new(sph4));
@@ -220,8 +216,7 @@ mod benchmarks {
         let mut buffer = RenderBuffer::new(x_res, y_res);
 
         let mut scene = Scene::new();
-        let mut sph = Sphere::new();
-        sph.set_color(&Color::red());
+        let mut sph = Sphere::new(Color::red(), 1.);
         let transform = Matrix::scale(1.0, 2.25, 1.0);
         sph.set_transform(&transform);
 
