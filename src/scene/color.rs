@@ -140,6 +140,18 @@ impl std::ops::Mul<&Color> for Color {
     }
 }
 
+impl std::ops::Mul<Color> for &Color {
+    type Output = Color;
+
+    fn mul(self, rhs: Color) -> Self::Output {
+        Color {
+            r: self.r * rhs.r,
+            g: self.g * rhs.g,
+            b: self.b * rhs.b,
+        }
+    }
+}
+
 impl std::ops::Mul<Color> for f32 {
     type Output = Color;
 

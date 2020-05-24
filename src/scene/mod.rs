@@ -33,7 +33,7 @@ impl Scene {
         self.ambient = *ambient;
     }
 
-    pub fn get_ambient(&self) -> &Color {
+    pub fn ambient(&self) -> &Color {
         &self.ambient
     }
 

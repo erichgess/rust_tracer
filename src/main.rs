@@ -32,9 +32,8 @@ fn main() {
 
     let mut scene = Scene::new();
     let mut sph = Sphere::new(Color::red(), 0.5);
-    let transform = Matrix::translate(-1.0, 0., 0.)
-        * Matrix::rotate_z(75.)
-        * Matrix::scale(1.0, 0.25, 1.0);
+    let transform =
+        Matrix::translate(-1.0, 0., 0.) * Matrix::rotate_z(75.) * Matrix::scale(1.0, 0.25, 1.0);
     sph.set_transform(&transform);
     scene.add_shape(Box::new(sph));
 
@@ -84,32 +83,39 @@ fn render(camera: &Camera, scene: &Scene, buffer: &mut RenderBuffer) {
 
 fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
     let hit = scene.intersect(&ray);
-    let diffuse = match hit {
+    match hit {
         None => Color::black(),
         Some(i) => {
-            calculate_light_illumination(scene, scene.lights(), &i) + i.material.color * scene.get_ambient()
-        }
-    };
+            let diffuse = calculate_light_illumination(scene, scene.lights(), &i);
 
-    let reflected = if reflections > 0 {
-        match hit {
-            None => Color::black(),
-            Some(i) => {
+            let reflected = if reflections > 0 {
                 // compute reflection vector
-                let reflected_dir = -ray.direction().reflect(&i.normal).norm();
-                let p = i.point + 0.0002 * i.normal;
-                let reflect_ray = Ray::new(&p, &reflected_dir);
+                let reflect_ray = reflect_ray(ray, &i);
                 // compute incoming energy from the direction of the reflected ray
                 let energy = trace_ray(scene, &reflect_ray, reflections - 1);
                 i.material.reflectivity
-                    * i.material.get_reflected_energy(&i.eye_dir, &reflected_dir, &i.normal, &energy)
-            }
-        }
-    } else {
-        Color::black()
-    };
+                    * i.material.get_reflected_energy(
+                        &i.eye_dir,
+                        &reflect_ray.direction(),
+                        &i.normal,
+                        &energy,
+                    )
+            } else {
+                Color::black()
+            };
 
-    diffuse + reflected
+            let ambient = i.material.color * scene.ambient();
+
+            diffuse + reflected + ambient
+        }
+    }
+}
+
+fn reflect_ray(ray: &Ray, i: &Intersection) -> Ray {
+    // compute reflection vector
+    let reflected_dir = -ray.direction().reflect(&i.normal).norm();
+    let p = i.point + 0.0002 * i.normal;
+    Ray::new(&p, &reflected_dir)
 }
 
 fn calculate_light_illumination(
