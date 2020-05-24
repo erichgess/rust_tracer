@@ -32,19 +32,18 @@ fn main() {
 
     let mut scene = Scene::new();
     let mut sph = Sphere::new(Color::red(), 0.5);
-    let transform = //Matrix::rotate_y(45.)
-        Matrix::translate(-1.0, 0., 0.)
+    let transform = Matrix::translate(-1.0, 0., 0.)
         * Matrix::rotate_z(75.)
         * Matrix::scale(1.0, 0.25, 1.0);
     sph.set_transform(&transform);
     scene.add_shape(Box::new(sph));
 
-    let mut sph2 = Sphere::new(Color::blue(), 0.8);
+    let mut sph2 = Sphere::new(Color::blue(), 0.4);
     let transform = Matrix::translate(1., 0., 0.);
     sph2.set_transform(&transform);
     scene.add_shape(Box::new(sph2));
 
-    let mut sph3 = Sphere::new(Color::green(), 0.2);
+    let mut sph3 = Sphere::new(Color::white(), 0.2);
     let transform = Matrix::translate(0., -2., 0.) * Matrix::scale(10., 1., 10.);
     sph3.set_transform(&transform);
     scene.add_shape(Box::new(sph3));
@@ -54,20 +53,22 @@ fn main() {
     sph4.set_transform(&transform);
     scene.add_shape(Box::new(sph4));
 
-    let light = PointLight::new(Point3::new(4., 4.0, 0.), Color::new(1., 1., 1.));
+    let light = PointLight::new(Point3::new(4., 4.0, 0.), Color::new(1., 0., 0.));
     scene.add_light(Box::new(light));
 
-    let light = PointLight::new(Point3::new(-1., 2.0, -4.), Color::new(0., 1., 1.));
+    let light = PointLight::new(Point3::new(-1., 2.0, -4.), Color::new(0., 1., 0.));
     scene.add_light(Box::new(light));
 
-    //let ambient = AmbientLight::new(&Color::new(0.2, 0.2, 0.2));
-    //scene.add_light(Box::new(ambient));
+    let light = PointLight::new(Point3::new(0., 8.0, -4.), Color::new(0., 0., 1.));
+    scene.add_light(Box::new(light));
+
+    let ambient = Color::new(0.1, 0.1, 0.1);
+    scene.set_ambient(&ambient);
 
     let start = std::time::Instant::now();
     render(&camera, &scene, &mut buffer);
     let duration = start.elapsed();
 
-    //terminal::draw(&buffer);
     bmp::save_to_bmp("test.png", &buffer);
     println!("Render and draw time: {}ms", duration.as_millis());
 }
@@ -99,7 +100,6 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
                 let p = i.point + 0.0002 * i.normal;
                 let reflect_ray = Ray::new(&p, &reflected_dir);
                 // compute incoming energy from the direction of the reflected ray
-                //i.material.reflectivity
                 let energy = trace_ray(scene, &reflect_ray, reflections - 1);
                 i.material.reflectivity
                     * i.material.get_reflected_energy(&i.eye_dir, &reflected_dir, &i.normal, &energy)
@@ -109,7 +109,7 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
         Color::black()
     };
 
-    0.4 * diffuse + reflected
+    0.4 * diffuse + reflected + scene.get_ambient()
 }
 
 fn calculate_light_illumination(

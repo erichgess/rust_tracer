@@ -7,6 +7,7 @@ pub use color::Color;
 pub use sphere::Sphere;
 
 pub struct Scene {
+    ambient: Color,
     lights: Vec<Box<dyn LightSource>>,
     shapes: Vec<Box<dyn Renderable>>,
 }
@@ -14,6 +15,7 @@ pub struct Scene {
 impl Scene {
     pub fn new() -> Scene {
         Scene {
+            ambient: Color::black(),
             lights: vec![],
             shapes: vec![],
         }
@@ -25,6 +27,14 @@ impl Scene {
 
     pub fn add_light(&mut self, light: Box<dyn LightSource>) {
         self.lights.push(light);
+    }
+
+    pub fn set_ambient(&mut self, ambient: &Color) {
+        self.ambient = *ambient;
+    }
+
+    pub fn get_ambient(&self) -> &Color {
+        &self.ambient
     }
 
     pub fn lights(&self) -> &Vec<Box<dyn LightSource>> {
@@ -178,6 +188,7 @@ impl LightSource for PointLight {
 
 /// Ambient light that radiates all points in a scene with a constant
 /// amount of energy.
+#[derive(Copy, Clone)]
 pub struct AmbientLight {
     color: Color,
 }
