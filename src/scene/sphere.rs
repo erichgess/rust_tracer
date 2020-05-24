@@ -13,12 +13,12 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    pub fn new(color: Color, reflectivity: f32) -> Sphere {
+    pub fn new(color: Color, reflectivity: f32, refraction_idx: f32) -> Sphere {
         Sphere {
             transform: Matrix::identity(),
             inv_transform: Matrix::identity(),
             color: color,
-            material: Material::new(&color, reflectivity, 0.),
+            material: Material::new(&color, reflectivity, refraction_idx),
         }
     }
 }
@@ -46,11 +46,12 @@ impl Renderable for Sphere {
                 }
 
                 let t = if t0 < 0. { t1 } else { t0 };
+                let entering = t0 > 0.;
                 let point = t * ray;
                 let normal = t * transformed_ray;
-                let normal = (self.inv_transform.transpose() * Vector3::from(normal)).norm();
+                let mut normal = (self.inv_transform.transpose() * Vector3::from(normal)).norm();
+                if !entering {normal = -normal;}
                 let eye_dir = -ray.direction().norm();
-                let entering = t0 > 0.;
                 Some(Intersection {
                     t,
                     material: self.material,
@@ -101,7 +102,7 @@ mod tests {
 
     #[test]
     fn basic() {
-        let mut sph = Sphere::new(Color::red(), 1.);
+        let mut sph = Sphere::new(Color::red(), 1., 0.);
 
         assert_eq!(
             Matrix::identity(),
@@ -119,7 +120,7 @@ mod tests {
 
     #[test]
     fn intersection_no_transform() {
-        let sph = Sphere::new(Color::white(), 1.);
+        let sph = Sphere::new(Color::white(), 1., 0.);
         let ray = Ray::new(&Point3::new(0., 0., 2.), &Vector3::new(0., 0., -1.));
         let intersect = sph.intersect(&ray);
         assert_ne!(None, intersect);
@@ -137,7 +138,7 @@ mod tests {
 
     #[test]
     fn intersection_transform() {
-        let mut sph = Sphere::new(Color::white(), 1.);
+        let mut sph = Sphere::new(Color::white(), 1., 0.);
         let transform = Matrix::translate(0., 2., -2.) * Matrix::scale(2., 2., 2.);
         sph.set_transform(&transform);
 
@@ -165,7 +166,7 @@ mod benchmarks {
 
     #[bench]
     fn intersection(b: &mut test::Bencher) {
-        let sph = Sphere::new(Color::white(), 1.);
+        let sph = Sphere::new(Color::white(), 1., 0.);
         let ray = Ray::new(&Point3::new(0., 0., 2.), &Vector3::new(0., 0., -1.));
 
         b.iter(|| sph.intersect(&ray));

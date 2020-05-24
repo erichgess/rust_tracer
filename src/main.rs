@@ -31,23 +31,23 @@ fn main() {
     let mut buffer = RenderBuffer::new(x_res, y_res);
 
     let mut scene = Scene::new();
-    let mut sph = Sphere::new(Color::red(), 0.5);
+    let mut sph = Sphere::new(Color::red(), 0.5, 0.);
     let transform =
         Matrix::translate(-1.0, 0., 0.) * Matrix::rotate_z(75.) * Matrix::scale(1.0, 0.25, 1.0);
     sph.set_transform(&transform);
     scene.add_shape(Box::new(sph));
 
-    let mut sph2 = Sphere::new(Color::blue(), 0.4);
+    let mut sph2 = Sphere::new(Color::blue(), 0.4, 0.);
     let transform = Matrix::translate(1., 0., 0.);
     sph2.set_transform(&transform);
     scene.add_shape(Box::new(sph2));
 
-    let mut sph3 = Sphere::new(Color::white(), 0.2);
+    let mut sph3 = Sphere::new(Color::white(), 0.2, 0.);
     let transform = Matrix::translate(0., -2., 0.) * Matrix::scale(10., 1., 10.);
     sph3.set_transform(&transform);
     scene.add_shape(Box::new(sph3));
 
-    let mut sph4 = Sphere::new(0.7 * Color::white(), 1.);
+    let mut sph4 = Sphere::new(0.7 * Color::white(), 0.02, 1.333);
     let transform = Matrix::translate(0., -0.5, -3.) * Matrix::scale(0.3, 0.3, 0.3);
     sph4.set_transform(&transform);
     scene.add_shape(Box::new(sph4));
@@ -106,8 +106,23 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
                 Color::black()
             };
 
+            let refracted = if i.material.refraction_index > EPSILON && reflections > 0 {
+                let (idx0, idx1) = if i.entering {
+                    (1., i.material.refraction_index)
+                } else {
+                    (i.material.refraction_index, 1.)
+                };
+                let refract_ray = refract_ray(ray, &i, idx0, idx1);
+                (1.-i.material.reflectivity)
+                    * i.material.color
+                    * refract_ray
+                        .map(|r| trace_ray(scene, &r, reflections - 1))
+                        .unwrap_or(Color::black())
+            } else {
+                Color::black()
+            };
 
-            lights + reflected + ambient
+            ambient + lights + reflected + refracted
         }
     }
 }
@@ -117,6 +132,21 @@ fn reflect_ray(ray: &Ray, i: &Intersection) -> Ray {
     let reflected_dir = -ray.direction().reflect(&i.normal).norm();
     let p = i.point + 0.0002 * reflected_dir;
     Ray::new(&p, &reflected_dir)
+}
+
+fn refract_ray(ray: &Ray, i: &Intersection, idx0: f32, idx1: f32) -> Option<Ray> {
+    let ratio = idx0 / idx1;
+    let m_dot_r = -ray.direction().dot(&i.normal);
+    let cos_theta_sqrd = 1. - ratio * ratio * (1. - m_dot_r * m_dot_r);
+
+    if cos_theta_sqrd > 0. {
+        let cos_theta = cos_theta_sqrd.sqrt();
+        let refract_dir = ray.direction() * ratio + i.normal * (ratio * m_dot_r - cos_theta);
+        let p = i.point + 0.0002 * refract_dir;
+        Some(Ray::new(&p, &refract_dir))
+    } else {
+        None
+    }
 }
 
 fn calculate_light_illumination(
@@ -223,7 +253,7 @@ mod benchmarks {
         let mut buffer = RenderBuffer::new(x_res, y_res);
 
         let mut scene = Scene::new();
-        let mut sph = Sphere::new(Color::red(), 1.);
+        let mut sph = Sphere::new(Color::red(), 1., 0.);
         let transform = Matrix::scale(1.0, 2.25, 1.0);
         sph.set_transform(&transform);
 
