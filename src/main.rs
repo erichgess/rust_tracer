@@ -82,13 +82,15 @@ fn render(camera: &Camera, scene: &Scene, buffer: &mut RenderBuffer) {
 }
 
 fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
+    use std::f32::EPSILON;
+
     let hit = scene.intersect(&ray);
     match hit {
         None => Color::black(),
         Some(i) => {
+            let ambient = i.material.color * scene.ambient();
             let lights = calculate_light_illumination(scene, scene.lights(), &i);
-
-            let reflected = if reflections > 0 {
+            let reflected = if i.material.reflectivity > EPSILON && reflections > 0 {
                 // compute reflection vector
                 let reflect_ray = reflect_ray(ray, &i);
                 // compute incoming energy from the direction of the reflected ray
@@ -104,7 +106,6 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
                 Color::black()
             };
 
-            let ambient = i.material.color * scene.ambient();
 
             lights + reflected + ambient
         }
@@ -114,7 +115,7 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
 fn reflect_ray(ray: &Ray, i: &Intersection) -> Ray {
     // compute reflection vector
     let reflected_dir = -ray.direction().reflect(&i.normal).norm();
-    let p = i.point + 0.0002 * i.normal;
+    let p = i.point + 0.0002 * reflected_dir;
     Ray::new(&p, &reflected_dir)
 }
 
