@@ -27,24 +27,8 @@ impl Scene {
         self.lights.push(light);
     }
 
-    pub fn get_incoming_energy(&self, intersection: &Intersection) -> Color {
-        // Move slightly away from the surface of intersection because rounding
-        // errors in floating point arithmetic can easily cause the ray to intersect
-        // with its surface.  This would cause random points to be colored as if
-        // they are in shadow even though they are visible to the light source.
-        let p = intersection.point + 0.0002 * intersection.normal;
-        self.lights
-            .iter()
-            .map(|l| l.get_energy(&self, &p, &intersection.eye_dir, &intersection.normal))
-            .map(|(ldir, lenergy)| {
-                intersection.material.get_reflected_energy(
-                    &intersection.eye_dir,
-                    &ldir,
-                    &intersection.normal,
-                    &lenergy,
-                )
-            })
-            .sum()
+    pub fn lights(&self) -> &Vec<Box<dyn LightSource>> {
+        &self.lights
     }
 }
 

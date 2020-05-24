@@ -6,7 +6,7 @@ mod scene;
 
 use math::{Matrix, Point3, Ray};
 use scene::Sphere;
-use scene::{AmbientLight, Color, PointLight, Renderable, Scene};
+use scene::{Color, Intersection, LightSource, PointLight, Renderable, Scene};
 
 pub struct RenderBuffer {
     pub w: usize,
@@ -80,18 +80,19 @@ fn render(camera: &Camera, scene: &Scene, buffer: &mut RenderBuffer) {
     for v in 0..camera.y_res {
         for u in 0..camera.x_res {
             let ray = camera.get_ray(u, v);
-            buffer.buf[u][v] = get_energy(scene, &ray, 4);
+            buffer.buf[u][v] = trace_ray(scene, &ray, 4);
         }
     }
 }
 
-fn get_energy(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
+fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
     let hit = scene.intersect(&ray);
     let diffuse = match hit {
         None => Color::black(),
         Some(i) => {
-            scene.get_incoming_energy(&i)
+            //scene.get_incoming_energy(&i)
             //let color = energy * i.material.color;
+            calculate_light_illumination(scene, scene.lights(), &i)
         }
     };
 
@@ -104,7 +105,8 @@ fn get_energy(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
                 let p = i.point + 0.0002 * i.normal;
                 let reflect_ray = Ray::new(&p, &reflected_dir);
                 // compute incoming energy from the direction of the reflected ray
-                i.material.reflectivity * (Color::white() - i.material.color) * get_energy(scene, &reflect_ray, reflections - 1)
+                i.material.reflectivity
+                    * trace_ray(scene, &reflect_ray, reflections - 1)
             }
         }
     } else {
@@ -112,6 +114,30 @@ fn get_energy(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
     };
 
     0.4 * diffuse + reflected
+}
+
+fn calculate_light_illumination(
+    scene: &Scene,
+    lights: &Vec<Box<dyn LightSource>>,
+    intersection: &Intersection,
+) -> Color {
+    // Move slightly away from the surface of intersection because rounding
+    // errors in floating point arithmetic can easily cause the ray to intersect
+    // with its surface.  This would cause random points to be colored as if
+    // they are in shadow even though they are visible to the light source.
+    let p = intersection.point + 0.0002 * intersection.normal;
+    lights
+        .iter()
+        .map(|l| l.get_energy(scene, &p, &intersection.eye_dir, &intersection.normal))
+        .map(|(ldir, lenergy)| {
+            intersection.material.get_reflected_energy(
+                &intersection.eye_dir,
+                &ldir,
+                &intersection.normal,
+                &lenergy,
+            )
+        })
+        .sum()
 }
 
 struct Camera {
