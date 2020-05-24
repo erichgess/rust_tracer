@@ -99,12 +99,14 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
             None => Color::black(),
             Some(i) => {
                 // compute reflection vector
-                let reflected_dir = -ray.direction().reflect(&i.normal);
+                let reflected_dir = -ray.direction().reflect(&i.normal).norm();
                 let p = i.point + 0.0002 * i.normal;
                 let reflect_ray = Ray::new(&p, &reflected_dir);
                 // compute incoming energy from the direction of the reflected ray
+                //i.material.reflectivity
+                let energy = trace_ray(scene, &reflect_ray, reflections - 1);
                 i.material.reflectivity
-                    * trace_ray(scene, &reflect_ray, reflections - 1)
+                    * i.material.get_reflected_energy(&i.eye_dir, &reflected_dir, &i.normal, &energy)
             }
         }
     } else {
