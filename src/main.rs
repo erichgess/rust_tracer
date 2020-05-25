@@ -175,19 +175,12 @@ fn fresnel_refraction(light_dir: &Vector3, normal: &Vector3, n1: f32, n2: f32) -
 
 fn calculate_light_illumination(
     scene: &Scene,
-    lights: &Vec<Box<dyn LightSource>>,
+    _lights: &Vec<Box<dyn LightSource>>,
     i: &Intersection,
     n1: f32,
     n2: f32,
 ) -> Color {
-    // Move slightly away from the surface of intersection because rounding
-    // errors in floating point arithmetic can easily cause the ray to intersect
-    // with its surface.  This would cause random points to be colored as if
-    // they are in shadow even though they are visible to the light source.
-    let p = i.point + 0.0002 * i.normal;
-    lights
-        .iter()
-        .map(|l| l.get_energy(scene, &p))
+    get_light_energy(scene, i).iter()
         .map(|(ldir, lenergy)| {
             let fresnel = fresnel_reflection(&ldir, &i.normal, n1, n2);
             fresnel *
@@ -195,6 +188,18 @@ fn calculate_light_illumination(
                 .get_reflected_energy(&i.eye_dir, &ldir, &i.normal, &lenergy)
         })
         .sum()
+}
+
+fn get_light_energy(scene: &Scene, i: &Intersection) -> Vec<(Vector3, Color)> {
+    // Move slightly away from the surface of intersection because rounding
+    // errors in floating point arithmetic can easily cause the ray to intersect
+    // with its surface.  This would cause random points to be colored as if
+    // they are in shadow even though they are visible to the light source.
+    let p = i.point + 0.0002 * i.normal;
+    scene.lights()
+        .iter()
+        .map(|l| l.get_energy(scene, &p))
+        .collect()
 }
 
 struct Camera {
