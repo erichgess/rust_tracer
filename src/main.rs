@@ -4,7 +4,7 @@ mod bmp;
 mod math;
 mod scene;
 
-use math::{Matrix, Point3, Ray};
+use math::{Matrix, Point3, Ray, Vector3};
 use scene::Sphere;
 use scene::{Color, Intersection, LightSource, PointLight, Renderable, Scene};
 
@@ -134,8 +134,8 @@ fn reflect_ray(ray: &Ray, i: &Intersection) -> Ray {
     Ray::new(&p, &reflected_dir)
 }
 
-fn refract_ray(ray: &Ray, i: &Intersection, idx0: f32, idx1: f32) -> Option<Ray> {
-    let ratio = idx0 / idx1;
+fn refract_ray(ray: &Ray, i: &Intersection, n1: f32, n2: f32) -> Option<Ray> {
+    let ratio = n1 / n2;
     let m_dot_r = -ray.direction().dot(&i.normal);
     let cos_theta_sqrd = 1. - ratio * ratio * (1. - m_dot_r * m_dot_r);
 
@@ -149,24 +149,31 @@ fn refract_ray(ray: &Ray, i: &Intersection, idx0: f32, idx1: f32) -> Option<Ray>
     }
 }
 
+fn fresnel(light_dir: &Vector3, normal: &Vector3, n1: f32, n2: f32) -> f32 {
+    let m_dot_r = light_dir.dot(&normal);
+    let r0 = ((n1 - n2)/(n1+n2)) * ((n1 - n2)/(n1+n2));
+
+    r0 + (1. - r0)*(1. - m_dot_r).powi(5)
+}
+
 fn calculate_light_illumination(
     scene: &Scene,
     lights: &Vec<Box<dyn LightSource>>,
-    intersection: &Intersection,
+    i: &Intersection,
 ) -> Color {
     // Move slightly away from the surface of intersection because rounding
     // errors in floating point arithmetic can easily cause the ray to intersect
     // with its surface.  This would cause random points to be colored as if
     // they are in shadow even though they are visible to the light source.
-    let p = intersection.point + 0.0002 * intersection.normal;
+    let p = i.point + 0.0002 * i.normal;
     lights
         .iter()
         .map(|l| l.get_energy(scene, &p))
         .map(|(ldir, lenergy)| {
-            intersection.material.get_reflected_energy(
-                &intersection.eye_dir,
+            i.material.get_reflected_energy(
+                &i.eye_dir,
                 &ldir,
-                &intersection.normal,
+                &i.normal,
                 &lenergy,
             )
         })
