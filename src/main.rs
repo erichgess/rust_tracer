@@ -131,7 +131,7 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
                     * refract_ray
                         .map(|r| {
                             let fresnel =
-                                fresnel_refraction(&r.direction().neg(), &i.normal, n1, n2);
+                                fresnel_refraction(&r.direction(), &i.normal.neg(), n1, n2);
                             fresnel * trace_ray(scene, &r, reflections - 1)
                         })
                         .unwrap_or(Color::black())
