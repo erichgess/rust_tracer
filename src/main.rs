@@ -124,7 +124,7 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
                     let fresnel = fresnel_reflection(&ldir, &i.normal, n1, n2);
                     fresnel *
                     i.material
-                        .get_reflected_energy(&i.eye_dir, &ldir, &i.normal, &lenergy, &i)
+                        .get_reflected_energy(&lenergy, &ldir, &i)
                 })
                 .sum();
 
@@ -138,10 +138,8 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
                     //* i.material.reflectivity
                     //  TODO: the above live, when removed, the reflections are too bright I think
                     * i.material.get_reflected_energy(
-                        &i.eye_dir,
-                        &reflect_ray.direction(),
-                        &i.normal,
                         &energy,
+                        &reflect_ray.direction(),
                         &i,
                     )
             } else {

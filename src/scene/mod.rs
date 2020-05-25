@@ -135,20 +135,14 @@ impl Material {
         }
     }
 
-    pub fn texture(&self, (u,v): (f32,f32)) -> Color {
-        (self.color)((u,v))
-    }
-
     pub fn get_reflected_energy(
         &self,
-        eye_dir: &Vector3,
-        light_dir: &Vector3,
-        normal: &Vector3,
         incoming: &Color,
+        light_dir: &Vector3,
         i: &Intersection,
     ) -> Color {
-        let diffuse = lambert(&light_dir, &normal, &incoming) * (self.color)(i.tex_coord);
-        let specular = phong(600., &eye_dir, &light_dir, &normal, &incoming) * self.specular_intensity;
+        let diffuse = lambert(&light_dir, &i.normal, &incoming) * (self.color)(i.tex_coord);
+        let specular = phong(600., &i.eye_dir, &light_dir, &i.normal, &incoming) * self.specular_intensity;
         (1. - self.reflectivity) * diffuse + self.reflectivity * specular
     }
 }
