@@ -92,6 +92,17 @@ fn main() {
 
     bmp::save_to_bmp("test.png", &buffer);
     println!("Render and draw time: {}ms", duration.as_millis());
+
+    draw_to_terminal(&scene);
+}
+
+fn draw_to_terminal(scene: &Scene) {
+    let x_res = 160;
+    let y_res = 80;
+    let camera = Camera::new(x_res, y_res);
+    let mut buffer = RenderBuffer::new(x_res, y_res);
+    render(&camera, scene, &mut buffer);
+    terminal::draw(&buffer);
 }
 
 fn render(camera: &Camera, scene: &Scene, buffer: &mut RenderBuffer) {

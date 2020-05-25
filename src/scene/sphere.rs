@@ -22,7 +22,7 @@ impl Sphere {
         }
     }
 
-    fn get_texture_coord(&self, n: &Vector3) -> TextureCoords {
+    fn get_texture_coord(n: &Vector3) -> TextureCoords {
         use std::f32::consts::PI;
         let u = (1. + n.z().atan2(n.x())/PI) * 0.5;
         let v = n.y().acos() / PI;
@@ -66,7 +66,7 @@ impl Renderable for Sphere {
                     eye_dir,
                     normal,
                     entering,
-                    tex_coord: self.get_texture_coord(&normal),
+                    tex_coord: Sphere::get_texture_coord(&normal),
                 })
             }
         }
@@ -182,6 +182,13 @@ mod benchmarks {
         let ray = Ray::new(&Point3::new(0., 0., 2.), &Vector3::new(0., 0., -1.));
 
         b.iter(|| sph.intersect(&ray));
+    }
+
+    #[bench]
+    fn get_texture_coord(b: &mut test::Bencher) {
+        let n = Vector3::new(1., 1., 1.).norm();
+
+        b.iter(|| Sphere::get_texture_coord(&n));
     }
 
     #[bench]
