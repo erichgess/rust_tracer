@@ -47,7 +47,7 @@ fn main() {
     sph3.set_transform(&transform);
     scene.add_shape(Box::new(sph3));
 
-    let mut sph4 = Sphere::new(0.7 * Color::white(), 0.02, 1.333);
+    let mut sph4 = Sphere::new(0.8 * Color::white(), 0.7, 1.333);
     let transform = Matrix::translate(0., -0.5, -3.) * Matrix::scale(0.3, 0.3, 0.3);
     sph4.set_transform(&transform);
     scene.add_shape(Box::new(sph4));
@@ -88,6 +88,12 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
     match hit {
         None => Color::black(),
         Some(i) => {
+            let (n1, n2) = if i.entering {
+                (1., i.material.refraction_index)
+            } else {
+                (i.material.refraction_index, 1.)
+            };
+
             let ambient = i.material.color * scene.ambient();
 
             let lights = calculate_light_illumination(scene, scene.lights(), &i);
@@ -97,7 +103,10 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
                 let reflect_ray = reflect_ray(ray, &i);
                 // compute incoming energy from the direction of the reflected ray
                 let energy = trace_ray(scene, &reflect_ray, reflections - 1);
-                i.material.reflectivity
+                let fresnel = fresnel_reflection(&reflect_ray.direction(), &i.normal, n1, n2);
+                fresnel
+                    //* i.material.reflectivity
+                    //  TODO: the above live, when removed, the reflections are too bright I think
                     * i.material.get_reflected_energy(
                         &i.eye_dir,
                         &reflect_ray.direction(),
@@ -109,16 +118,14 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
             };
 
             let refracted = if i.material.refraction_index > EPSILON && reflections > 0 {
-                let (n1, n2) = if i.entering {
-                    (1., i.material.refraction_index)
-                } else {
-                    (i.material.refraction_index, 1.)
-                };
                 let refract_ray = refract_ray(ray, &i, n1, n2);
-                (1.-i.material.reflectivity)
-                    * i.material.color
+                i.material.color
                     * refract_ray
-                        .map(|r| trace_ray(scene, &r, reflections - 1))
+                        .map(|r| {
+                            let fresnel =
+                                fresnel_refraction(&r.direction().neg(), &i.normal, n1, n2);
+                            fresnel * trace_ray(scene, &r, reflections - 1)
+                        })
                         .unwrap_or(Color::black())
             } else {
                 Color::black()
@@ -155,14 +162,14 @@ fn refract_ray(ray: &Ray, i: &Intersection, n1: f32, n2: f32) -> Option<Ray> {
 /// reflected off of a surface.
 fn fresnel_reflection(light_dir: &Vector3, normal: &Vector3, n1: f32, n2: f32) -> f32 {
     let m_dot_r = light_dir.dot(&normal);
-    let r0 = ((n1 - n2)/(n1+n2)) * ((n1 - n2)/(n1+n2));
+    let r0 = ((n1 - n2) / (n1 + n2)) * ((n1 - n2) / (n1 + n2));
 
-    r0 + (1. - r0)*(1. - m_dot_r).powi(5)
+    r0 + (1. - r0) * (1. - m_dot_r).powi(5)
 }
 
 /// Use Schlick's approximation to compute the amount of energy transmitted through a material
 /// (this is the energy which is not reflected)
-fn fresnel_refration(light_dir: &Vector3, normal: &Vector3, n1: f32, n2: f32) -> f32 {
+fn fresnel_refraction(light_dir: &Vector3, normal: &Vector3, n1: f32, n2: f32) -> f32 {
     1. - fresnel_reflection(light_dir, normal, n1, n2)
 }
 
@@ -180,12 +187,8 @@ fn calculate_light_illumination(
         .iter()
         .map(|l| l.get_energy(scene, &p))
         .map(|(ldir, lenergy)| {
-            i.material.get_reflected_energy(
-                &i.eye_dir,
-                &ldir,
-                &i.normal,
-                &lenergy,
-            )
+            i.material
+                .get_reflected_energy(&i.eye_dir, &ldir, &i.normal, &lenergy)
         })
         .sum()
 }
