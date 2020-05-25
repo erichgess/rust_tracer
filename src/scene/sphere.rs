@@ -4,22 +4,29 @@ use super::Color;
 use super::Intersection;
 use super::Material;
 use super::Renderable;
+use super::TextureCoords;
+use super::ColorFun;
 
 pub struct Sphere {
     transform: Matrix,
     inv_transform: Matrix,
-    color: Color,
     material: Material,
 }
 
 impl Sphere {
-    pub fn new(color: Color, reflectivity: f32, refraction_idx: f32) -> Sphere {
+    pub fn new(color: ColorFun, reflectivity: f32, refraction_idx: f32) -> Sphere {
         Sphere {
             transform: Matrix::identity(),
             inv_transform: Matrix::identity(),
-            color: color,
-            material: Material::new(&color, reflectivity, refraction_idx),
+            material: Material::new(color, reflectivity, refraction_idx),
         }
+    }
+
+    fn get_texture_coord(&self, n: &Vector3) -> TextureCoords {
+        use std::f32::consts::PI;
+        let u = (1. + n.z().atan2(n.x())/PI) * 0.5;
+        let v = n.y().acos() / PI;
+        (u, v)
     }
 }
 
@@ -59,6 +66,7 @@ impl Renderable for Sphere {
                     eye_dir,
                     normal,
                     entering,
+                    tex_coord: self.get_texture_coord(&normal),
                 })
             }
         }
@@ -67,10 +75,6 @@ impl Renderable for Sphere {
     fn set_transform(&mut self, mat: &Matrix) {
         self.transform = *mat;
         self.inv_transform = self.transform.inverse();
-    }
-
-    fn set_color(&mut self, color: &Color) {
-        self.color = *color;
     }
 }
 
@@ -100,9 +104,13 @@ mod tests {
     use super::*;
     use crate::math::Vector3;
 
+    fn white(_: TextureCoords) -> Color {
+        Color::white()
+    }
+
     #[test]
     fn basic() {
-        let mut sph = Sphere::new(Color::red(), 1., 0.);
+        let mut sph = Sphere::new(white, 1., 0.);
 
         assert_eq!(
             Matrix::identity(),
@@ -120,7 +128,7 @@ mod tests {
 
     #[test]
     fn intersection_no_transform() {
-        let sph = Sphere::new(Color::white(), 1., 0.);
+        let sph = Sphere::new(white, 1., 0.);
         let ray = Ray::new(&Point3::new(0., 0., 2.), &Vector3::new(0., 0., -1.));
         let intersect = sph.intersect(&ray);
         assert_ne!(None, intersect);
@@ -138,7 +146,7 @@ mod tests {
 
     #[test]
     fn intersection_transform() {
-        let mut sph = Sphere::new(Color::white(), 1., 0.);
+        let mut sph = Sphere::new(white, 1., 0.);
         let transform = Matrix::translate(0., 2., -2.) * Matrix::scale(2., 2., 2.);
         sph.set_transform(&transform);
 
@@ -164,9 +172,13 @@ mod benchmarks {
     use super::*;
     use crate::math::Vector3;
 
+    fn white(_: TextureCoords) -> Color {
+        Color::white()
+    }
+
     #[bench]
     fn intersection(b: &mut test::Bencher) {
-        let sph = Sphere::new(Color::white(), 1., 0.);
+        let sph = Sphere::new(white, 1., 0.);
         let ray = Ray::new(&Point3::new(0., 0., 2.), &Vector3::new(0., 0., -1.));
 
         b.iter(|| sph.intersect(&ray));

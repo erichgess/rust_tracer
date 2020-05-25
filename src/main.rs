@@ -6,7 +6,7 @@ mod scene;
 
 use math::{Matrix, Point3, Ray, Vector3};
 use scene::Sphere;
-use scene::{Color, Intersection, LightSource, PointLight, Renderable, Scene};
+use scene::{Color, Intersection, TextureCoords, PointLight, Renderable, Scene};
 
 pub struct RenderBuffer {
     pub w: usize,
@@ -24,6 +24,28 @@ impl RenderBuffer {
     }
 }
 
+fn red(_: TextureCoords) -> Color {
+    Color::red()
+}
+
+fn blue(_: TextureCoords) -> Color {
+    Color::blue()
+}
+
+fn white(_: TextureCoords) -> Color {
+    Color::white()
+}
+
+fn checkerboard(tx: TextureCoords) -> Color {
+    let u = (20. * tx.0) as i32;
+    let v = (500. * tx.1) as i32;
+    if u % 2 == v % 2 {
+        Color::white()
+    } else {
+        0.5 * Color::white()
+    }
+}
+
 fn main() {
     let x_res = 512;
     let y_res = 512;
@@ -31,23 +53,23 @@ fn main() {
     let mut buffer = RenderBuffer::new(x_res, y_res);
 
     let mut scene = Scene::new();
-    let mut sph = Sphere::new(Color::red(), 0.5, 0.);
+    let mut sph = Sphere::new(red, 0.5, 0.);
     let transform =
         Matrix::translate(-1.0, 0., 0.) * Matrix::rotate_z(75.) * Matrix::scale(1.0, 0.25, 1.0);
     sph.set_transform(&transform);
     scene.add_shape(Box::new(sph));
 
-    let mut sph2 = Sphere::new(Color::blue(), 0.4, 0.);
+    let mut sph2 = Sphere::new(blue, 0.4, 0.);
     let transform = Matrix::translate(1., 0., 0.);
     sph2.set_transform(&transform);
     scene.add_shape(Box::new(sph2));
 
-    let mut sph3 = Sphere::new(Color::white(), 0.2, 0.);
+    let mut sph3 = Sphere::new(checkerboard, 0.2, 0.);
     let transform = Matrix::translate(0., -2., 0.) * Matrix::scale(10., 1., 10.);
     sph3.set_transform(&transform);
     scene.add_shape(Box::new(sph3));
 
-    let mut sph4 = Sphere::new(1. * Color::white(), 0.7, 1.333);
+    let mut sph4 = Sphere::new(white, 0.7, 1.333);
     let transform = Matrix::translate(0., -0.5, -3.) * Matrix::scale(0.3, 0.3, 0.3);
     sph4.set_transform(&transform);
     scene.add_shape(Box::new(sph4));
@@ -94,7 +116,7 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
                 (i.material.refraction_index, 1.)
             };
 
-            let ambient = i.material.color * scene.ambient();
+            let ambient = (i.material.color)(i.tex_coord) * scene.ambient();
 
             let lights:Color = get_light_energy(scene, &i)
                 .iter()
@@ -102,7 +124,7 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
                     let fresnel = fresnel_reflection(&ldir, &i.normal, n1, n2);
                     fresnel *
                     i.material
-                        .get_reflected_energy(&i.eye_dir, &ldir, &i.normal, &lenergy)
+                        .get_reflected_energy(&i.eye_dir, &ldir, &i.normal, &lenergy, &i)
                 })
                 .sum();
 
@@ -120,6 +142,7 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
                         &reflect_ray.direction(),
                         &i.normal,
                         &energy,
+                        &i,
                     )
             } else {
                 Color::black()
@@ -127,7 +150,7 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
 
             let refracted = if i.material.refraction_index > EPSILON && reflections > 0 {
                 let refract_ray = refract_ray(ray, &i, n1, n2);
-                i.material.color
+                (i.material.color)(i.tex_coord)
                     * refract_ray
                         .map(|r| {
                             let fresnel =
@@ -274,7 +297,7 @@ mod benchmarks {
         let mut buffer = RenderBuffer::new(x_res, y_res);
 
         let mut scene = Scene::new();
-        let mut sph = Sphere::new(Color::red(), 1., 0.);
+        let mut sph = Sphere::new(red, 1., 0.);
         let transform = Matrix::scale(1.0, 2.25, 1.0);
         sph.set_transform(&transform);
 

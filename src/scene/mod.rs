@@ -66,8 +66,6 @@ fn phong(
 impl Renderable for Scene {
     fn set_transform(&mut self, _: &Matrix) {}
 
-    fn set_color(&mut self, _: &Color) {}
-
     fn intersect(&self, ray: &Ray) -> Option<Intersection> {
         let mut nearest_intersection = None;
         for shape in self.shapes.iter() {
@@ -102,10 +100,9 @@ pub trait Renderable {
     // Set the transformation matrix which will be used to position
     // and scale the sphere within the scene
     fn set_transform(&mut self, mat: &Matrix);
-
-    // Sets the color of the object
-    fn set_color(&mut self, color: &Color);
 }
+
+pub type TextureCoords = (f32,f32);
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Intersection {
@@ -115,24 +112,31 @@ pub struct Intersection {
     pub eye_dir: Vector3,
     pub normal: Vector3,
     pub entering: bool,
+    pub tex_coord: TextureCoords,
 }
+
+type ColorFun = fn((f32,f32)) -> Color;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Material {
-    pub color: Color,
+    pub color: ColorFun,
     pub specular_intensity: Color,
     pub reflectivity: f32,
     pub refraction_index: f32,
 }
 
 impl Material {
-    pub fn new(color: &Color, reflectivity: f32, refraction_index: f32) -> Material {
+    pub fn new(color: ColorFun, reflectivity: f32, refraction_index: f32) -> Material {
         Material {
-            color: *color,
+            color: color,
             specular_intensity: Color::white(),
             reflectivity,
             refraction_index,
         }
+    }
+
+    pub fn texture(&self, (u,v): (f32,f32)) -> Color {
+        (self.color)((u,v))
     }
 
     pub fn get_reflected_energy(
@@ -141,8 +145,9 @@ impl Material {
         light_dir: &Vector3,
         normal: &Vector3,
         incoming: &Color,
+        i: &Intersection,
     ) -> Color {
-        let diffuse = lambert(&light_dir, &normal, &incoming) * self.color;
+        let diffuse = lambert(&light_dir, &normal, &incoming) * (self.color)(i.tex_coord);
         let specular = phong(600., &eye_dir, &light_dir, &normal, &incoming) * self.specular_intensity;
         (1. - self.reflectivity) * diffuse + self.reflectivity * specular
     }
