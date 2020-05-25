@@ -47,7 +47,7 @@ fn main() {
     sph3.set_transform(&transform);
     scene.add_shape(Box::new(sph3));
 
-    let mut sph4 = Sphere::new(0.8 * Color::white(), 0.7, 1.333);
+    let mut sph4 = Sphere::new(1. * Color::white(), 0.7, 1.333);
     let transform = Matrix::translate(0., -0.5, -3.) * Matrix::scale(0.3, 0.3, 0.3);
     sph4.set_transform(&transform);
     scene.add_shape(Box::new(sph4));
@@ -96,7 +96,7 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
 
             let ambient = i.material.color * scene.ambient();
 
-            let lights = calculate_light_illumination(scene, scene.lights(), &i);
+            let lights = calculate_light_illumination(scene, scene.lights(), &i, n1, n2);
 
             let reflected = if i.material.reflectivity > EPSILON && reflections > 0 {
                 // compute reflection vector
@@ -177,6 +177,8 @@ fn calculate_light_illumination(
     scene: &Scene,
     lights: &Vec<Box<dyn LightSource>>,
     i: &Intersection,
+    n1: f32,
+    n2: f32,
 ) -> Color {
     // Move slightly away from the surface of intersection because rounding
     // errors in floating point arithmetic can easily cause the ray to intersect
@@ -187,6 +189,8 @@ fn calculate_light_illumination(
         .iter()
         .map(|l| l.get_energy(scene, &p))
         .map(|(ldir, lenergy)| {
+            let fresnel = fresnel_reflection(&ldir, &i.normal, n1, n2);
+            fresnel *
             i.material
                 .get_reflected_energy(&i.eye_dir, &ldir, &i.normal, &lenergy)
         })
