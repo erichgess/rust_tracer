@@ -96,7 +96,15 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
 
             let ambient = i.material.color * scene.ambient();
 
-            let lights = calculate_light_illumination(scene, scene.lights(), &i, n1, n2);
+            let lights:Color = get_light_energy(scene, &i)
+                .iter()
+                .map(|(ldir, lenergy)| {
+                    let fresnel = fresnel_reflection(&ldir, &i.normal, n1, n2);
+                    fresnel *
+                    i.material
+                        .get_reflected_energy(&i.eye_dir, &ldir, &i.normal, &lenergy)
+                })
+                .sum();
 
             let reflected = if i.material.reflectivity > EPSILON && reflections > 0 {
                 // compute reflection vector
@@ -173,24 +181,7 @@ fn fresnel_refraction(light_dir: &Vector3, normal: &Vector3, n1: f32, n2: f32) -
     1. - fresnel_reflection(light_dir, normal, n1, n2)
 }
 
-fn calculate_light_illumination(
-    scene: &Scene,
-    _lights: &Vec<Box<dyn LightSource>>,
-    i: &Intersection,
-    n1: f32,
-    n2: f32,
-) -> Color {
-    get_light_energy(scene, i).iter()
-        .map(|(ldir, lenergy)| {
-            let fresnel = fresnel_reflection(&ldir, &i.normal, n1, n2);
-            fresnel *
-            i.material
-                .get_reflected_energy(&i.eye_dir, &ldir, &i.normal, &lenergy)
-        })
-        .sum()
-}
-
-fn get_light_energy(scene: &Scene, i: &Intersection) -> Vec<(Vector3, Color)> {
+fn get_light_energy(scene: &Scene, i: &Intersection) -> Vec<(Vector3,Color)>{
     // Move slightly away from the surface of intersection because rounding
     // errors in floating point arithmetic can easily cause the ray to intersect
     // with its surface.  This would cause random points to be colored as if
