@@ -89,7 +89,9 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
         None => Color::black(),
         Some(i) => {
             let ambient = i.material.color * scene.ambient();
+
             let lights = calculate_light_illumination(scene, scene.lights(), &i);
+
             let reflected = if i.material.reflectivity > EPSILON && reflections > 0 {
                 // compute reflection vector
                 let reflect_ray = reflect_ray(ray, &i);
@@ -107,12 +109,12 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
             };
 
             let refracted = if i.material.refraction_index > EPSILON && reflections > 0 {
-                let (idx0, idx1) = if i.entering {
+                let (n1, n2) = if i.entering {
                     (1., i.material.refraction_index)
                 } else {
                     (i.material.refraction_index, 1.)
                 };
-                let refract_ray = refract_ray(ray, &i, idx0, idx1);
+                let refract_ray = refract_ray(ray, &i, n1, n2);
                 (1.-i.material.reflectivity)
                     * i.material.color
                     * refract_ray
@@ -149,11 +151,19 @@ fn refract_ray(ray: &Ray, i: &Intersection, n1: f32, n2: f32) -> Option<Ray> {
     }
 }
 
-fn fresnel(light_dir: &Vector3, normal: &Vector3, n1: f32, n2: f32) -> f32 {
+/// Use Schlick's approximation to compute the Fresnel coeffection for the amount of energy
+/// reflected off of a surface.
+fn fresnel_reflection(light_dir: &Vector3, normal: &Vector3, n1: f32, n2: f32) -> f32 {
     let m_dot_r = light_dir.dot(&normal);
     let r0 = ((n1 - n2)/(n1+n2)) * ((n1 - n2)/(n1+n2));
 
     r0 + (1. - r0)*(1. - m_dot_r).powi(5)
+}
+
+/// Use Schlick's approximation to compute the amount of energy transmitted through a material
+/// (this is the energy which is not reflected)
+fn fresnel_refration(light_dir: &Vector3, normal: &Vector3, n1: f32, n2: f32) -> f32 {
+    1. - fresnel_reflection(light_dir, normal, n1, n2)
 }
 
 fn calculate_light_illumination(
