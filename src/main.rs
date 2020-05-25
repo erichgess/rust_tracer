@@ -139,7 +139,8 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
                 Color::black()
             };
 
-            ambient + lights + reflected + refracted
+            //ambient + 
+            lights + reflected + refracted
         }
     }
 }
