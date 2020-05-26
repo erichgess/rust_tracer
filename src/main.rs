@@ -137,7 +137,7 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
                 .iter()
                 .map(|(ldir, lenergy)| {
                     let fresnel = fresnel_reflection(&ldir, &i.normal, n1, n2);
-                    fresnel *
+                    //fresnel *
                     i.material
                         .get_reflected_energy(&lenergy, &ldir, &i)
                 })
@@ -176,7 +176,7 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
             };
 
             ambient + 
-            lights + reflected + refracted
+            lights// + reflected + refracted
         }
     }
 }
@@ -209,13 +209,15 @@ fn fresnel_reflection(light_dir: &Vector3, normal: &Vector3, n1: f32, n2: f32) -
     let m_dot_r = light_dir.dot(&normal);
     let r0 = ((n1 - n2) / (n1 + n2)) * ((n1 - n2) / (n1 + n2));
 
-    r0 + (1. - r0) * (1. - m_dot_r).powi(5)
+    r0 + (1. - r0) * (1. - m_dot_r).powi(5);
+    1.
 }
 
 /// Use Schlick's approximation to compute the amount of energy transmitted through a material
 /// (this is the energy which is not reflected)
 fn fresnel_refraction(light_dir: &Vector3, normal: &Vector3, n1: f32, n2: f32) -> f32 {
-    1. - fresnel_reflection(light_dir, normal, n1, n2)
+    1. - fresnel_reflection(light_dir, normal, n1, n2);
+    0.5
 }
 
 fn get_light_energy(scene: &Scene, i: &Intersection) -> Vec<(Vector3,Color)>{

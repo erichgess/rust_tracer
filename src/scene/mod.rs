@@ -42,8 +42,8 @@ impl Scene {
     }
 }
 
-fn lambert(light_dir: &Vector3, normal: &Vector3, color: &Color) -> Color {
-    light_dir.dot(normal) * color
+fn lambert(light_dir: &Vector3, normal: &Vector3, light: &Color, surface: &Color) -> Color {
+    light_dir.dot(normal) * light * surface
 }
 
 fn phong(
@@ -51,15 +51,16 @@ fn phong(
     eye_dir: &Vector3,
     light_dir: &Vector3,
     normal: &Vector3,
-    color: &Color,
+    light: &Color,
+    surface: &Color,
 ) -> Color {
     let h = (eye_dir.norm() + light_dir.norm()).norm();
     let m_dot_h = normal.dot(&h);
 
     if m_dot_h < 0. {
-        0. * color
+        Color::black()
     } else {
-        m_dot_h.powf(power) * color
+        m_dot_h.powf(power) * light * surface
     }
 }
 
@@ -139,15 +140,17 @@ impl Material {
         }
     }
 
+    /// Use Phong reflection model to compute the intensity of light reflected
+    /// in the direction of the eye
     pub fn get_reflected_energy(
         &self,
         incoming: &Color,
         light_dir: &Vector3,
         i: &Intersection,
     ) -> Color {
-        let diffuse = lambert(&light_dir, &i.normal, &incoming) * (self.diffuse)(i.tex_coord);
-        let specular = phong(600., &i.eye_dir, &light_dir, &i.normal, &incoming) * (self.specular)(i.tex_coord);
-        (1. - self.reflectivity) * diffuse + self.reflectivity * specular
+        let diffuse = lambert(&light_dir, &i.normal, &incoming, &(self.diffuse)(i.tex_coord));
+        let specular = phong(60., &i.eye_dir, &light_dir, &i.normal, &incoming, &(self.specular)(i.tex_coord));
+        diffuse + specular
     }
 }
 
