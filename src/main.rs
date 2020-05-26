@@ -40,6 +40,10 @@ fn white(_: TextureCoords) -> Color {
     Color::white()
 }
 
+fn bright_gray(_: TextureCoords) -> Color {
+    0.8 * Color::white()
+}
+
 fn dim_white(_: TextureCoords) -> Color {
     0.1 * Color::white()
 }
