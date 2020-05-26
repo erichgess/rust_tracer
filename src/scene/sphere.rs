@@ -1,16 +1,15 @@
 use crate::math::{Matrix, Point3, Ray, Vector3};
 
-use super::Color;
 use super::ColorFun;
 use super::Intersection;
-use super::Material;
+use super::Phong;
 use super::Renderable;
 use super::TextureCoords;
 
 pub struct Sphere {
     transform: Matrix,
     inv_transform: Matrix,
-    material: Material,
+    material: Phong,
 }
 
 impl Sphere {
@@ -25,7 +24,7 @@ impl Sphere {
         Sphere {
             transform: Matrix::identity(),
             inv_transform: Matrix::identity(),
-            material: Material::new(
+            material: Phong::new(
                 ambient,
                 diffuse,
                 specular,
@@ -119,6 +118,7 @@ fn solve_quadratic(a: f32, b: f32, c: f32) -> Option<(f32, f32)> {
 mod tests {
     use super::*;
     use crate::math::Vector3;
+    use crate::scene::color::Color;
 
     fn white(_: TextureCoords) -> Color {
         Color::white()
@@ -187,6 +187,7 @@ mod benchmarks {
     extern crate test;
     use super::*;
     use crate::math::Vector3;
+    use crate::scene::color::Color;
 
     fn white(_: TextureCoords) -> Color {
         Color::white()

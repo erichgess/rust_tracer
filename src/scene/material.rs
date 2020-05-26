@@ -1,7 +1,11 @@
 use super::*;
 
+pub trait Material {
+    fn get_reflected_energy(&self, incoming: &Color, light_dir: &Vector3, i: &Intersection) -> Color;
+}
+
 #[derive(Debug, PartialEq, Copy, Clone)]
-pub struct Material {
+pub struct Phong {
     pub specular: ColorFun,
     pub ambient: ColorFun,
     pub diffuse: ColorFun,
@@ -10,7 +14,7 @@ pub struct Material {
     pub refraction_index: f32,
 }
 
-impl Material {
+impl Phong {
     pub fn new(
         ambient: ColorFun,
         diffuse: ColorFun,
@@ -18,8 +22,8 @@ impl Material {
         power: f32,
         reflectivity: f32,
         refraction_index: f32,
-    ) -> Material {
-        Material {
+    ) -> Phong {
+        Phong {
             ambient,
             diffuse,
             specular,
@@ -28,10 +32,12 @@ impl Material {
             refraction_index,
         }
     }
+}
 
+impl Material for Phong {
     /// Use Phong reflection model to compute the intensity of light reflected
     /// in the direction of the eye
-    pub fn get_reflected_energy(
+    fn get_reflected_energy(
         &self,
         incoming: &Color,
         light_dir: &Vector3,

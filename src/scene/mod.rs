@@ -6,7 +6,7 @@ mod material;
 
 pub use color::Color;
 pub use sphere::Sphere;
-pub use material::Material;
+pub use material::{Phong, Material};
 
 pub struct Scene {
     ambient: Color,
@@ -110,7 +110,7 @@ pub type TextureCoords = (f32, f32);
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Intersection {
     pub t: f32,
-    pub material: Material,
+    pub material: Phong,
     pub point: Point3,
     pub eye_dir: Vector3,
     pub normal: Vector3,

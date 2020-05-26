@@ -6,7 +6,7 @@ mod scene;
 
 use math::{Matrix, Point3, Ray, Vector3};
 use scene::Sphere;
-use scene::{Color, Intersection, PointLight, Renderable, Scene, TextureCoords};
+use scene::{Color, Intersection, Material, PointLight, Renderable, Scene, TextureCoords};
 
 pub struct RenderBuffer {
     pub w: usize,
