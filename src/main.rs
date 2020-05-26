@@ -24,6 +24,10 @@ impl RenderBuffer {
     }
 }
 
+fn black(_: TextureCoords) -> Color {
+    Color::black()
+}
+
 fn red(_: TextureCoords) -> Color {
     Color::red()
 }
@@ -57,23 +61,23 @@ fn main() {
     let mut buffer = RenderBuffer::new(x_res, y_res);
 
     let mut scene = Scene::new();
-    let mut sph = Sphere::new(dim_white, red, white, 0.5, 0.);
+    let mut sph = Sphere::new(dim_white, red, white, 60., 0.5, 0.);
     let transform =
         Matrix::translate(-1.0, 0., 0.) * Matrix::rotate_z(75.) * Matrix::scale(1.0, 0.25, 1.0);
     sph.set_transform(&transform);
     scene.add_shape(Box::new(sph));
 
-    let mut sph2 = Sphere::new(dim_white, blue, white, 0.4, 0.);
+    let mut sph2 = Sphere::new(dim_white, blue, white, 600., 0.4, 0.);
     let transform = Matrix::translate(1., 0., 0.);
     sph2.set_transform(&transform);
     scene.add_shape(Box::new(sph2));
 
-    let mut sph3 = Sphere::new(dim_white, checkerboard, white, 0.2, 0.);
+    let mut sph3 = Sphere::new(dim_white, checkerboard, white, 60., 0.2, 0.);
     let transform = Matrix::translate(0., -2., 0.) * Matrix::scale(10., 1., 10.);
     sph3.set_transform(&transform);
     scene.add_shape(Box::new(sph3));
 
-    let mut sph4 = Sphere::new(dim_white, white, white, 0.7, 1.333);
+    let mut sph4 = Sphere::new(black, white, white, 60., 0.7, 13.33);
     let transform = Matrix::translate(0., -0.5, -3.) * Matrix::scale(0.3, 0.3, 0.3);
     sph4.set_transform(&transform);
     scene.add_shape(Box::new(sph4));
@@ -138,7 +142,7 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
                 .iter()
                 .map(|(ldir, lenergy)| {
                     let fresnel = fresnel_reflection(&ldir, &i.normal, n1, n2);
-                    //fresnel *
+                    fresnel *
                     i.material
                         .get_reflected_energy(&lenergy, &ldir, &i)
                 })
@@ -176,8 +180,10 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
                 Color::black()
             };
 
-            ambient + 
-            lights// + reflected + refracted
+            ambient
+            + lights
+            + reflected 
+            + refracted
         }
     }
 }
@@ -216,8 +222,7 @@ fn fresnel_reflection(light_dir: &Vector3, normal: &Vector3, n1: f32, n2: f32) -
 /// Use Schlick's approximation to compute the amount of energy transmitted through a material
 /// (this is the energy which is not reflected)
 fn fresnel_refraction(light_dir: &Vector3, normal: &Vector3, n1: f32, n2: f32) -> f32 {
-    1. - fresnel_reflection(light_dir, normal, n1, n2);
-    0.5
+    1. - fresnel_reflection(light_dir, normal, n1, n2)
 }
 
 fn get_light_energy(scene: &Scene, i: &Intersection) -> Vec<(Vector3,Color)>{
@@ -312,7 +317,7 @@ mod benchmarks {
         let mut buffer = RenderBuffer::new(x_res, y_res);
 
         let mut scene = Scene::new();
-        let mut sph = Sphere::new(white, red, white, 1., 0.);
+        let mut sph = Sphere::new(white, red, white, 60., 1., 0.);
         let transform = Matrix::scale(1.0, 2.25, 1.0);
         sph.set_transform(&transform);
 

@@ -123,18 +123,18 @@ pub struct Material {
     pub specular: ColorFun,
     pub ambient: ColorFun,
     pub diffuse: ColorFun,
-    pub specular_intensity: Color,
+    pub power: f32,
     pub reflectivity: f32,
     pub refraction_index: f32,
 }
 
 impl Material {
-    pub fn new(ambient: ColorFun, diffuse: ColorFun, specular: ColorFun, reflectivity: f32, refraction_index: f32) -> Material {
+    pub fn new(ambient: ColorFun, diffuse: ColorFun, specular: ColorFun, power: f32, reflectivity: f32, refraction_index: f32) -> Material {
         Material {
             ambient,
             diffuse,
             specular,
-            specular_intensity: Color::white(),
+            power,
             reflectivity,
             refraction_index,
         }
@@ -149,7 +149,7 @@ impl Material {
         i: &Intersection,
     ) -> Color {
         let diffuse = lambert(&light_dir, &i.normal, &incoming, &(self.diffuse)(i.tex_coord));
-        let specular = phong(60., &i.eye_dir, &light_dir, &i.normal, &incoming, &(self.specular)(i.tex_coord));
+        let specular = phong(self.power, &i.eye_dir, &light_dir, &i.normal, &incoming, &(self.specular)(i.tex_coord));
         diffuse + specular
     }
 }
