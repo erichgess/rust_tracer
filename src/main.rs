@@ -94,7 +94,8 @@ fn main() {
     render(&camera, &scene, &mut buffer);
     let duration = start.elapsed();
 
-    bmp::save_to_bmp("test.png", &buffer);
+    let timestamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).expect("Invalid time");
+    bmp::save_to_bmp(&format!("{}.png", timestamp.as_secs()), &buffer);
     println!("Render and draw time: {}ms", duration.as_millis());
 
     draw_to_terminal(&scene);
@@ -209,8 +210,7 @@ fn fresnel_reflection(light_dir: &Vector3, normal: &Vector3, n1: f32, n2: f32) -
     let m_dot_r = light_dir.dot(&normal);
     let r0 = ((n1 - n2) / (n1 + n2)) * ((n1 - n2) / (n1 + n2));
 
-    r0 + (1. - r0) * (1. - m_dot_r).powi(5);
-    1.
+    r0 + (1. - r0) * (1. - m_dot_r).powi(5)
 }
 
 /// Use Schlick's approximation to compute the amount of energy transmitted through a material
