@@ -77,7 +77,7 @@ fn main() {
     sph3.set_transform(&transform);
     scene.add_shape(Box::new(sph3));
 
-    let mut sph4 = Sphere::new(black, white, white, 60., 0.7, 13.33);
+    let mut sph4 = Sphere::new(black, white, white, 60., 0.7, 1.333);
     let transform = Matrix::translate(0., -0.5, -3.) * Matrix::scale(0.3, 0.3, 0.3);
     sph4.set_transform(&transform);
     scene.add_shape(Box::new(sph4));
