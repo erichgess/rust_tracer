@@ -119,16 +119,20 @@ type ColorFun = fn((f32,f32)) -> Color;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Material {
-    pub color: ColorFun,
+    pub specular: ColorFun,
+    pub ambient: ColorFun,
+    pub diffuse: ColorFun,
     pub specular_intensity: Color,
     pub reflectivity: f32,
     pub refraction_index: f32,
 }
 
 impl Material {
-    pub fn new(color: ColorFun, reflectivity: f32, refraction_index: f32) -> Material {
+    pub fn new(ambient: ColorFun, diffuse: ColorFun, specular: ColorFun, reflectivity: f32, refraction_index: f32) -> Material {
         Material {
-            color: color,
+            ambient,
+            diffuse,
+            specular,
             specular_intensity: Color::white(),
             reflectivity,
             refraction_index,
@@ -141,8 +145,8 @@ impl Material {
         light_dir: &Vector3,
         i: &Intersection,
     ) -> Color {
-        let diffuse = lambert(&light_dir, &i.normal, &incoming) * (self.color)(i.tex_coord);
-        let specular = phong(600., &i.eye_dir, &light_dir, &i.normal, &incoming) * self.specular_intensity;
+        let diffuse = lambert(&light_dir, &i.normal, &incoming) * (self.diffuse)(i.tex_coord);
+        let specular = phong(600., &i.eye_dir, &light_dir, &i.normal, &incoming) * (self.specular)(i.tex_coord);
         (1. - self.reflectivity) * diffuse + self.reflectivity * specular
     }
 }

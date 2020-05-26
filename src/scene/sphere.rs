@@ -14,11 +14,11 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    pub fn new(color: ColorFun, reflectivity: f32, refraction_idx: f32) -> Sphere {
+    pub fn new(ambient: ColorFun, diffuse: ColorFun, specular: ColorFun, reflectivity: f32, refraction_idx: f32) -> Sphere {
         Sphere {
             transform: Matrix::identity(),
             inv_transform: Matrix::identity(),
-            material: Material::new(color, reflectivity, refraction_idx),
+            material: Material::new(ambient, diffuse, specular, reflectivity, refraction_idx),
         }
     }
 
@@ -110,7 +110,7 @@ mod tests {
 
     #[test]
     fn basic() {
-        let mut sph = Sphere::new(white, 1., 0.);
+        let mut sph = Sphere::new(white, white, white, 1., 0.);
 
         assert_eq!(
             Matrix::identity(),
@@ -128,7 +128,7 @@ mod tests {
 
     #[test]
     fn intersection_no_transform() {
-        let sph = Sphere::new(white, 1., 0.);
+        let sph = Sphere::new(white, white, white, 1., 0.);
         let ray = Ray::new(&Point3::new(0., 0., 2.), &Vector3::new(0., 0., -1.));
         let intersect = sph.intersect(&ray);
         assert_ne!(None, intersect);
@@ -146,7 +146,7 @@ mod tests {
 
     #[test]
     fn intersection_transform() {
-        let mut sph = Sphere::new(white, 1., 0.);
+        let mut sph = Sphere::new(white, white, white, 1., 0.);
         let transform = Matrix::translate(0., 2., -2.) * Matrix::scale(2., 2., 2.);
         sph.set_transform(&transform);
 
@@ -178,7 +178,7 @@ mod benchmarks {
 
     #[bench]
     fn intersection(b: &mut test::Bencher) {
-        let sph = Sphere::new(white, 1., 0.);
+        let sph = Sphere::new(white, white, white, 1., 0.);
         let ray = Ray::new(&Point3::new(0., 0., 2.), &Vector3::new(0., 0., -1.));
 
         b.iter(|| sph.intersect(&ray));

@@ -36,6 +36,10 @@ fn white(_: TextureCoords) -> Color {
     Color::white()
 }
 
+fn dim_white(_:TextureCoords) -> Color {
+    0.1 * Color::white()
+}
+
 fn checkerboard(tx: TextureCoords) -> Color {
     let u = (20. * tx.0) as i32;
     let v = (500. * tx.1) as i32;
@@ -53,23 +57,23 @@ fn main() {
     let mut buffer = RenderBuffer::new(x_res, y_res);
 
     let mut scene = Scene::new();
-    let mut sph = Sphere::new(red, 0.5, 0.);
+    let mut sph = Sphere::new(dim_white, red, white, 0.5, 0.);
     let transform =
         Matrix::translate(-1.0, 0., 0.) * Matrix::rotate_z(75.) * Matrix::scale(1.0, 0.25, 1.0);
     sph.set_transform(&transform);
     scene.add_shape(Box::new(sph));
 
-    let mut sph2 = Sphere::new(blue, 0.4, 0.);
+    let mut sph2 = Sphere::new(dim_white, blue, white, 0.4, 0.);
     let transform = Matrix::translate(1., 0., 0.);
     sph2.set_transform(&transform);
     scene.add_shape(Box::new(sph2));
 
-    let mut sph3 = Sphere::new(checkerboard, 0.2, 0.);
+    let mut sph3 = Sphere::new(dim_white, checkerboard, white, 0.2, 0.);
     let transform = Matrix::translate(0., -2., 0.) * Matrix::scale(10., 1., 10.);
     sph3.set_transform(&transform);
     scene.add_shape(Box::new(sph3));
 
-    let mut sph4 = Sphere::new(white, 0.7, 1.333);
+    let mut sph4 = Sphere::new(dim_white, white, white, 0.7, 1.333);
     let transform = Matrix::translate(0., -0.5, -3.) * Matrix::scale(0.3, 0.3, 0.3);
     sph4.set_transform(&transform);
     scene.add_shape(Box::new(sph4));
@@ -127,7 +131,7 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
                 (i.material.refraction_index, 1.)
             };
 
-            let ambient = (i.material.color)(i.tex_coord) * scene.ambient();
+            let ambient = (i.material.ambient)(i.tex_coord) * scene.ambient();
 
             let lights:Color = get_light_energy(scene, &i)
                 .iter()
@@ -159,7 +163,7 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
 
             let refracted = if i.material.refraction_index > EPSILON && reflections > 0 {
                 let refract_ray = refract_ray(ray, &i, n1, n2);
-                (i.material.color)(i.tex_coord)
+                (i.material.diffuse)(i.tex_coord)
                     * refract_ray
                         .map(|r| {
                             let fresnel =
@@ -306,7 +310,7 @@ mod benchmarks {
         let mut buffer = RenderBuffer::new(x_res, y_res);
 
         let mut scene = Scene::new();
-        let mut sph = Sphere::new(red, 1., 0.);
+        let mut sph = Sphere::new(white, red, white, 1., 0.);
         let transform = Matrix::scale(1.0, 2.25, 1.0);
         sph.set_transform(&transform);
 
