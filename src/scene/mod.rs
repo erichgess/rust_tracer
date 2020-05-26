@@ -103,7 +103,7 @@ pub trait Renderable {
     fn set_transform(&mut self, mat: &Matrix);
 }
 
-pub type TextureCoords = (f32,f32);
+pub type TextureCoords = (f32, f32);
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Intersection {
@@ -116,7 +116,7 @@ pub struct Intersection {
     pub tex_coord: TextureCoords,
 }
 
-type ColorFun = fn((f32,f32)) -> Color;
+type ColorFun = fn((f32, f32)) -> Color;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Material {
@@ -129,7 +129,14 @@ pub struct Material {
 }
 
 impl Material {
-    pub fn new(ambient: ColorFun, diffuse: ColorFun, specular: ColorFun, power: f32, reflectivity: f32, refraction_index: f32) -> Material {
+    pub fn new(
+        ambient: ColorFun,
+        diffuse: ColorFun,
+        specular: ColorFun,
+        power: f32,
+        reflectivity: f32,
+        refraction_index: f32,
+    ) -> Material {
         Material {
             ambient,
             diffuse,
@@ -148,18 +155,26 @@ impl Material {
         light_dir: &Vector3,
         i: &Intersection,
     ) -> Color {
-        let diffuse = lambert(&light_dir, &i.normal, &incoming, &(self.diffuse)(i.tex_coord));
-        let specular = phong(self.power, &i.eye_dir, &light_dir, &i.normal, &incoming, &(self.specular)(i.tex_coord));
+        let diffuse = lambert(
+            &light_dir,
+            &i.normal,
+            &incoming,
+            &(self.diffuse)(i.tex_coord),
+        );
+        let specular = phong(
+            self.power,
+            &i.eye_dir,
+            &light_dir,
+            &i.normal,
+            &incoming,
+            &(self.specular)(i.tex_coord),
+        );
         diffuse + specular
     }
 }
 
 pub trait LightSource {
-    fn get_energy(
-        &self,
-        scene: &Scene,
-        point: &Point3,
-    ) -> (Vector3, Color);
+    fn get_energy(&self, scene: &Scene, point: &Point3) -> (Vector3, Color);
 }
 
 /**
@@ -178,11 +193,7 @@ impl PointLight {
 }
 
 impl LightSource for PointLight {
-    fn get_energy(
-        &self,
-        scene: &Scene,
-        point: &Point3,
-    ) -> (Vector3, Color) {
+    fn get_energy(&self, scene: &Scene, point: &Point3) -> (Vector3, Color) {
         let dir_to_light = (self.pos - point).norm();
         let ray = Ray::new(&point, &dir_to_light);
         let total_energy = match scene.intersect(&ray) {

@@ -6,7 +6,7 @@ mod scene;
 
 use math::{Matrix, Point3, Ray, Vector3};
 use scene::Sphere;
-use scene::{Color, Intersection, TextureCoords, PointLight, Renderable, Scene};
+use scene::{Color, Intersection, PointLight, Renderable, Scene, TextureCoords};
 
 pub struct RenderBuffer {
     pub w: usize,
@@ -40,7 +40,7 @@ fn white(_: TextureCoords) -> Color {
     Color::white()
 }
 
-fn dim_white(_:TextureCoords) -> Color {
+fn dim_white(_: TextureCoords) -> Color {
     0.1 * Color::white()
 }
 
@@ -98,7 +98,9 @@ fn main() {
     render(&camera, &scene, &mut buffer);
     let duration = start.elapsed();
 
-    let timestamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).expect("Invalid time");
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .expect("Invalid time");
     bmp::save_to_bmp(&format!("{}.png", timestamp.as_secs()), &buffer);
     println!("Render and draw time: {}ms", duration.as_millis());
 
@@ -138,13 +140,11 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
 
             let ambient = (i.material.ambient)(i.tex_coord) * scene.ambient();
 
-            let lights:Color = get_light_energy(scene, &i)
+            let lights: Color = get_light_energy(scene, &i)
                 .iter()
                 .map(|(ldir, lenergy)| {
                     let fresnel = fresnel_reflection(&ldir, &i.normal, n1, n2);
-                    fresnel *
-                    i.material
-                        .get_reflected_energy(&lenergy, &ldir, &i)
+                    fresnel * i.material.get_reflected_energy(&lenergy, &ldir, &i)
                 })
                 .sum();
 
@@ -180,10 +180,7 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
                 Color::black()
             };
 
-            ambient
-            + lights
-            + reflected 
-            + refracted
+            ambient + lights + reflected + refracted
         }
     }
 }
@@ -225,13 +222,14 @@ fn fresnel_refraction(light_dir: &Vector3, normal: &Vector3, n1: f32, n2: f32) -
     1. - fresnel_reflection(light_dir, normal, n1, n2)
 }
 
-fn get_light_energy(scene: &Scene, i: &Intersection) -> Vec<(Vector3,Color)>{
+fn get_light_energy(scene: &Scene, i: &Intersection) -> Vec<(Vector3, Color)> {
     // Move slightly away from the surface of intersection because rounding
     // errors in floating point arithmetic can easily cause the ray to intersect
     // with its surface.  This would cause random points to be colored as if
     // they are in shadow even though they are visible to the light source.
     let p = i.point + 0.0002 * i.normal;
-    scene.lights()
+    scene
+        .lights()
         .iter()
         .map(|l| l.get_energy(scene, &p))
         .collect()

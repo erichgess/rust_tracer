@@ -1,11 +1,11 @@
 use crate::math::{Matrix, Point3, Ray, Vector3};
 
 use super::Color;
+use super::ColorFun;
 use super::Intersection;
 use super::Material;
 use super::Renderable;
 use super::TextureCoords;
-use super::ColorFun;
 
 pub struct Sphere {
     transform: Matrix,
@@ -14,17 +14,31 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    pub fn new(ambient: ColorFun, diffuse: ColorFun, specular: ColorFun, power: f32, reflectivity: f32, refraction_idx: f32) -> Sphere {
+    pub fn new(
+        ambient: ColorFun,
+        diffuse: ColorFun,
+        specular: ColorFun,
+        power: f32,
+        reflectivity: f32,
+        refraction_idx: f32,
+    ) -> Sphere {
         Sphere {
             transform: Matrix::identity(),
             inv_transform: Matrix::identity(),
-            material: Material::new(ambient, diffuse, specular, power, reflectivity, refraction_idx),
+            material: Material::new(
+                ambient,
+                diffuse,
+                specular,
+                power,
+                reflectivity,
+                refraction_idx,
+            ),
         }
     }
 
     fn get_texture_coord(n: &Vector3) -> TextureCoords {
         use std::f32::consts::PI;
-        let u = (1. + n.z().atan2(n.x())/PI) * 0.5;
+        let u = (1. + n.z().atan2(n.x()) / PI) * 0.5;
         let v = n.y().acos() / PI;
         (u, v)
     }
@@ -57,7 +71,9 @@ impl Renderable for Sphere {
                 let point = t * ray;
                 let normal = t * transformed_ray;
                 let mut normal = (self.inv_transform.transpose() * Vector3::from(normal)).norm();
-                if !entering {normal = -normal;}
+                if !entering {
+                    normal = -normal;
+                }
                 let eye_dir = -ray.direction().norm();
                 Some(Intersection {
                     t,
