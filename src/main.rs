@@ -105,7 +105,7 @@ fn main() {
     let timestamp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .expect("Invalid time");
-    bmp::save_to_bmp(&format!("{}.png", timestamp.as_secs()), &buffer);
+    bmp::save_to_bmp("./output/", &format!("{}.png", timestamp.as_secs()), &buffer).expect("Failed to save image to disk");
     println!("Render and draw time: {}ms", duration.as_millis());
 
     draw_to_terminal(&scene);
