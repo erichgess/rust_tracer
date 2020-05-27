@@ -44,28 +44,6 @@ impl Scene {
     }
 }
 
-fn lambert(light_dir: &Vector3, normal: &Vector3, light: &Color, surface: &Color) -> Color {
-    light_dir.dot(normal) * light * surface
-}
-
-fn phong(
-    power: f32,
-    eye_dir: &Vector3,
-    light_dir: &Vector3,
-    normal: &Vector3,
-    light: &Color,
-    surface: &Color,
-) -> Color {
-    let h = (eye_dir.norm() + light_dir.norm()).norm();
-    let m_dot_h = normal.dot(&h);
-
-    if m_dot_h < 0. {
-        Color::black()
-    } else {
-        m_dot_h.powf(power) * light * surface
-    }
-}
-
 impl Renderable for Scene {
     fn set_transform(&mut self, _: &Matrix) {}
 

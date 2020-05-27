@@ -124,13 +124,17 @@ fn render(camera: &Camera, scene: &Scene, buffer: &mut RenderBuffer) {
     for v in 0..camera.y_res {
         for u in 0..camera.x_res {
             let ray = camera.get_ray(u, v);
-            buffer.buf[u][v] = trace_ray(scene, &ray, 4);
+            buffer.buf[u][v] = trace_ray(scene, &ray, 5);
         }
     }
 }
 
-fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
+fn trace_ray(scene: &Scene, ray: &Ray, depth: usize) -> Color {
     use std::f32::EPSILON;
+
+    if depth == 0 {
+        return Color::black();
+    }
 
     let hit = scene.intersect(&ray);
     match hit {
@@ -152,11 +156,11 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
                 })
                 .sum();
 
-            let reflected = if i.material.reflectivity > EPSILON && reflections > 0 {
+            let reflected = if i.material.reflectivity > EPSILON {
                 // compute reflection vector
                 let reflect_ray = reflect_ray(ray, &i);
                 // compute incoming energy from the direction of the reflected ray
-                let energy = trace_ray(scene, &reflect_ray, reflections - 1);
+                let energy = trace_ray(scene, &reflect_ray, depth - 1);
                 let fresnel = fresnel_reflection(&reflect_ray.direction(), &i.normal, n1, n2);
                 fresnel
                     //* i.material.reflectivity
@@ -170,14 +174,14 @@ fn trace_ray(scene: &Scene, ray: &Ray, reflections: usize) -> Color {
                 Color::black()
             };
 
-            let refracted = if i.material.refraction_index > EPSILON && reflections > 0 {
+            let refracted = if i.material.refraction_index > EPSILON {
                 let refract_ray = refract_ray(ray, &i, n1, n2);
                 (i.material.diffuse)(i.tex_coord)
                     * refract_ray
                         .map(|r| {
                             let fresnel =
                                 fresnel_refraction(&r.direction(), &i.normal.neg(), n1, n2);
-                            fresnel * trace_ray(scene, &r, reflections - 1)
+                            fresnel * trace_ray(scene, &r, depth - 1)
                         })
                         .unwrap_or(Color::black())
             } else {
