@@ -33,7 +33,11 @@ fn red(_: TextureCoords) -> Color {
 }
 
 fn blue(_: TextureCoords) -> Color {
-    Color::blue()
+    0.8 * Color::blue()
+}
+
+fn dim_blue(_: TextureCoords) -> Color {
+    0.1 * Color::blue()
 }
 
 fn white(_: TextureCoords) -> Color {
@@ -71,7 +75,7 @@ fn main() {
     sph.set_transform(&transform);
     scene.add_shape(Box::new(sph));
 
-    let mut sph2 = Sphere::new(dim_white, blue, white, 600., 0.4, 0.);
+    let mut sph2 = Sphere::new(black, blue, dim_blue, 600., 0.4, 0.);
     let transform = Matrix::translate(1., 0., 0.);
     sph2.set_transform(&transform);
     scene.add_shape(Box::new(sph2));
@@ -105,7 +109,12 @@ fn main() {
     let timestamp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .expect("Invalid time");
-    bmp::save_to_bmp("./output/", &format!("{}.png", timestamp.as_secs()), &buffer).expect("Failed to save image to disk");
+    bmp::save_to_bmp(
+        "./output/",
+        &format!("{}.png", timestamp.as_secs()),
+        &buffer,
+    )
+    .expect("Failed to save image to disk");
     println!("Render and draw time: {}ms", duration.as_millis());
 
     draw_to_terminal(&scene);
@@ -163,13 +172,8 @@ fn trace_ray(scene: &Scene, ray: &Ray, depth: usize) -> Color {
                 let energy = trace_ray(scene, &reflect_ray, depth - 1);
                 let fresnel = fresnel_reflection(&reflect_ray.direction(), &i.normal, n1, n2);
                 fresnel
-                    //* i.material.reflectivity
-                    //  TODO: the above live, when removed, the reflections are too bright I think
-                    * i.material.get_reflected_energy(
-                        &energy,
-                        &reflect_ray.direction(),
-                        &i,
-                    )
+                    * i.material
+                        .get_reflected_energy(&energy, &reflect_ray.direction(), &i)
             } else {
                 Color::black()
             };
