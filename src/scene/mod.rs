@@ -1,6 +1,7 @@
 use crate::math::{Matrix, Point3, Ray, Vector3};
 
 mod color;
+mod cube;
 mod sphere;
 mod material;
 

@@ -46,7 +46,6 @@ impl Sphere {
 impl Renderable for Sphere {
     fn intersect(&self, ray: &Ray) -> Option<Intersection> {
         // apply transformation to the ray
-        //let transformed_ray = ray.mat_mul(&self.inv_transform);
         let transformed_ray = self.inv_transform * ray;
 
         let l = transformed_ray.origin() - Point3::new(0., 0., 0.);
