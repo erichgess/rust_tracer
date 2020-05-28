@@ -6,7 +6,7 @@ mod scene;
 
 use math::{Matrix, Point3, Ray, Vector3};
 use scene::Sphere;
-use scene::{Color, Intersection, Material, PointLight, Renderable, Scene, TextureCoords};
+use scene::{Color, Intersection, Material, Phong, Plane, PointLight, Renderable, Scene, TextureCoords};
 
 pub struct RenderBuffer {
     pub w: usize,
@@ -53,12 +53,22 @@ fn dim_white(_: TextureCoords) -> Color {
 }
 
 fn checkerboard(tx: TextureCoords) -> Color {
-    let u = (20. * tx.0) as i32;
-    let v = (500. * tx.1) as i32;
-    if u % 2 == v % 2 {
-        Color::white()
+    let u = (tx.0).abs() as i32;
+    let v = (tx.1).abs() as i32;
+
+    if tx.0 < 0. && tx.1 < 0.
+        || tx.0 > 0. && tx.1 > 0. {
+        if u % 2 == v % 2 {
+            Color::white()
+        } else {
+            0.5 * Color::white()
+        }
     } else {
-        0.5 * Color::white()
+        if u % 2 != v % 2 {
+            Color::white()
+        } else {
+            0.5 * Color::white()
+        }
     }
 }
 
@@ -76,19 +86,23 @@ fn main() {
     scene.add_shape(Box::new(sph));
 
     let mut sph2 = Sphere::new(black, blue, dim_blue, 600., 0.4, 0.);
-    let transform = Matrix::translate(1., 0., 0.);
+    let transform = Matrix::translate(1., -1., 0.);
     sph2.set_transform(&transform);
     scene.add_shape(Box::new(sph2));
 
-    let mut sph3 = Sphere::new(dim_white, checkerboard, white, 60., 0.2, 0.);
-    let transform = Matrix::translate(0., -2., 0.) * Matrix::scale(10., 1., 10.);
-    sph3.set_transform(&transform);
-    scene.add_shape(Box::new(sph3));
+    //let mut sph3 = Sphere::new(dim_white, checkerboard, white, 60., 0.2, 0.);
+    //let transform = Matrix::translate(0., -2., 0.) * Matrix::scale(10., 1., 10.);
+    //sph3.set_transform(&transform);
+    //scene.add_shape(Box::new(sph3));
 
     let mut sph4 = Sphere::new(black, white, white, 60., 0.7, 1.333);
     let transform = Matrix::translate(0., -0.5, -3.) * Matrix::scale(0.3, 0.3, 0.3);
     sph4.set_transform(&transform);
     scene.add_shape(Box::new(sph4));
+
+    let plane_material = Phong::new(white, checkerboard, white, 60., 0., 0.);
+    let mut plane = Plane::new(&Point3::new(0., -2., 0.), &Vector3::new(0., 1., 0.), &plane_material);
+    scene.add_shape(Box::new(plane));
 
     let light = PointLight::new(Point3::new(4., 4.0, 0.), Color::new(1., 0., 0.));
     scene.add_light(Box::new(light));

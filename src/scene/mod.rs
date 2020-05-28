@@ -2,11 +2,13 @@ use crate::math::{Matrix, Point3, Ray, Vector3};
 
 mod color;
 mod cube;
+mod plane;
 mod sphere;
 mod material;
 
 pub use color::Color;
 pub use sphere::Sphere;
+pub use plane::Plane;
 pub use material::{Phong, Material};
 
 pub struct Scene {
