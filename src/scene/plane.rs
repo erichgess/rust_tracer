@@ -17,14 +17,14 @@ pub struct Plane {
 
 impl Plane {
     pub fn new(origin: &Point3, normal: &Vector3, material: &Phong) -> Plane {
-        let w = if normal.dot(&Vector3::new(1., 0., 0.)).abs() <= std::f32::EPSILON {
-            Vector3::new(1., 0., 0.)
+        let w = if normal.cross(&Vector3::new(1., 0., 0.)).len() <= std::f32::EPSILON {
+            Vector3::new(0., 1., 0.)
         } else {
             Vector3::new(1., 0., 0.)
         };
 
-        let u = Vector3::new(1., 0., 0.);
-        let v = Vector3::new(0., 0., 1.);
+        let u = normal.cross(&w).norm();
+        let v = normal.cross(&u).norm();
 
         Plane {
             origin: *origin,
