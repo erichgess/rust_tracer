@@ -73,8 +73,8 @@ fn checkerboard(tx: TextureCoords) -> Color {
 }
 
 fn main() {
-    let x_res = 512;
-    let y_res = 512;
+    let x_res = 4096;
+    let y_res = 4096;
     let camera = Camera::new(x_res, y_res);
     let mut buffer = RenderBuffer::new(x_res, y_res);
 
@@ -96,12 +96,16 @@ fn main() {
     //scene.add_shape(Box::new(sph3));
 
     let mut sph4 = Sphere::new(black, white, white, 60., 0.7, 1.333);
-    let transform = Matrix::translate(0., -0.5, -3.) * Matrix::scale(0.3, 0.3, 0.3);
+    let transform = Matrix::translate(0., -0.5, -3.) * Matrix::scale(0.6, 0.6, 0.6);
     sph4.set_transform(&transform);
     scene.add_shape(Box::new(sph4));
 
-    let plane_material = Phong::new(white, checkerboard, white, 60., 0., 0.);
-    let mut plane = Plane::new(&Point3::new(0., -2., 0.), &Vector3::new(0., 1., 0.), &plane_material);
+    let plane_material = Phong::new(dim_white, checkerboard, dim_white, 60., 0., 0.);
+    let plane = Plane::new(&Point3::new(0., -2., 2.), &Vector3::new(0., 0., -1.), &plane_material);
+    scene.add_shape(Box::new(plane));
+
+    let plane_material = Phong::new(dim_white, checkerboard, dim_white, 60., 0., 0.);
+    let plane = Plane::new(&Point3::new(0., -2., 0.), &Vector3::new(0., 1., 0.), &plane_material);
     scene.add_shape(Box::new(plane));
 
     let light = PointLight::new(Point3::new(4., 4.0, 0.), Color::new(1., 0., 0.));

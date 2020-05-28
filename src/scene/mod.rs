@@ -125,7 +125,13 @@ impl LightSource for PointLight {
         let dir_to_light = (self.pos - point).norm();
         let ray = Ray::new(&point, &dir_to_light);
         let total_energy = match scene.intersect(&ray) {
-            Some(_) => Color::black(),
+            // If there is an intersection: make sure it happens between the light and the
+            // surface point.
+            Some(i) => if (i.point - point).len2() < (self.pos - point).len2() {
+                Color::black()
+            } else {
+                self.color
+            },
             None => self.color,
         };
         (dir_to_light, total_energy)
