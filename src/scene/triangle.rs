@@ -54,7 +54,7 @@ impl Renderable for Triangle {
 
         let qvec = tvec.cross(&v0v1);
         let v = ray.direction().dot(&qvec) * inv_det;
-        if v < 0. || u+v > 1. {
+        if v < 0. || u + v > 1. {
             return None;
         }
 
@@ -82,10 +82,10 @@ mod tests {
     use super::*;
     use crate::math::Ray;
     use crate::scene::color::Color;
-    use crate::scene::TextureCoords;
+    use crate::scene::{Material, Phong, PointLight, TextureCoords};
 
     fn white(_: TextureCoords) -> Color {
-        Color::white()
+        0.5 * Color::white()
     }
 
     #[test]
@@ -121,10 +121,7 @@ mod tests {
             &material,
         );
 
-        let ray = Ray::new(
-                &Point3::new(0., 0., -4.),
-                &Vector3::new(0., 0., 1.),
-            );
+        let ray = Ray::new(&Point3::new(0., 0., -4.), &Vector3::new(0., 0., 1.));
 
         let i = tri.intersect(&ray);
         assert_ne!(None, i);
@@ -135,5 +132,31 @@ mod tests {
         assert_eq!(Vector3::new(0., 0., -1.), i.normal);
         assert_eq!(Vector3::new(0., 0., -1.), i.eye_dir);
         assert_eq!(true, i.entering);
+    }
+
+    #[test]
+    fn shading() {
+        // CW defined triangle the normal should point in the -Z axis
+        let material = Phong::new(white, white, white, 60., 0., 0.);
+        let tri = Triangle::new(
+            &Point3::new(1., -1., 0.),
+            &Point3::new(-1., -1., 0.),
+            &Point3::new(-1., 1., 0.),
+            &material,
+        );
+
+        let ray = Ray::new(&Point3::new(0., 0., -4.), &Vector3::new(0., 0., 1.));
+
+        let i = tri.intersect(&ray);
+        let i = i.unwrap();
+
+        let light = PointLight::new(Point3::new(0., 0., -4.), Color::new(1., 1., 1.));
+        let energy = tri.material.get_reflected_energy(
+                &light.color,
+                &(light.pos - i.point).norm(),
+                &i,
+            );
+
+        assert_eq!(Color::white(), energy);
     }
 }
