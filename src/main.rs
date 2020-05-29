@@ -120,7 +120,7 @@ fn main() {
     scene.set_ambient(&ambient);
 
     let start = std::time::Instant::now();
-    render(&camera, &scene, &mut buffer);
+    render(&camera, &scene, &mut buffer, 8);
     let duration = start.elapsed();
 
     let timestamp = std::time::SystemTime::now()
@@ -142,15 +142,15 @@ fn draw_to_terminal(scene: &Scene) {
     let y_res = 80;
     let camera = Camera::new(x_res, y_res);
     let mut buffer = RenderBuffer::new(x_res, y_res);
-    render(&camera, scene, &mut buffer);
+    render(&camera, scene, &mut buffer, 5);
     terminal::draw(&buffer);
 }
 
-fn render(camera: &Camera, scene: &Scene, buffer: &mut RenderBuffer) {
+fn render(camera: &Camera, scene: &Scene, buffer: &mut RenderBuffer, depth: usize) {
     for v in 0..camera.y_res {
         for u in 0..camera.x_res {
             let ray = camera.get_ray(u, v);
-            buffer.buf[u][v] = trace_ray(scene, &ray, 5);
+            buffer.buf[u][v] = trace_ray(scene, &ray, depth);
         }
     }
 }
@@ -350,6 +350,6 @@ mod benchmarks {
 
         scene.add_shape(Box::new(sph));
 
-        b.iter(|| super::render(&camera, &scene, &mut buffer));
+        b.iter(|| super::render(&camera, &scene, &mut buffer, 5));
     }
 }
