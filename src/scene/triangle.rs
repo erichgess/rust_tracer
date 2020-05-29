@@ -64,12 +64,18 @@ impl Renderable for Triangle {
             return None;
         }
 
+        let normal = if t < 0.  {
+            -self.normal
+        } else {
+            self.normal
+        };
+
         Some(Intersection {
             t,
             material: self.material,
             point: t * ray,
             eye_dir: -(ray.direction().norm()),
-            normal: self.normal,
+            normal,
             entering: det > 0.,
             tex_coord: (u, v),
         })

@@ -6,7 +6,7 @@ mod scene;
 
 use math::{Matrix, Point3, Ray, Vector3};
 use scene::Sphere;
-use scene::{Color, Intersection, Material, Phong, Plane, PointLight, Renderable, Scene, TextureCoords, Triangle};
+use scene::{Cube, Color, Intersection, Material, Phong, Plane, PointLight, Renderable, Scene, TextureCoords, Triangle};
 
 pub struct RenderBuffer {
     pub w: usize,
@@ -79,7 +79,7 @@ fn main() {
     let mut buffer = RenderBuffer::new(x_res, y_res);
 
     let mut scene = Scene::new();
-    /*let mut sph = Sphere::new(dim_white, red, white, 60., 0.5, 0.);
+    let mut sph = Sphere::new(dim_white, red, white, 60., 0.5, 0.);
     let transform =
         Matrix::translate(-1.0, 0., 0.) * Matrix::rotate_z(75.) * Matrix::scale(1.0, 0.25, 1.0);
     sph.set_transform(&transform);
@@ -93,7 +93,7 @@ fn main() {
     let mut sph4 = Sphere::new(black, white, white, 60., 0.7, 1.333);
     let transform = Matrix::translate(0., -0.5, -3.) * Matrix::scale(0.6, 0.6, 0.6);
     sph4.set_transform(&transform);
-    scene.add_shape(Box::new(sph4));*/
+    scene.add_shape(Box::new(sph4));
 
     let plane_material = Phong::new(dim_white, checkerboard, dim_white, 60., 0., 0.);
     let plane = Plane::new(&Point3::new(0., -2., 2.), &Vector3::new(0., 0., -1.), &plane_material);
@@ -103,113 +103,10 @@ fn main() {
     let plane = Plane::new(&Point3::new(0., -2., 0.), &Vector3::new(0., 1., 0.), &plane_material);
     scene.add_shape(Box::new(plane));
 
-    let v0 = Point3::new(0.5, 0.5, -0.5);
-    let v1 = Point3::new(0.5, -0.5, -0.5);
-    let v2 = Point3::new(-0.5, -0.5, -0.5);
-    let v3 = Point3::new(-0.5, 0.5, -0.5);
-
-    let v4 = Point3::new(0.5, 0.5, 0.5);
-    let v5 = Point3::new(-0.5, 0.5, 0.5);
-    let v6 = Point3::new(-0.5, -0.5, 0.5);
-    let v7 = Point3::new(0.5, -0.5, 0.5);
-
-    // front
-    let tri_material = Phong::new(white, white, white, 60., 0., 0.);
-    let triangle = Triangle::new(
-        &v1,
-        &v2,
-        &v3,
-        &tri_material,
-        );
-    scene.add_shape(Box::new(triangle));
-    let triangle = Triangle::new(
-        &v0,
-        &v1,
-        &v3,
-        &tri_material,
-        );
-    scene.add_shape(Box::new(triangle));
-
-    // back
-    let triangle = Triangle::new(
-        &v6,
-        &v7,
-        &v5,
-        &tri_material,
-        );
-    scene.add_shape(Box::new(triangle));
-    let triangle = Triangle::new(
-        &v4,
-        &v7,
-        &v5,
-        &tri_material,
-        );
-    scene.add_shape(Box::new(triangle));
-
-    // right side
-    let triangle = Triangle::new(
-        &v0,
-        &v4,
-        &v7,
-        &tri_material,
-        );
-    scene.add_shape(Box::new(triangle));
-    let triangle = Triangle::new(
-        &v7,
-        &v1,
-        &v0,
-        &tri_material,
-        );
-    scene.add_shape(Box::new(triangle));
-
-    // left side
-    let triangle = Triangle::new(
-        &v5,
-        &v3,
-        &v2,
-        &tri_material,
-        );
-    scene.add_shape(Box::new(triangle));
-    let triangle = Triangle::new(
-        &v2,
-        &v6,
-        &v5,
-        &tri_material,
-        );
-    scene.add_shape(Box::new(triangle));
-
-    // bottom
-    let triangle = Triangle::new(
-        &v1,
-        &v7,
-        &v6,
-        &tri_material,
-        );
-    scene.add_shape(Box::new(triangle));
-    let triangle = Triangle::new(
-        &v6,
-        &v2,
-        &v1,
-        &tri_material,
-        );
-    scene.add_shape(Box::new(triangle));
-
-    // top
-    let triangle = Triangle::new(
-        &v5,
-        &v4,
-        &v0,
-        &tri_material,
-        );
-    scene.add_shape(Box::new(triangle));
-    let triangle = Triangle::new(
-        &v0,
-        &v3,
-        &v5,
-        &tri_material,
-        );
-    scene.add_shape(Box::new(triangle));
-
+    let mut cube = Cube::new(black, white, white, 60., 0., 1.333);
+    let transform = Matrix::translate(-1., -1.0, -4.) * Matrix::rotate_x(-45.0);
+    cube.set_transform(&transform);
+    scene.add_shape(Box::new(cube));
     let light = PointLight::new(Point3::new(4., 4.0, 0.), Color::new(1., 0., 0.));
     scene.add_light(Box::new(light));
 

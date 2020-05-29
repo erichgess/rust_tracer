@@ -10,6 +10,7 @@ mod material;
 pub use color::Color;
 pub use sphere::Sphere;
 pub use plane::Plane;
+pub use cube::Cube;
 pub use triangle::Triangle;
 pub use material::{Phong, Material};
 
