@@ -4,6 +4,7 @@ mod color;
 mod cube;
 mod plane;
 mod sphere;
+mod triangle;
 mod material;
 
 pub use color::Color;

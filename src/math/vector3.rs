@@ -157,6 +157,14 @@ impl ops::Sub<&Vector3> for Vector3 {
     }
 }
 
+impl ops::Sub for &Vector3 {
+    type Output = Vector3;
+
+    fn sub(self, rhs: &Vector3) -> Self::Output {
+        Vector3::sub(self, rhs)
+    }
+}
+
 impl ops::Mul<f32> for Vector3 {
     type Output = Vector3;
 
