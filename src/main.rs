@@ -73,8 +73,8 @@ fn checkerboard(tx: TextureCoords) -> Color {
 }
 
 fn main() {
-    let x_res = 4096;
-    let y_res = 4096;
+    let x_res = 512;
+    let y_res = 512;
     let camera = Camera::new(x_res, y_res);
     let mut buffer = RenderBuffer::new(x_res, y_res);
 
