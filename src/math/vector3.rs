@@ -3,7 +3,7 @@ use std::ops;
 use super::matrix::Matrix;
 use super::point::Point3;
 
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub struct Vector3 {
     x: f32,
     y: f32,
@@ -112,6 +112,15 @@ impl Vector3 {
 
     pub fn reflect(&self, about: &Vector3) -> Vector3 {
         2. * (self.dot(about)) * about - self
+    }
+}
+
+impl std::cmp::PartialEq for Vector3 {
+    fn eq(&self, rhs: &Self) -> bool {
+        use std::f32::EPSILON;
+        (rhs.x - self.x).abs() < EPSILON
+            && (rhs.y - self.y).abs() < EPSILON
+            && (rhs.z - self.z).abs() < EPSILON
     }
 }
 

@@ -6,7 +6,7 @@ mod scene;
 
 use math::{Matrix, Point3, Ray, Vector3};
 use scene::Sphere;
-use scene::{Color, Intersection, Material, Phong, Plane, PointLight, Renderable, Scene, TextureCoords};
+use scene::{Color, Intersection, Material, Phong, Plane, PointLight, Renderable, Scene, TextureCoords, Triangle};
 
 pub struct RenderBuffer {
     pub w: usize,
@@ -107,6 +107,15 @@ fn main() {
     let plane_material = Phong::new(dim_white, checkerboard, dim_white, 60., 0., 0.);
     let plane = Plane::new(&Point3::new(0., -2., 0.), &Vector3::new(0., 1., 0.), &plane_material);
     scene.add_shape(Box::new(plane));
+
+    let tri_material = Phong::new(white, white, white, 60., 0., 0.);
+    let triangle = Triangle::new(
+        &Point3::new(4., 0., 1.),
+        &Point3::new(0., 0., 1.),
+        &Point3::new(0., 4., 1.),
+        &tri_material,
+        );
+    scene.add_shape(Box::new(triangle));
 
     let light = PointLight::new(Point3::new(4., 4.0, 0.), Color::new(1., 0., 0.));
     scene.add_light(Box::new(light));

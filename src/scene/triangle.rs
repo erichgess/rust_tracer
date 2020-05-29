@@ -20,6 +20,8 @@ impl Triangle {
             v0v1.cross(&v0v2).norm()
         };
 
+        println!("{:?}", normal);
+
         Triangle {
             verts,
             normal,
@@ -52,7 +54,7 @@ impl Renderable for Triangle {
 
         let qvec = tvec.cross(&v0v1);
         let v = ray.direction().dot(&qvec) * inv_det;
-        if v < 0. || v > 1. {
+        if v < 0. || u+v > 1. {
             return None;
         }
 
@@ -62,7 +64,7 @@ impl Renderable for Triangle {
             t,
             material: self.material,
             point: t * ray,
-            eye_dir: ray.direction().norm().neg(),
+            eye_dir: -(ray.direction().norm()),
             normal: self.normal,
             entering: det > 0.,
             tex_coord: (u, v),
@@ -78,12 +80,14 @@ impl Renderable for Triangle {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::math::Ray;
     use crate::scene::color::Color;
     use crate::scene::TextureCoords;
 
     fn white(_: TextureCoords) -> Color {
         Color::white()
     }
+
     #[test]
     fn creation() {
         let material = Phong::new(white, white, white, 60., 0., 0.);
@@ -104,5 +108,32 @@ mod tests {
             &material,
         );
         assert_eq!(Vector3::new(0., 0., -1.), tri.normal);
+    }
+
+    #[test]
+    fn intersection() {
+        // CW defined triangle the normal should point in the -Z axis
+        let material = Phong::new(white, white, white, 60., 0., 0.);
+        let tri = Triangle::new(
+            &Point3::new(1., -1., 0.),
+            &Point3::new(-1., -1., 0.),
+            &Point3::new(-1., 1., 0.),
+            &material,
+        );
+
+        let ray = Ray::new(
+                &Point3::new(0., 0., -4.),
+                &Vector3::new(0., 0., 1.),
+            );
+
+        let i = tri.intersect(&ray);
+        assert_ne!(None, i);
+        let i = i.unwrap();
+
+        assert_eq!(4.0, i.t);
+        assert_eq!(Point3::new(0., 0., 0.), i.point);
+        assert_eq!(Vector3::new(0., 0., -1.), i.normal);
+        assert_eq!(Vector3::new(0., 0., -1.), i.eye_dir);
+        assert_eq!(true, i.entering);
     }
 }
