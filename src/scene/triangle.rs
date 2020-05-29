@@ -60,6 +60,10 @@ impl Renderable for Triangle {
 
         let t = v0v2.dot(&qvec) * inv_det;
 
+        if t < 0.  {
+            return None;
+        }
+
         Some(Intersection {
             t,
             material: self.material,
@@ -115,9 +119,9 @@ mod tests {
         // CW defined triangle the normal should point in the -Z axis
         let material = Phong::new(white, white, white, 60., 0., 0.);
         let tri = Triangle::new(
-            &Point3::new(1., -1., 0.),
-            &Point3::new(-1., -1., 0.),
-            &Point3::new(-1., 1., 0.),
+            &Point3::new(2., -2., 0.),
+            &Point3::new(-2., -2., 0.),
+            &Point3::new(-2., 2., 0.),
             &material,
         );
 
@@ -135,13 +139,30 @@ mod tests {
     }
 
     #[test]
+    fn behind_ray_not_intersection() {
+        // CW defined triangle the normal should point in the -Z axis
+        let material = Phong::new(white, white, white, 60., 0., 0.);
+        let tri = Triangle::new(
+            &Point3::new(2., -2., 0.),
+            &Point3::new(-2., -2., 0.),
+            &Point3::new(-2., 2., 0.),
+            &material,
+        );
+
+        let ray = Ray::new(&Point3::new(0., 0., -4.), &Vector3::new(0., 0., -1.));
+
+        let i = tri.intersect(&ray);
+        assert_eq!(None, i);
+    }
+
+    #[test]
     fn shading() {
         // CW defined triangle the normal should point in the -Z axis
         let material = Phong::new(white, white, white, 60., 0., 0.);
         let tri = Triangle::new(
-            &Point3::new(1., -1., 0.),
+            &Point3::new(2., -1., 0.),
             &Point3::new(-1., -1., 0.),
-            &Point3::new(-1., 1., 0.),
+            &Point3::new(-1., 2., 0.),
             &material,
         );
 
