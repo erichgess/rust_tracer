@@ -29,6 +29,7 @@ impl Scene {
         }
     }
 
+    /// Adds `shape` to the scene so that it will be rendered.
     pub fn add_shape(&mut self, shape: Box<dyn Renderable>) {
         self.shapes.push(shape);
     }
