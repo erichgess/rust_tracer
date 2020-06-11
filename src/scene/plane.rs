@@ -75,11 +75,11 @@ impl Renderable for Plane {
 mod test {
     use super::*;
     use crate::math::Vector3;
-    use crate::scene::color::Color;
+    use crate::scene::color::{Color, colors::WHITE};
     use crate::scene::TextureCoords;
 
     fn white(_: TextureCoords) -> Color {
-        Color::white()
+        WHITE
     }
 
     #[test]

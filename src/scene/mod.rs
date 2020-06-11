@@ -8,6 +8,7 @@ mod triangle;
 mod material;
 
 pub use color::Color;
+pub use color::colors;
 pub use sphere::Sphere;
 pub use plane::Plane;
 pub use cube::Cube;
@@ -23,7 +24,7 @@ pub struct Scene {
 impl Scene {
     pub fn new() -> Scene {
         Scene {
-            ambient: Color::black(),
+            ambient: colors::BLACK,
             lights: vec![],
             shapes: vec![],
         }
@@ -132,7 +133,7 @@ impl LightSource for PointLight {
             // If there is an intersection: make sure it happens between the light and the
             // surface point.
             Some(i) => if (i.point - point).len2() < (self.pos - point).len2() {
-                Color::black()
+                colors::BLACK
             } else {
                 self.color
             },

@@ -91,11 +91,11 @@ impl Renderable for Triangle {
 mod tests {
     use super::*;
     use crate::math::Ray;
-    use crate::scene::color::Color;
+    use crate::scene::color::{Color, colors::*};
     use crate::scene::{Material, Phong, PointLight, TextureCoords};
 
     fn white(_: TextureCoords) -> Color {
-        0.5 * Color::white()
+        0.5 * WHITE
     }
 
     #[test]
@@ -184,6 +184,6 @@ mod tests {
                 &i,
             );
 
-        assert_eq!(Color::white(), energy);
+        assert_eq!(WHITE, energy);
     }
 }

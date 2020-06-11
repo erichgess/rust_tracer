@@ -7,6 +7,7 @@ mod scene;
 use math::{Matrix, Point3, Ray, Vector3};
 use scene::Sphere;
 use scene::{Cube, Color, Intersection, Material, Phong, Plane, PointLight, Renderable, Scene, TextureCoords, Triangle};
+use scene::colors::*;
 
 pub struct RenderBuffer {
     pub w: usize,
@@ -19,37 +20,37 @@ impl RenderBuffer {
         RenderBuffer {
             w,
             h,
-            buf: vec![vec![Color::black(); h]; w],
+            buf: vec![vec![BLACK; h]; w],
         }
     }
 }
 
 fn black(_: TextureCoords) -> Color {
-    Color::black()
+    BLACK
 }
 
 fn red(_: TextureCoords) -> Color {
-    Color::red()
+    RED
 }
 
 fn blue(_: TextureCoords) -> Color {
-    0.8 * Color::blue()
+    0.8 * BLUE
 }
 
 fn dim_blue(_: TextureCoords) -> Color {
-    0.1 * Color::blue()
+    0.1 * BLUE
 }
 
 fn white(_: TextureCoords) -> Color {
-    Color::white()
+    WHITE
 }
 
 fn bright_gray(_: TextureCoords) -> Color {
-    0.8 * Color::white()
+    0.8 * WHITE
 }
 
 fn dim_white(_: TextureCoords) -> Color {
-    0.1 * Color::white()
+    0.1 * WHITE
 }
 
 fn checkerboard(tx: TextureCoords) -> Color {
@@ -59,15 +60,15 @@ fn checkerboard(tx: TextureCoords) -> Color {
     if tx.0 < 0. && tx.1 < 0.
         || tx.0 > 0. && tx.1 > 0. {
         if u % 2 == v % 2 {
-            Color::white()
+            WHITE
         } else {
-            0.5 * Color::white()
+            0.5 * WHITE
         }
     } else {
         if u % 2 != v % 2 {
-            Color::white()
+            WHITE
         } else {
-            0.5 * Color::white()
+            0.5 * WHITE
         }
     }
 }
@@ -159,12 +160,12 @@ fn trace_ray(scene: &Scene, ray: &Ray, depth: usize) -> Color {
     use std::f32::EPSILON;
 
     if depth == 0 {
-        return Color::black();
+        return BLACK;
     }
 
     let hit = scene.intersect(&ray);
     match hit {
-        None => Color::black(),
+        None => BLACK,
         Some(i) => {
             let (n1, n2) = if i.entering {
                 (1., i.material.refraction_index)
@@ -192,7 +193,7 @@ fn trace_ray(scene: &Scene, ray: &Ray, depth: usize) -> Color {
                     * i.material
                         .get_reflected_energy(&energy, &reflect_ray.direction(), &i)
             } else {
-                Color::black()
+                BLACK
             };
 
             let refracted = if i.material.refraction_index > EPSILON {
@@ -204,9 +205,9 @@ fn trace_ray(scene: &Scene, ray: &Ray, depth: usize) -> Color {
                                 fresnel_refraction(&r.direction(), &i.normal.neg(), n1, n2);
                             fresnel * trace_ray(scene, &r, depth - 1)
                         })
-                        .unwrap_or(Color::black())
+                        .unwrap_or(BLACK)
             } else {
-                Color::black()
+                BLACK
             };
 
             ambient + lights + reflected + refracted
@@ -300,7 +301,10 @@ impl Camera {
 mod terminal {
     extern crate termion;
 
-    use super::scene::Color;
+    use super::scene::{
+        Color,
+        colors::*,
+    };
     use super::RenderBuffer;
     use termion::{color, color::Rgb};
 
@@ -318,7 +322,7 @@ mod terminal {
         for v in 0..buffer.h {
             for u in 0..buffer.w {
                 match buffer.buf[u][v] {
-                    c if c == Color::black() => print!("{}.", color::Fg(color::White)),
+                    c if c == BLACK => print!("{}.", color::Fg(color::White)),
                     c => {
                         print!("{}x", color::Fg(to_rgb(&c)));
                     }

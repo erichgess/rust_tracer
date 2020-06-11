@@ -77,7 +77,7 @@ fn phong(
     let m_dot_h = normal.dot(&h);
 
     if m_dot_h < 0. {
-        Color::black()
+        colors::BLACK
     } else {
         m_dot_h.powf(power) * light * surface
     }

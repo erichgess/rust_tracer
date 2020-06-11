@@ -117,10 +117,10 @@ fn solve_quadratic(a: f32, b: f32, c: f32) -> Option<(f32, f32)> {
 mod tests {
     use super::*;
     use crate::math::Vector3;
-    use crate::scene::color::Color;
+    use crate::scene::color::{Color, colors::WHITE};
 
     fn white(_: TextureCoords) -> Color {
-        Color::white()
+        WHITE
     }
 
     #[test]
@@ -186,10 +186,10 @@ mod benchmarks {
     extern crate test;
     use super::*;
     use crate::math::Vector3;
-    use crate::scene::color::Color;
+    use crate::scene::color::{Color, colors::WHITE};
 
     fn white(_: TextureCoords) -> Color {
-        Color::white()
+        WHITE
     }
 
     #[bench]
