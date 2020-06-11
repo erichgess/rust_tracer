@@ -18,6 +18,7 @@ struct Config {
     width: usize,
     height: usize,
     to_terminal: bool,
+    depth: usize,
 }
 
 fn main() {
@@ -32,7 +33,7 @@ fn main() {
     let mut scene = Scene::new();
     create_scene(&mut scene);
     let start = std::time::Instant::now();
-    render(&camera, &scene, &mut buffer, 8);
+    render(&camera, &scene, &mut buffer, config.depth);
     let duration = start.elapsed();
 
     let timestamp = std::time::SystemTime::now()
@@ -72,6 +73,14 @@ fn configure_cli<'a, 'b>() -> App<'a, 'b> {
                 .help("Set the height in pixels of the rendered image")
         )
         .arg(
+            Arg::with_name("depth")
+                .long("depth")
+                .short("d")
+                .takes_value(true)
+                .default_value("8")
+                .help("Set the maximum depth of reflections and transmissions which the ray tracer will follow when tracing a ray through the scene.")
+        )
+        .arg(
             Arg::with_name("to-terminal")
                 .long("to-terminal")
                 .short("t")
@@ -82,10 +91,12 @@ fn configure_cli<'a, 'b>() -> App<'a, 'b> {
 fn parse_args(args: &ArgMatches) -> Config {
     let width = args.value_of("width").map(|s| s.parse::<usize>().expect("Expected integer for width")).unwrap();
     let height = args.value_of("height").map(|s| s.parse::<usize>().expect("Expected integer for height")).unwrap();
+    let depth = args.value_of("depth").map(|s| s.parse::<usize>().expect("Expected integer for depth")).unwrap();
     let to_terminal = args.is_present("to-terminal");
     Config{
         width,
         height,
+        depth,
         to_terminal,
     }
 }
