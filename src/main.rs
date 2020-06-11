@@ -41,7 +41,7 @@ fn main() {
         app.connect_activate(move |app| {
             build_gui(app, config);
         });
-        app.run(&vec![]);
+        app.run(&vec![]); // Give an empty list of args bc we already processed the args above.
     } else {
         let mut scene = Scene::new();
         create_scene(&mut scene);
@@ -65,6 +65,7 @@ fn build_gui(app: &gtk::Application, config: Config) {
     window.add(&vbox);
 
     let img = gtk::Image::new();
+    img.set_size_request(config.width as i32, config.height as i32);
     vbox.pack_start(&img, true, true, 0);
 
     let btn = gtk::Button::new();
