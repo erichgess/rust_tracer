@@ -54,7 +54,7 @@ fn main() {
 fn configure_cli<'a, 'b>() -> App<'a, 'b> {
     App::new("Rust Tracer")
         .version(option_env!("CARGO_PKG_VERSION").unwrap_or(""))
-        .about("Task Management with scoping")
+        .about("Ray Tracer")
         .arg(
             Arg::with_name("width")
                 .long("width")
