@@ -55,7 +55,6 @@ fn main() {
 
 fn build_gui(app: &gtk::Application, config: Config) {
     let window = gtk::ApplicationWindow::new(app);
-
     window.set_title("Rust Tracer");
     window.set_border_width(10);
     window.set_position(gtk::WindowPosition::CenterOnParent);
@@ -72,8 +71,35 @@ fn build_gui(app: &gtk::Application, config: Config) {
     btn.set_label("Render");
     vbox.pack_start(&btn, false, false, 0);
 
+    // Setup rendering configuration controls
+    let wbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+    vbox.pack_start(&wbox, true, true, 0);
+
+    let label = gtk::Label::new(Some("Width"));
+    wbox.pack_start(&label, false, false, 0);
+    let width = gtk::Entry::new();
+    width.set_text(&format!("{}", config.width));
+    wbox.pack_start(&width, true, true, 4);
+
+    let label = gtk::Label::new(Some("Height"));
+    wbox.pack_start(&label, false, false, 0);
+    let height = gtk::Entry::new();
+    height.set_text(&format!("{}", config.height));
+    wbox.pack_start(&height, true, true, 4);
+
+    // Configure button action
     let img = img.clone();
     btn.connect_clicked(move |_btn| {
+        let w = width.get_text().map(|v| v.parse::<usize>().unwrap_or(config.width)).unwrap();
+        let h = height.get_text().map(|v| v.parse::<usize>().unwrap_or(config.height)).unwrap();
+        let config = Config {
+            width: w,
+            height: h,
+            depth: config.depth,
+            to_terminal: config.to_terminal,
+            gui: config.gui,
+        };
+
         println!("Rendering...");
         let mut scene = Scene::new();
         create_scene(&mut scene);
