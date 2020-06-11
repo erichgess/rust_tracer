@@ -63,9 +63,13 @@ fn build_gui(app: &gtk::Application, config: Config) {
     let vbox = gtk::Box::new(gtk::Orientation::Vertical, 0);
     window.add(&vbox);
 
+    let scrolled_box = gtk::ScrolledWindow::new(None::<&gtk::Adjustment>, None::<&gtk::Adjustment>);
+    scrolled_box.set_size_request(config.width as i32, config.height as i32);
+    vbox.pack_start(&scrolled_box, true, true, 0);
+
     let img = gtk::Image::new();
     img.set_size_request(config.width as i32, config.height as i32);
-    vbox.pack_start(&img, true, true, 0);
+    scrolled_box.add(&img);
 
     let btn = gtk::Button::new();
     btn.set_label("Render");
@@ -73,21 +77,21 @@ fn build_gui(app: &gtk::Application, config: Config) {
 
     // Setup rendering configuration controls
     let wbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);
-    vbox.pack_start(&wbox, true, true, 0);
+    vbox.pack_start(&wbox, false, false, 0);
 
     let label = gtk::Label::new(Some("Width"));
     wbox.pack_start(&label, false, false, 0);
     let w_input = gtk::Entry::new();
     w_input.set_text(&format!("{}", config.width));
-    wbox.pack_start(&w_input, true, true, 4);
+    wbox.pack_start(&w_input, false, false, 4);
 
     let label = gtk::Label::new(Some("Height"));
     wbox.pack_start(&label, false, false, 0);
     let h_input = gtk::Entry::new();
     h_input.set_text(&format!("{}", config.height));
-    wbox.pack_start(&h_input, true, true, 4);
+    wbox.pack_start(&h_input, false, false, 4);
 
-    // Configure button action
+    // Setup Render button to render and display the scene
     let img = img.clone();
     btn.connect_clicked(move |_btn| {
         let width = w_input.get_text().map(|v| v.parse::<usize>().unwrap_or(config.width)).unwrap();
