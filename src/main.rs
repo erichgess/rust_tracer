@@ -1,10 +1,15 @@
 #![feature(test)]
 
+extern crate gio;
+extern crate gtk;
+
 mod bmp;
 mod math;
 mod scene;
 
 use clap::{App, Arg, ArgMatches};
+use gio::prelude::*;
+use gtk::prelude::*;
 
 use math::{Matrix, Point3, Ray, Vector3};
 use scene::colors::*;
@@ -17,39 +22,44 @@ use scene::{
 struct Config {
     width: usize,
     height: usize,
-    to_terminal: bool,
     depth: usize,
+    to_terminal: bool,
+    gui: bool,
 }
 
 fn main() {
     let args = configure_cli().get_matches();
     let config = parse_args(&args);
     println!("Rendering configuration: {:?}", config);
-    let x_res = config.width;
-    let y_res = config.height;
-    let camera = Camera::new(x_res, y_res);
-    let mut buffer = RenderBuffer::new(x_res, y_res);
 
     let mut scene = Scene::new();
     create_scene(&mut scene);
-    let start = std::time::Instant::now();
-    render(&camera, &scene, &mut buffer, config.depth);
-    let duration = start.elapsed();
-
     let timestamp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .expect("Invalid time");
-    bmp::save_to_bmp(
-        "./output/",
-        &format!("{}.png", timestamp.as_secs()),
-        &buffer,
-    )
-    .expect("Failed to save image to disk");
-    println!("Render and draw time: {}ms", duration.as_millis());
+    let file = format!("{}.png", timestamp.as_secs());
+    render_to_file(&config, &scene, "./output/", &file);
+}
 
-    if config.to_terminal {
-        draw_to_terminal(&scene);
-    }
+fn build_gui(app: &gtk::Application, config: &Config) {
+    let window = gtk::ApplicationWindow::new(app);
+
+    window.set_title("Rust Tracer");
+    window.set_border_width(10);
+    window.set_position(gtk::WindowPosition::CenterOnParent);
+    window.set_default_size(config.width as i32, config.height as i32);
+
+    let vbox = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    window.add(&vbox);
+
+    let img = gtk::Image::new();
+    vbox.pack_start(&img, true, true, 0);
+
+    let btn = gtk::Button::new();
+    btn.set_label("Render");
+    vbox.pack_start(&btn, false, false, 0);
+
+    window.show_all();
 }
 
 fn configure_cli<'a, 'b>() -> App<'a, 'b> {
@@ -81,6 +91,12 @@ fn configure_cli<'a, 'b>() -> App<'a, 'b> {
                 .help("Set the maximum depth of reflections and transmissions which the ray tracer will follow when tracing a ray through the scene.")
         )
         .arg(
+            Arg::with_name("gui")
+                .long("gui")
+                .short("g")
+                .help("Open a GUI for interacting with the ray tracer.")
+        )
+        .arg(
             Arg::with_name("to-terminal")
                 .long("to-terminal")
                 .short("t")
@@ -93,12 +109,43 @@ fn parse_args(args: &ArgMatches) -> Config {
     let height = args.value_of("height").map(|s| s.parse::<usize>().expect("Expected integer for height")).unwrap();
     let depth = args.value_of("depth").map(|s| s.parse::<usize>().expect("Expected integer for depth")).unwrap();
     let to_terminal = args.is_present("to-terminal");
+    let gui = args.is_present("gui");
     Config{
         width,
         height,
         depth,
         to_terminal,
+        gui,
     }
+}
+
+fn render_to_file(config: &Config, scene: &Scene, dir: &str, file: &str) {
+    let start = std::time::Instant::now();
+    let buffer = render_scene(config, scene);
+    let duration = start.elapsed();
+    println!("Render and draw time: {}ms", duration.as_millis());
+
+    bmp::save_to_bmp(
+        dir,
+        file,
+        &buffer,
+    )
+    .expect("Failed to save image to disk");
+}
+
+fn render_scene(config: &Config, scene: &Scene) -> RenderBuffer {
+    let x_res = config.width;
+    let y_res = config.height;
+    let camera = Camera::new(x_res, y_res);
+    let mut buffer = RenderBuffer::new(x_res, y_res);
+
+    render(&camera, &scene, &mut buffer, config.depth);
+
+    if config.to_terminal {
+        draw_to_terminal(&scene);
+    }
+
+    buffer
 }
 
 pub struct RenderBuffer {
