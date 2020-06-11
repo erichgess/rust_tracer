@@ -4,10 +4,91 @@ mod bmp;
 mod math;
 mod scene;
 
+use clap::{App, Arg, ArgMatches};
+
 use math::{Matrix, Point3, Ray, Vector3};
-use scene::Sphere;
-use scene::{Cube, Color, Intersection, Material, Phong, Plane, PointLight, Renderable, Scene, TextureCoords, Triangle};
 use scene::colors::*;
+use scene::Sphere;
+use scene::{
+    Color, Cube, Intersection, Material, Phong, Plane, PointLight, Renderable, Scene, TextureCoords,
+};
+
+#[derive(Debug)]
+struct Config {
+    width: usize,
+    height: usize,
+    to_terminal: bool,
+}
+
+fn main() {
+    let args = configure_cli().get_matches();
+    let config = parse_args(&args);
+    println!("{:?}", config);
+    let x_res = config.width;
+    let y_res = config.height;
+    let camera = Camera::new(x_res, y_res);
+    let mut buffer = RenderBuffer::new(x_res, y_res);
+
+    let mut scene = Scene::new();
+    create_scene(&mut scene);
+    let start = std::time::Instant::now();
+    render(&camera, &scene, &mut buffer, 8);
+    let duration = start.elapsed();
+
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .expect("Invalid time");
+    bmp::save_to_bmp(
+        "./output/",
+        &format!("{}.png", timestamp.as_secs()),
+        &buffer,
+    )
+    .expect("Failed to save image to disk");
+    println!("Render and draw time: {}ms", duration.as_millis());
+
+    if config.to_terminal {
+        draw_to_terminal(&scene);
+    }
+}
+
+fn configure_cli<'a, 'b>() -> App<'a, 'b> {
+    App::new("Rust Tracer")
+        .version(option_env!("CARGO_PKG_VERSION").unwrap_or(""))
+        .about("Task Management with scoping")
+        .arg(
+            Arg::with_name("width")
+                .long("width")
+                .short("w")
+                .takes_value(true)
+                .default_value("512")
+                .help("Set the width in pixels of the rendered image")
+        )
+        .arg(
+            Arg::with_name("height")
+                .long("height")
+                .short("h")
+                .takes_value(true)
+                .default_value("512")
+                .help("Set the height in pixels of the rendered image")
+        )
+        .arg(
+            Arg::with_name("to-terminal")
+                .long("to-terminal")
+                .short("t")
+                .help("Render the scene as ASCII art to the terminal")
+        )
+}
+
+fn parse_args(args: &ArgMatches) -> Config {
+    let width = args.value_of("width").map(|s| s.parse::<usize>().expect("Expected integer for width")).unwrap();
+    let height = args.value_of("height").map(|s| s.parse::<usize>().expect("Expected integer for height")).unwrap();
+    let to_terminal = args.is_present("to-terminal");
+    Config{
+        width,
+        height,
+        to_terminal,
+    }
+}
 
 pub struct RenderBuffer {
     pub w: usize,
@@ -57,8 +138,7 @@ fn checkerboard(tx: TextureCoords) -> Color {
     let u = (tx.0).abs() as i32;
     let v = (tx.1).abs() as i32;
 
-    if tx.0 < 0. && tx.1 < 0.
-        || tx.0 > 0. && tx.1 > 0. {
+    if tx.0 < 0. && tx.1 < 0. || tx.0 > 0. && tx.1 > 0. {
         if u % 2 == v % 2 {
             WHITE
         } else {
@@ -73,13 +153,7 @@ fn checkerboard(tx: TextureCoords) -> Color {
     }
 }
 
-fn main() {
-    let x_res = 512;
-    let y_res = 512;
-    let camera = Camera::new(x_res, y_res);
-    let mut buffer = RenderBuffer::new(x_res, y_res);
-
-    let mut scene = Scene::new();
+fn create_scene(scene: &mut Scene) {
     let mut sph = Sphere::new(dim_white, red, white, 60., 0.5, 0.);
     let transform =
         Matrix::translate(-1.0, 0., 0.) * Matrix::rotate_z(75.) * Matrix::scale(1.0, 0.25, 1.0);
@@ -97,11 +171,19 @@ fn main() {
     scene.add_shape(Box::new(sph4));
 
     let plane_material = Phong::new(dim_white, checkerboard, dim_white, 60., 0., 0.);
-    let plane = Plane::new(&Point3::new(0., -2., 2.), &Vector3::new(0., 0., -1.), &plane_material);
+    let plane = Plane::new(
+        &Point3::new(0., -2., 2.),
+        &Vector3::new(0., 0., -1.),
+        &plane_material,
+    );
     scene.add_shape(Box::new(plane));
 
     let plane_material = Phong::new(dim_white, checkerboard, dim_white, 60., 0., 0.);
-    let plane = Plane::new(&Point3::new(0., -2., 0.), &Vector3::new(0., 1., 0.), &plane_material);
+    let plane = Plane::new(
+        &Point3::new(0., -2., 0.),
+        &Vector3::new(0., 1., 0.),
+        &plane_material,
+    );
     scene.add_shape(Box::new(plane));
 
     let mut cube = Cube::new(black, white, white, 60., 0., 1.333);
@@ -119,28 +201,11 @@ fn main() {
 
     let ambient = Color::new(0.1, 0.1, 0.1);
     scene.set_ambient(&ambient);
-
-    let start = std::time::Instant::now();
-    render(&camera, &scene, &mut buffer, 8);
-    let duration = start.elapsed();
-
-    let timestamp = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .expect("Invalid time");
-    bmp::save_to_bmp(
-        "./output/",
-        &format!("{}.png", timestamp.as_secs()),
-        &buffer,
-    )
-    .expect("Failed to save image to disk");
-    println!("Render and draw time: {}ms", duration.as_millis());
-
-    draw_to_terminal(&scene);
 }
 
 fn draw_to_terminal(scene: &Scene) {
-    let x_res = 160;
-    let y_res = 80;
+    let x_res = 100;
+    let y_res = 50;
     let camera = Camera::new(x_res, y_res);
     let mut buffer = RenderBuffer::new(x_res, y_res);
     render(&camera, scene, &mut buffer, 5);
@@ -301,10 +366,7 @@ impl Camera {
 mod terminal {
     extern crate termion;
 
-    use super::scene::{
-        Color,
-        colors::*,
-    };
+    use super::scene::{colors::*, Color};
     use super::RenderBuffer;
     use termion::{color, color::Rgb};
 
@@ -324,7 +386,7 @@ mod terminal {
                 match buffer.buf[u][v] {
                     c if c == BLACK => print!("{}.", color::Fg(color::White)),
                     c => {
-                        print!("{}x", color::Fg(to_rgb(&c)));
+                        print!("{}X", color::Fg(to_rgb(&c)));
                     }
                 }
             }
