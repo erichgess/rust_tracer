@@ -20,8 +20,6 @@ impl Triangle {
             v0v1.cross(&v0v2).norm()
         };
 
-        println!("{:?}", normal);
-
         Triangle {
             verts,
             normal,

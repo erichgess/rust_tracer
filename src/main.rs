@@ -24,7 +24,7 @@ struct Config {
 fn main() {
     let args = configure_cli().get_matches();
     let config = parse_args(&args);
-    println!("{:?}", config);
+    println!("Rendering configuration: {:?}", config);
     let x_res = config.width;
     let y_res = config.height;
     let camera = Camera::new(x_res, y_res);
