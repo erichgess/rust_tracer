@@ -7,6 +7,8 @@ mod bmp;
 mod math;
 mod scene;
 
+use std::env::args;
+
 use clap::{App, Arg, ArgMatches};
 use gio::prelude::*;
 use gtk::prelude::*;
@@ -18,7 +20,7 @@ use scene::{
     Color, Cube, Intersection, Material, Phong, Plane, PointLight, Renderable, Scene, TextureCoords,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 struct Config {
     width: usize,
     height: usize,
@@ -28,20 +30,30 @@ struct Config {
 }
 
 fn main() {
-    let args = configure_cli().get_matches();
-    let config = parse_args(&args);
+    let cargs = configure_cli().get_matches();
+    let config = parse_args(&cargs);
     println!("Rendering configuration: {:?}", config);
 
-    let mut scene = Scene::new();
-    create_scene(&mut scene);
-    let timestamp = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .expect("Invalid time");
-    let file = format!("{}.png", timestamp.as_secs());
-    render_to_file(&config, &scene, "./output/", &file);
+    if config.gui {
+        let app = gtk::Application::new(Some("com.github.erichgess.rust-tracer"), Default::default())
+            .expect("Initialization failed...");
+
+        app.connect_activate(move |app| {
+            build_gui(app, config);
+        });
+        app.run(&vec![]);
+    } else {
+        let mut scene = Scene::new();
+        create_scene(&mut scene);
+        let timestamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("Invalid time");
+        let file = format!("{}.png", timestamp.as_secs());
+        render_to_file(&config, &scene, "./output/", &file);
+    }
 }
 
-fn build_gui(app: &gtk::Application, config: &Config) {
+fn build_gui(app: &gtk::Application, config: Config) {
     let window = gtk::ApplicationWindow::new(app);
 
     window.set_title("Rust Tracer");
@@ -58,6 +70,19 @@ fn build_gui(app: &gtk::Application, config: &Config) {
     let btn = gtk::Button::new();
     btn.set_label("Render");
     vbox.pack_start(&btn, false, false, 0);
+
+    let img = img.clone();
+    btn.connect_clicked(move |_btn| {
+        println!("Rendering...");
+        let mut scene = Scene::new();
+        create_scene(&mut scene);
+        let timestamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("Invalid time");
+        let file = format!("{}.png", timestamp.as_secs());
+        render_to_file(&config, &scene, "./output/", &file);
+        img.set_from_file(format!("./output/{}", file));
+    });
 
     window.show_all();
 }
