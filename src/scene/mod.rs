@@ -108,6 +108,7 @@ type ColorFun = fn((f32, f32)) -> Color;
 
 pub trait LightSource {
     fn get_energy(&self, scene: &Scene, point: &Point3) -> (Vector3, Color);
+    fn to_string(&self) -> String;
 }
 
 /**
@@ -141,6 +142,12 @@ impl LightSource for PointLight {
         };
         (dir_to_light, total_energy)
     }
+
+    fn to_string(&self) -> String {
+        format!("Position: ({}, {}, {}), Color: ({}, {}, {})",
+            self.pos.x(), self.pos.y(), self.pos.z(),
+            self.color.r, self.color.g, self.color.b)
+    }
 }
 
 /// Ambient light that radiates all points in a scene with a constant
@@ -160,5 +167,10 @@ impl AmbientLight {
 impl LightSource for AmbientLight {
     fn get_energy(&self, _: &Scene, _: &Point3) -> (Vector3, Color) {
         (Vector3::new(0., 0., 0.), self.color)
+    }
+
+    fn to_string(&self) -> String {
+        format!("Color: ({}, {}, {})",
+            self.color.r, self.color.g, self.color.b)
     }
 }

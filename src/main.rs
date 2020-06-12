@@ -8,6 +8,8 @@ mod gui;
 mod math;
 mod scene;
 
+use std::rc::Rc;
+
 use clap::{App, Arg, ArgMatches};
 use gio::prelude::*;
 use gtk::prelude::*;
@@ -38,7 +40,10 @@ fn main() {
             .expect("Initialization failed...");
 
         app.connect_activate(move |app| {
-            build_gui(app, config);
+            let mut scene = Scene::new();
+            create_scene(&mut scene);
+            let scene = Rc::new(scene);
+            build_gui(app, config, scene);
         });
         app.run(&vec![]); // Give an empty list of args bc we already processed the args above.
     } else {
@@ -52,7 +57,7 @@ fn main() {
     }
 }
 
-fn build_gui(app: &gtk::Application, config: Config) {
+fn build_gui<'a>(app: &gtk::Application, config: Config, scene: Rc<Scene>) {
     let window = gtk::ApplicationWindow::new(app);
     window.set_title("Rust Tracer");
     window.set_border_width(10);
@@ -63,24 +68,40 @@ fn build_gui(app: &gtk::Application, config: Config) {
     window.add(&notebook.notebook);
 
 
-    let render_box = build_render_view(config);
+    let render_box = build_render_view(config, Rc::clone(&scene));
     let title = "Render";
     notebook.create_tab(title, render_box.upcast());
 
-    let scene_desc = build_scene_description_box();
+    let scene_desc = build_scene_description_box(&Rc::clone(&scene));
     let title = "Scene";
     notebook.create_tab(title, scene_desc.upcast());
 
     window.show_all();
 }
 
-fn build_scene_description_box() -> gtk::TextView {
+fn build_scene_description_box(scene: &Scene) -> gtk::TextView {
     let text = gtk::TextView::new();
     text.set_editable(false);
+    match text.get_buffer() {
+        None => panic!("Could not get buffer from TextView for Scene Description"),
+        Some(buffer) => {
+            let mut text = String::new();
+            buffer.set_text("Put Scene Shit Here");
+            // Print Ambient Light
+            text = format!("Ambient Light: {:?}\n", scene.ambient());
+            
+            // Print lights
+            for light in scene.lights() {
+                text = text + &format!("Light: {}\n", light.to_string());
+            }
+
+            buffer.set_text(&text);
+        }
+    }
     text
 }
 
-fn build_render_view(config: Config) -> gtk::Box {
+fn build_render_view<'a>(config: Config, scene: Rc<Scene>) -> gtk::Box {
     let vbox = gtk::Box::new(gtk::Orientation::Vertical, 0);
 
     let scrolled_box = gtk::ScrolledWindow::new(None::<&gtk::Adjustment>, None::<&gtk::Adjustment>);
@@ -113,6 +134,7 @@ fn build_render_view(config: Config) -> gtk::Box {
 
     // Setup Render button to render and display the scene
     let img = img.clone();
+    let scene = Rc::clone(&scene);
     btn.connect_clicked(move |_btn| {
         let width = w_input.get_text().map(|v| v.parse::<usize>().unwrap_or(config.width)).unwrap();
         let height = h_input.get_text().map(|v| v.parse::<usize>().unwrap_or(config.height)).unwrap();
@@ -123,8 +145,8 @@ fn build_render_view(config: Config) -> gtk::Box {
         };
 
         println!("Rendering...");
-        let mut scene = Scene::new();
-        create_scene(&mut scene);
+        //let mut scene = Scene::new();
+        //create_scene(&mut scene);
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .expect("Invalid time");
