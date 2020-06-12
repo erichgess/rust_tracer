@@ -1,12 +1,12 @@
 /// A basic plane
 
 use crate::math::{Matrix, Point3, Ray, Vector3};
-use super::{Intersection, Phong, Renderable};
+use super::{Intersection, TexturePhong, Renderable};
 
 pub struct Plane {
     origin: Point3,
     normal: Vector3,
-    material: Phong,
+    material: TexturePhong,
     transform: Matrix,
     inv_transform: Matrix,
 
@@ -16,7 +16,7 @@ pub struct Plane {
 }
 
 impl Plane {
-    pub fn new(origin: &Point3, normal: &Vector3, material: &Phong) -> Plane {
+    pub fn new(origin: &Point3, normal: &Vector3, material: &TexturePhong) -> Plane {
         let w = if normal.cross(&Vector3::new(1., 0., 0.)).len() <= std::f32::EPSILON {
             Vector3::new(0., 1., 0.)
         } else {
@@ -56,7 +56,7 @@ impl Renderable for Plane {
             let v = self.v.dot(&Vector3::from(point));
             let i = Intersection{
                 t: t,
-                material: self.material,
+                material: self.material.at((u,v)),
                 point: point,
                 eye_dir: -ray.direction().norm(),
                 normal: (self.transform * self.normal),
@@ -88,7 +88,7 @@ mod test {
 
     #[test]
     fn texture_coords() {
-        let phong = Phong::new(white, white, white, 60., 0., 0.);
+        let phong = TexturePhong::new(white, white, white, 60., 0., 0.);
         let normal = Vector3::new(0., 1., 0.);
         let plane = Plane::new(&Point3::new(0., 0., 0.), &normal, &phong);
 

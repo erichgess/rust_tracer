@@ -1,6 +1,6 @@
 use crate::math::{Matrix, Point3, Ray, Vector3};
 
-use super::ColorFun;
+use super::Color;
 use super::Intersection;
 use super::Phong;
 use super::Renderable;
@@ -14,9 +14,9 @@ pub struct Sphere {
 
 impl Sphere {
     pub fn new(
-        ambient: ColorFun,
-        diffuse: ColorFun,
-        specular: ColorFun,
+        ambient: Color,
+        diffuse: Color,
+        specular: Color,
         power: f32,
         reflectivity: f32,
         refraction_idx: f32,
@@ -129,7 +129,7 @@ mod tests {
 
     #[test]
     fn basic() {
-        let mut sph = Sphere::new(white, white, white, 60., 1., 0.);
+        let mut sph = Sphere::new(WHITE, WHITE, WHITE, 60., 1., 0.);
 
         assert_eq!(
             Matrix::identity(),
@@ -147,7 +147,7 @@ mod tests {
 
     #[test]
     fn intersection_no_transform() {
-        let sph = Sphere::new(white, white, white, 60., 1., 0.);
+        let sph = Sphere::new(WHITE, WHITE, WHITE, 60., 1., 0.);
         let ray = Ray::new(&Point3::new(0., 0., 2.), &Vector3::new(0., 0., -1.));
         let intersect = sph.intersect(&ray);
         assert_ne!(None, intersect);
@@ -165,7 +165,7 @@ mod tests {
 
     #[test]
     fn intersection_transform() {
-        let mut sph = Sphere::new(white, white, white, 60., 1., 0.);
+        let mut sph = Sphere::new(WHITE, WHITE, WHITE, 60., 1., 0.);
         let transform = Matrix::translate(0., 2., -2.) * Matrix::scale(2., 2., 2.);
         sph.set_transform(&transform);
 
@@ -198,7 +198,7 @@ mod benchmarks {
 
     #[bench]
     fn intersection(b: &mut test::Bencher) {
-        let sph = Sphere::new(white, white, white, 60., 1., 0.);
+        let sph = Sphere::new(WHITE, WHITE, WHITE, 60., 1., 0.);
         let ray = Ray::new(&Point3::new(0., 0., 2.), &Vector3::new(0., 0., -1.));
 
         b.iter(|| sph.intersect(&ray));

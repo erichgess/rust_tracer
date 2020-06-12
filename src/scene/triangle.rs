@@ -102,7 +102,7 @@ mod tests {
 
     #[test]
     fn creation() {
-        let material = Phong::new(white, white, white, 60., 0., 0.);
+        let material = Phong::new(WHITE, WHITE, WHITE, 60., 0., 0.);
         // CCW defined triangle the normal should point in the +Z axis
         let tri = Triangle::new(
             &Point3::new(0., 0., 0.),
@@ -125,7 +125,7 @@ mod tests {
     #[test]
     fn intersection() {
         // CW defined triangle the normal should point in the -Z axis
-        let material = Phong::new(white, white, white, 60., 0., 0.);
+        let material = Phong::new(WHITE, WHITE, WHITE, 60., 0., 0.);
         let tri = Triangle::new(
             &Point3::new(2., -2., 0.),
             &Point3::new(-2., -2., 0.),
@@ -149,7 +149,7 @@ mod tests {
     #[test]
     fn behind_ray_not_intersection() {
         // CW defined triangle the normal should point in the -Z axis
-        let material = Phong::new(white, white, white, 60., 0., 0.);
+        let material = Phong::new(WHITE, WHITE, WHITE, 60., 0., 0.);
         let tri = Triangle::new(
             &Point3::new(2., -2., 0.),
             &Point3::new(-2., -2., 0.),
@@ -166,7 +166,7 @@ mod tests {
     #[test]
     fn shading() {
         // CW defined triangle the normal should point in the -Z axis
-        let material = Phong::new(white, white, white, 60., 0., 0.);
+        let material = Phong::new(WHITE, WHITE, WHITE, 60., 0., 0.);
         let tri = Triangle::new(
             &Point3::new(2., -1., 0.),
             &Point3::new(-1., -1., 0.),

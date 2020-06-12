@@ -13,9 +13,9 @@ pub trait Material {
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Phong {
-    pub specular: ColorFun,
-    pub ambient: ColorFun,
-    pub diffuse: ColorFun,
+    pub specular: Color,
+    pub ambient: Color,
+    pub diffuse: Color,
     pub power: f32,
     pub reflectivity: f32,
     pub refraction_index: f32,
@@ -23,9 +23,9 @@ pub struct Phong {
 
 impl Phong {
     pub fn new(
-        ambient: ColorFun,
-        diffuse: ColorFun,
-        specular: ColorFun,
+        ambient: Color,
+        diffuse: Color,
+        specular: Color,
         power: f32,
         reflectivity: f32,
         refraction_index: f32,
@@ -42,6 +42,78 @@ impl Phong {
 }
 
 impl Material for Phong {
+    /// Use Phong reflection model to compute the intensity of light reflected
+    /// in the direction of the eye
+    fn get_reflected_energy(
+        &self,
+        incoming: &Color,
+        light_dir: &Vector3,
+        i: &Intersection,
+    ) -> Color {
+        let diffuse = lambert(
+            &light_dir,
+            &i.normal,
+            &incoming,
+            &self.diffuse,
+        );
+        let specular = phong(
+            self.power,
+            &i.eye_dir,
+            &light_dir,
+            &i.normal,
+            &incoming,
+            &self.specular,
+        );
+        diffuse + specular
+    }
+
+    fn to_string(&self) -> String {
+        format!("Phong")
+    }
+}
+
+#[derive(Debug, PartialEq, Copy, Clone)]
+pub struct TexturePhong {
+    pub specular: ColorFun,
+    pub ambient: ColorFun,
+    pub diffuse: ColorFun,
+    pub power: f32,
+    pub reflectivity: f32,
+    pub refraction_index: f32,
+}
+
+impl TexturePhong {
+    pub fn new(
+        ambient: ColorFun,
+        diffuse: ColorFun,
+        specular: ColorFun,
+        power: f32,
+        reflectivity: f32,
+        refraction_index: f32,
+    ) -> TexturePhong {
+        TexturePhong {
+            ambient,
+            diffuse,
+            specular,
+            power,
+            reflectivity,
+            refraction_index,
+        }
+    }
+
+    pub fn at(&self, tx: TextureCoords) -> Phong {
+        Phong::new(
+            (self.ambient)(tx),
+            (self.diffuse)(tx),
+            (self.specular)(tx),
+            self.power,
+            self.reflectivity,
+            self.refraction_index,
+            )
+    }
+}
+
+impl Material for TexturePhong {
     /// Use Phong reflection model to compute the intensity of light reflected
     /// in the direction of the eye
     fn get_reflected_energy(

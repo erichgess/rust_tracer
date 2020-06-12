@@ -56,7 +56,7 @@ fn trace_ray(scene: &Scene, ray: &Ray, depth: usize) -> Color {
                 (i.material.refraction_index, 1.)
             };
 
-            let ambient = (i.material.ambient)(i.tex_coord) * scene.ambient();
+            let ambient = (i.material.ambient) * scene.ambient();
 
             let lights: Color = get_light_energy(scene, &i)
                 .iter()
@@ -81,7 +81,7 @@ fn trace_ray(scene: &Scene, ray: &Ray, depth: usize) -> Color {
 
             let refracted = if i.material.refraction_index > EPSILON {
                 let refract_ray = refract_ray(ray, &i, n1, n2);
-                (i.material.diffuse)(i.tex_coord)
+                (i.material.diffuse)
                     * refract_ray
                         .map(|r| {
                             let fresnel =
@@ -236,7 +236,7 @@ mod benchmarks {
         let mut buffer = RenderBuffer::new(x_res, y_res);
 
         let mut scene = Scene::new();
-        let mut sph = Sphere::new(white, red, white, 60., 1., 0.);
+        let mut sph = Sphere::new(WHITE, RED, WHITE, 60., 1., 0.);
         let transform = Matrix::scale(1.0, 2.25, 1.0);
         sph.set_transform(&transform);
 

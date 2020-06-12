@@ -1,7 +1,7 @@
 /// Render a unit cube
 use crate::math::{Matrix, Point3, Ray};
 
-use super::ColorFun;
+use super::Color;
 use super::Intersection;
 use super::Phong;
 use super::Renderable;
@@ -16,9 +16,9 @@ pub struct Cube {
 
 impl Cube {
     pub fn new(
-        ambient: ColorFun,
-        diffuse: ColorFun,
-        specular: ColorFun,
+        ambient: Color,
+        diffuse: Color,
+        specular: Color,
         power: f32,
         reflectivity: f32,
         refraction_idx: f32,

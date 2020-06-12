@@ -13,7 +13,7 @@ pub use sphere::Sphere;
 pub use plane::Plane;
 pub use cube::Cube;
 pub use triangle::Triangle;
-pub use material::{ColorFun, Phong, Material};
+pub use material::{ColorFun, TexturePhong, Phong, Material};
 
 pub struct Scene {
     ambient: Color,
