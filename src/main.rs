@@ -155,8 +155,6 @@ fn build_render_view<'a>(config: Config, scene: Rc<Scene>) -> gtk::Box {
         };
 
         println!("Rendering...");
-        //let mut scene = Scene::new();
-        //create_scene(&mut scene);
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .expect("Invalid time");
