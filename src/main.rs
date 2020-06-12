@@ -36,8 +36,9 @@ fn main() {
     println!("Rendering configuration: {:?}", config);
 
     if config.gui {
-        let app = gtk::Application::new(Some("com.github.erichgess.rust-tracer"), Default::default())
-            .expect("Initialization failed...");
+        let app =
+            gtk::Application::new(Some("com.github.erichgess.rust-tracer"), Default::default())
+                .expect("Initialization failed...");
 
         app.connect_activate(move |app| {
             let mut scene = Scene::new();
@@ -67,7 +68,6 @@ fn build_gui<'a>(app: &gtk::Application, config: Config, scene: Rc<Scene>) {
     let mut notebook = gui::Notebook::new();
     window.add(&notebook.notebook);
 
-
     let render_box = build_render_view(config, Rc::clone(&scene));
     let title = "Render";
     notebook.create_tab(title, render_box.upcast());
@@ -89,7 +89,7 @@ fn build_scene_description_box(scene: &Scene) -> gtk::TextView {
             buffer.set_text("Put Scene Shit Here");
             // Print Ambient Light
             text = format!("Ambient Light: {:?}\n", scene.ambient());
-            
+
             // Print lights
             for light in scene.lights() {
                 text = text + &format!("Light: {}\n", light.to_string());
@@ -141,8 +141,14 @@ fn build_render_view<'a>(config: Config, scene: Rc<Scene>) -> gtk::Box {
     let img = img.clone();
     let scene = Rc::clone(&scene);
     btn.connect_clicked(move |_btn| {
-        let width = w_input.get_text().map(|v| v.parse::<usize>().unwrap_or(config.width)).unwrap();
-        let height = h_input.get_text().map(|v| v.parse::<usize>().unwrap_or(config.height)).unwrap();
+        let width = w_input
+            .get_text()
+            .map(|v| v.parse::<usize>().unwrap_or(config.width))
+            .unwrap();
+        let height = h_input
+            .get_text()
+            .map(|v| v.parse::<usize>().unwrap_or(config.height))
+            .unwrap();
         let config = Config {
             width,
             height,
@@ -206,12 +212,21 @@ fn configure_cli<'a, 'b>() -> App<'a, 'b> {
 }
 
 fn parse_args(args: &ArgMatches) -> Config {
-    let width = args.value_of("width").map(|s| s.parse::<usize>().expect("Expected integer for width")).unwrap();
-    let height = args.value_of("height").map(|s| s.parse::<usize>().expect("Expected integer for height")).unwrap();
-    let depth = args.value_of("depth").map(|s| s.parse::<usize>().expect("Expected integer for depth")).unwrap();
+    let width = args
+        .value_of("width")
+        .map(|s| s.parse::<usize>().expect("Expected integer for width"))
+        .unwrap();
+    let height = args
+        .value_of("height")
+        .map(|s| s.parse::<usize>().expect("Expected integer for height"))
+        .unwrap();
+    let depth = args
+        .value_of("depth")
+        .map(|s| s.parse::<usize>().expect("Expected integer for depth"))
+        .unwrap();
     let to_terminal = args.is_present("to-terminal");
     let gui = args.is_present("gui");
-    Config{
+    Config {
         width,
         height,
         depth,
@@ -226,12 +241,7 @@ fn render_to_file(config: &Config, scene: &Scene, dir: &str, file: &str) {
     let duration = start.elapsed();
     println!("Render and draw time: {}ms", duration.as_millis());
 
-    bmp::save_to_bmp(
-        dir,
-        file,
-        &buffer,
-    )
-    .expect("Failed to save image to disk");
+    bmp::save_to_bmp(dir, file, &buffer).expect("Failed to save image to disk");
 }
 
 fn render_scene(config: &Config, scene: &Scene) -> RenderBuffer {
