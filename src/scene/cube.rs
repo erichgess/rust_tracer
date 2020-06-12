@@ -84,7 +84,6 @@ impl Cube {
         Cube {
             transform: Matrix::identity(),
             inv_transform: Matrix::identity(),
-            material: material,
             triangles: scene,
         }
     }
