@@ -85,7 +85,7 @@ fn build_scene_description_box(scene: &Scene) -> gtk::TextView {
     match text.get_buffer() {
         None => panic!("Could not get buffer from TextView for Scene Description"),
         Some(buffer) => {
-            let mut text = String::new();
+            let mut text;
             buffer.set_text("Put Scene Shit Here");
             // Print Ambient Light
             text = format!("Ambient Light: {:?}\n", scene.ambient());
@@ -93,6 +93,11 @@ fn build_scene_description_box(scene: &Scene) -> gtk::TextView {
             // Print lights
             for light in scene.lights() {
                 text = text + &format!("Light: {}\n", light.to_string());
+            }
+
+            // Print shapes
+            for shape in scene.shapes() {
+                text = text + &format!("Shape: {}\n", shape.to_string());
             }
 
             buffer.set_text(&text);

@@ -50,6 +50,10 @@ impl Scene {
     pub fn lights(&self) -> &Vec<Box<dyn LightSource>> {
         &self.lights
     }
+
+    pub fn shapes(&self) -> &Vec<Box<dyn Renderable>> {
+        &self.shapes
+    }
 }
 
 impl Renderable for Scene {
@@ -71,6 +75,10 @@ impl Renderable for Scene {
         }
         nearest_intersection
     }
+
+    fn to_string(&self) -> String {
+        "The Scene".into()
+    }
 }
 
 /**
@@ -89,6 +97,8 @@ pub trait Renderable {
     // Set the transformation matrix which will be used to position
     // and scale the sphere within the scene
     fn set_transform(&mut self, mat: &Matrix);
+
+    fn to_string(&self) -> String;
 }
 
 pub type TextureCoords = (f32, f32);

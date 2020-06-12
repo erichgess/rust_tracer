@@ -2,6 +2,7 @@ use super::*;
 
 pub trait Material {
     fn get_reflected_energy(&self, incoming: &Color, light_dir: &Vector3, i: &Intersection) -> Color;
+    fn to_string(&self) -> String;
 }
 
 #[derive(Debug, PartialEq, Copy, Clone)]
@@ -58,6 +59,10 @@ impl Material for Phong {
             &(self.specular)(i.tex_coord),
         );
         diffuse + specular
+    }
+
+    fn to_string(&self) -> String {
+        format!("Phong")
     }
 }
 

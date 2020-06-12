@@ -90,6 +90,10 @@ impl Renderable for Sphere {
         self.transform = *mat;
         self.inv_transform = self.transform.inverse();
     }
+
+    fn to_string(&self) -> String {
+        "Sphere".into()
+    }
 }
 
 fn solve_quadratic(a: f32, b: f32, c: f32) -> Option<(f32, f32)> {

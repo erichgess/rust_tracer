@@ -69,6 +69,10 @@ impl Renderable for Plane {
             None
         }
     }
+
+    fn to_string(&self) -> String {
+        "Plane".into()
+    }
 }
 
 #[cfg(test)]

@@ -83,6 +83,10 @@ impl Renderable for Triangle {
         self.transform = *m;
         self.inv_transform = m.inverse();
     }
+
+    fn to_string(&self) -> String {
+        "Triable".into()
+    }
 }
 
 #[cfg(test)]

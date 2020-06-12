@@ -112,4 +112,8 @@ impl Renderable for Cube {
         self.transform = *mat;
         self.inv_transform = self.transform.inverse();
     }
+
+    fn to_string(&self) -> String {
+        "Cube".into()
+    }
 }
