@@ -4,10 +4,9 @@ extern crate gio;
 extern crate gtk;
 
 mod bmp;
+mod gui;
 mod math;
 mod scene;
-
-use std::env::args;
 
 use clap::{App, Arg, ArgMatches};
 use gio::prelude::*;
@@ -60,8 +59,29 @@ fn build_gui(app: &gtk::Application, config: Config) {
     window.set_position(gtk::WindowPosition::CenterOnParent);
     window.set_default_size(config.width as i32, config.height as i32);
 
+    let mut notebook = gui::Notebook::new();
+    window.add(&notebook.notebook);
+
+
+    let render_box = build_render_view(config);
+    let title = "Render";
+    notebook.create_tab(title, render_box.upcast());
+
+    let scene_desc = build_scene_description_box();
+    let title = "Scene";
+    notebook.create_tab(title, scene_desc.upcast());
+
+    window.show_all();
+}
+
+fn build_scene_description_box() -> gtk::TextView {
+    let text = gtk::TextView::new();
+    text.set_editable(false);
+    text
+}
+
+fn build_render_view(config: Config) -> gtk::Box {
     let vbox = gtk::Box::new(gtk::Orientation::Vertical, 0);
-    window.add(&vbox);
 
     let scrolled_box = gtk::ScrolledWindow::new(None::<&gtk::Adjustment>, None::<&gtk::Adjustment>);
     scrolled_box.set_size_request(config.width as i32, config.height as i32);
@@ -113,7 +133,7 @@ fn build_gui(app: &gtk::Application, config: Config) {
         img.set_from_file(format!("./output/{}", file));
     });
 
-    window.show_all();
+    vbox
 }
 
 fn configure_cli<'a, 'b>() -> App<'a, 'b> {
