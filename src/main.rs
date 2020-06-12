@@ -34,21 +34,21 @@ fn main() {
     let config = parse_args(&cargs);
     println!("Rendering configuration: {:?}", config);
 
+    let mut scene = Scene::new();
+    create_scene(&mut scene);
+    let scene = Rc::new(scene);
+
     if config.gui {
         let app =
             gtk::Application::new(Some("com.github.erichgess.rust-tracer"), Default::default())
                 .expect("Initialization failed...");
-
         app.connect_activate(move |app| {
-            let mut scene = Scene::new();
-            create_scene(&mut scene);
-            let scene = Rc::new(scene);
+            let scene = Rc::clone(&scene);
             build_gui(app, config, scene);
         });
+
         app.run(&vec![]); // Give an empty list of args bc we already processed the args above.
     } else {
-        let mut scene = Scene::new();
-        create_scene(&mut scene);
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .expect("Invalid time");
