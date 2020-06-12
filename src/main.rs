@@ -72,14 +72,14 @@ fn build_gui<'a>(app: &gtk::Application, config: Config, scene: Rc<Scene>) {
     let title = "Render";
     notebook.create_tab(title, render_box.upcast());
 
-    let scene_desc = build_scene_description_box(&Rc::clone(&scene));
+    let scene_desc = build_scene_description_view(&Rc::clone(&scene));
     let title = "Scene";
     notebook.create_tab(title, scene_desc.upcast());
 
     window.show_all();
 }
 
-fn build_scene_description_box(scene: &Scene) -> gtk::TextView {
+fn build_scene_description_view(scene: &Scene) -> gtk::TextView {
     let text = gtk::TextView::new();
     text.set_editable(false);
     match text.get_buffer() {
