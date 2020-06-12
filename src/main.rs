@@ -136,6 +136,12 @@ fn build_render_view<'a>(config: Config, scene: Rc<Scene>) -> gtk::Box {
     h_input.set_text(&format!("{}", config.height));
     wbox.pack_start(&h_input, false, false, 4);
 
+    let label = gtk::Label::new(Some("Depth"));
+    wbox.pack_start(&label, false, false, 0);
+    let d_input = gtk::Entry::new();
+    d_input.set_text(&format!("{}", config.depth));
+    wbox.pack_start(&d_input, false, false, 4);
+
     // Setup Render button to render and display the scene
     let img = img.clone();
     let scene = Rc::clone(&scene);
@@ -148,9 +154,14 @@ fn build_render_view<'a>(config: Config, scene: Rc<Scene>) -> gtk::Box {
             .get_text()
             .map(|v| v.parse::<usize>().unwrap_or(config.height))
             .unwrap();
+        let depth = d_input
+            .get_text()
+            .map(|v| v.parse::<usize>().unwrap_or(config.depth))
+            .unwrap();
         let config = Config {
             width,
             height,
+            depth,
             ..config
         };
 
