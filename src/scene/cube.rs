@@ -1,11 +1,10 @@
 /// Render a unit cube
-use crate::math::{Matrix, Point3, Ray, Vector3};
+use crate::math::{Matrix, Point3, Ray};
 
 use super::ColorFun;
 use super::Intersection;
 use super::Phong;
 use super::Renderable;
-use super::TextureCoords;
 use super::Triangle;
 use super::Scene;
 
@@ -13,7 +12,6 @@ pub struct Cube {
     triangles: Scene,
     transform: Matrix,
     inv_transform: Matrix,
-    material: Phong,
 }
 
 impl Cube {

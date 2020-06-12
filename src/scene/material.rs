@@ -2,6 +2,10 @@ use super::*;
 
 pub type ColorFun = fn((f32, f32)) -> Color;
 
+pub trait ColorTrait {
+    fn color(tx: TextureCoords) -> Color;
+}
+
 pub trait Material {
     fn get_reflected_energy(&self, incoming: &Color, light_dir: &Vector3, i: &Intersection) -> Color;
     fn to_string(&self) -> String;
