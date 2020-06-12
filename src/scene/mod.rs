@@ -13,7 +13,7 @@ pub use sphere::Sphere;
 pub use plane::Plane;
 pub use cube::Cube;
 pub use triangle::Triangle;
-pub use material::{Phong, Material};
+pub use material::{ColorFun, Phong, Material};
 
 pub struct Scene {
     ambient: Color,
@@ -113,8 +113,6 @@ pub struct Intersection {
     pub entering: bool,
     pub tex_coord: TextureCoords,
 }
-
-type ColorFun = fn((f32, f32)) -> Color;
 
 pub trait LightSource {
     fn get_energy(&self, scene: &Scene, point: &Point3) -> (Vector3, Color);
