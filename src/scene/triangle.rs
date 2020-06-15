@@ -166,7 +166,7 @@ mod tests {
     #[test]
     fn shading() {
         // CW defined triangle the normal should point in the -Z axis
-        let material = Phong::new(WHITE, WHITE, WHITE, 60., 0., 0.);
+        let material = Phong::new(0.5 * WHITE, 0.5 * WHITE, 0.5 * WHITE, 60., 0., 0.);
         let tri = Triangle::new(
             &Point3::new(2., -1., 0.),
             &Point3::new(-1., -1., 0.),
