@@ -5,6 +5,7 @@ use super::Intersection;
 use super::Phong;
 use super::Renderable;
 use super::TextureCoords;
+use super::Material;
 
 pub struct Sphere {
     transform: Matrix,
@@ -75,7 +76,7 @@ impl Renderable for Sphere {
                 let eye_dir = -ray.direction().norm();
                 Some(Intersection {
                     t,
-                    material: self.material,
+                    material: &self.material,
                     point,
                     eye_dir,
                     normal,
@@ -150,16 +151,16 @@ mod tests {
         let sph = Sphere::new(WHITE, WHITE, WHITE, 60., 1., 0.);
         let ray = Ray::new(&Point3::new(0., 0., 2.), &Vector3::new(0., 0., -1.));
         let intersect = sph.intersect(&ray);
-        assert_ne!(None, intersect);
+        assert_eq!(true, intersect.is_some());
         assert_eq!(1., intersect.unwrap().t);
 
         let miss = Ray::new(&Point3::new(0., 0., 2.), &Vector3::new(0., 1., 0.));
         let intersect = sph.intersect(&miss);
-        assert_eq!(None, intersect);
+        assert_eq!(false, intersect.is_some());
 
         let edge = Ray::new(&Point3::new(0., 1., 2.), &Vector3::new(0., 0., -1.));
         let intersect = sph.intersect(&edge);
-        assert_ne!(None, intersect);
+        assert_eq!(true, intersect.is_some());
         assert_eq!(2., intersect.unwrap().t);
     }
 
@@ -171,16 +172,16 @@ mod tests {
 
         let ray = Ray::new(&Point3::new(0., 0., 2.), &Vector3::new(0., 0., -1.));
         let intersect = sph.intersect(&ray);
-        assert_ne!(None, intersect);
+        assert_eq!(true, intersect.is_some());
         assert_eq!(4., intersect.unwrap().t);
 
         let miss = Ray::new(&Point3::new(0., 0., 2.), &Vector3::new(0., 1., 0.));
         let intersect = sph.intersect(&miss);
-        assert_eq!(None, intersect);
+        assert_eq!(false, intersect.is_some());
 
         let edge = Ray::new(&Point3::new(0., 2., 2.), &Vector3::new(0., 0., -1.));
         let intersect = sph.intersect(&edge);
-        assert_ne!(None, intersect);
+        assert_eq!(true, intersect.is_some());
         assert_eq!(2., intersect.unwrap().t);
     }
 }

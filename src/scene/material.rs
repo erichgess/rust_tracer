@@ -8,6 +8,10 @@ pub trait ColorTrait {
 
 pub trait Material {
     fn get_reflected_energy(&self, incoming: &Color, light_dir: &Vector3, i: &Intersection) -> Color;
+    fn diffuse(&self, tx: TextureCoords) -> Color;
+    fn ambient(&self, tx: TextureCoords) -> Color;
+    fn reflectivity(&self) -> f32;
+    fn refraction_index(&self) -> f32;
     fn to_string(&self) -> String;
 }
 
@@ -42,6 +46,22 @@ impl Phong {
 }
 
 impl Material for Phong {
+    fn diffuse(&self, _: TextureCoords) -> Color {
+        self.diffuse
+    }
+
+    fn ambient(&self, _: TextureCoords) -> Color {
+        self.ambient
+    }
+
+    fn refraction_index(&self) -> f32 {
+        self.refraction_index
+    }
+
+    fn reflectivity(&self) -> f32 {
+        self.reflectivity
+    }
+
     /// Use Phong reflection model to compute the intensity of light reflected
     /// in the direction of the eye
     fn get_reflected_energy(
@@ -114,6 +134,22 @@ impl TexturePhong {
 }
 
 impl Material for TexturePhong {
+    fn diffuse(&self, tx: TextureCoords) -> Color {
+        (self.diffuse)(tx)
+    }
+
+    fn ambient(&self, tx: TextureCoords) -> Color {
+        (self.ambient)(tx)
+    }
+
+    fn refraction_index(&self) -> f32 {
+        self.refraction_index
+    }
+
+    fn reflectivity(&self) -> f32 {
+        self.reflectivity
+    }
+
     /// Use Phong reflection model to compute the intensity of light reflected
     /// in the direction of the eye
     fn get_reflected_energy(

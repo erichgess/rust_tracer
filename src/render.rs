@@ -51,12 +51,12 @@ fn trace_ray(scene: &Scene, ray: &Ray, depth: usize) -> Color {
         None => BLACK,
         Some(i) => {
             let (n1, n2) = if i.entering {
-                (1., i.material.refraction_index)
+                (1., i.material.refraction_index())
             } else {
-                (i.material.refraction_index, 1.)
+                (i.material.refraction_index(), 1.)
             };
 
-            let ambient = (i.material.ambient) * scene.ambient();
+            let ambient = (i.material.ambient(i.tex_coord)) * scene.ambient();
 
             let lights: Color = get_light_energy(scene, &i)
                 .iter()
@@ -66,7 +66,7 @@ fn trace_ray(scene: &Scene, ray: &Ray, depth: usize) -> Color {
                 })
                 .sum();
 
-            let reflected = if i.material.reflectivity > EPSILON {
+            let reflected = if i.material.reflectivity() > EPSILON {
                 // compute reflection vector
                 let reflect_ray = reflect_ray(ray, &i);
                 // compute incoming energy from the direction of the reflected ray
@@ -79,9 +79,9 @@ fn trace_ray(scene: &Scene, ray: &Ray, depth: usize) -> Color {
                 BLACK
             };
 
-            let refracted = if i.material.refraction_index > EPSILON {
+            let refracted = if i.material.refraction_index() > EPSILON {
                 let refract_ray = refract_ray(ray, &i, n1, n2);
-                (i.material.diffuse)
+                (i.material.diffuse(i.tex_coord))
                     * refract_ray
                         .map(|r| {
                             let fresnel =

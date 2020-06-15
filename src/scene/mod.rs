@@ -103,10 +103,10 @@ pub trait Renderable {
 
 pub type TextureCoords = (f32, f32);
 
-#[derive(Debug, PartialEq, Copy, Clone)]
-pub struct Intersection {
+#[derive(Copy, Clone)]
+pub struct Intersection<'a> {
     pub t: f32,
-    pub material: Phong,
+    pub material: &'a dyn Material,
     pub point: Point3,
     pub eye_dir: Vector3,
     pub normal: Vector3,

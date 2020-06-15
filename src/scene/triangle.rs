@@ -70,7 +70,7 @@ impl Renderable for Triangle {
 
         Some(Intersection {
             t,
-            material: self.material,
+            material: &self.material,
             point: t * ray,
             eye_dir: -(ray.direction().norm()),
             normal,
@@ -132,7 +132,7 @@ mod tests {
         let ray = Ray::new(&Point3::new(0., 0., -4.), &Vector3::new(0., 0., 1.));
 
         let i = tri.intersect(&ray);
-        assert_ne!(None, i);
+        assert_eq!(true, i.is_some());
         let i = i.unwrap();
 
         assert_eq!(4.0, i.t);
@@ -156,7 +156,7 @@ mod tests {
         let ray = Ray::new(&Point3::new(0., 0., -4.), &Vector3::new(0., 0., -1.));
 
         let i = tri.intersect(&ray);
-        assert_eq!(None, i);
+        assert_eq!(false, i.is_some());
     }
 
     #[test]
