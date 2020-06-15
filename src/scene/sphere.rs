@@ -190,11 +190,7 @@ mod benchmarks {
     extern crate test;
     use super::*;
     use crate::math::Vector3;
-    use crate::scene::color::{Color, colors::WHITE};
-
-    fn white(_: TextureCoords) -> Color {
-        WHITE
-    }
+    use crate::scene::color::colors::WHITE;
 
     #[bench]
     fn intersection(b: &mut test::Bencher) {

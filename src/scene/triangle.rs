@@ -94,11 +94,7 @@ mod tests {
     use super::*;
     use crate::math::Ray;
     use crate::scene::color::{Color, colors::*};
-    use crate::scene::{Material, Phong, PointLight, TextureCoords};
-
-    fn white(_: TextureCoords) -> Color {
-        0.5 * WHITE
-    }
+    use crate::scene::{Material, Phong, PointLight};
 
     #[test]
     fn creation() {
