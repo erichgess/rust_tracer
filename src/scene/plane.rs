@@ -1,5 +1,7 @@
 /// A basic plane
 
+use std::rc::Rc;
+
 use crate::math::{Matrix, Point3, Ray, Vector3};
 use super::{Intersection, TexturePhong, Renderable};
 
@@ -56,7 +58,7 @@ impl Renderable for Plane {
             let v = self.v.dot(&Vector3::from(point));
             let i = Intersection{
                 t: t,
-                material: &self.material,
+                material: Rc::new(self.material),
                 point: point,
                 eye_dir: -ray.direction().norm(),
                 normal: (self.transform * self.normal),

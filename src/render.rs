@@ -218,6 +218,8 @@ mod benchmarks {
     extern crate test;
     use test::Bencher;
 
+    use std::rc::Rc;
+
     use super::*;
 
     fn red(_: TextureCoords) -> Color {
@@ -236,7 +238,8 @@ mod benchmarks {
         let mut buffer = RenderBuffer::new(x_res, y_res);
 
         let mut scene = Scene::new();
-        let mut sph = Sphere::new(WHITE, RED, WHITE, 60., 1., 0.);
+        let phong = Rc::new(Phong::new(WHITE, RED, WHITE, 60., 1., 0.));
+        let mut sph = Sphere::new(phong);
         let transform = Matrix::scale(1.0, 2.25, 1.0);
         sph.set_transform(&transform);
 

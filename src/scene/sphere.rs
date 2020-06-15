@@ -1,8 +1,8 @@
 use crate::math::{Matrix, Point3, Ray, Vector3};
 
-use super::Color;
+use std::rc::Rc;
+
 use super::Intersection;
-use super::Phong;
 use super::Renderable;
 use super::TextureCoords;
 use super::Material;
@@ -10,29 +10,17 @@ use super::Material;
 pub struct Sphere {
     transform: Matrix,
     inv_transform: Matrix,
-    material: Phong,
+    material: Rc<dyn Material>,
 }
 
 impl Sphere {
     pub fn new(
-        ambient: Color,
-        diffuse: Color,
-        specular: Color,
-        power: f32,
-        reflectivity: f32,
-        refraction_idx: f32,
+        material: Rc<dyn Material>
     ) -> Sphere {
         Sphere {
             transform: Matrix::identity(),
             inv_transform: Matrix::identity(),
-            material: Phong::new(
-                ambient,
-                diffuse,
-                specular,
-                power,
-                reflectivity,
-                refraction_idx,
-            ),
+            material,
         }
     }
 
@@ -76,7 +64,7 @@ impl Renderable for Sphere {
                 let eye_dir = -ray.direction().norm();
                 Some(Intersection {
                     t,
-                    material: &self.material,
+                    material: Rc::clone(&self.material),
                     point,
                     eye_dir,
                     normal,
@@ -122,6 +110,7 @@ fn solve_quadratic(a: f32, b: f32, c: f32) -> Option<(f32, f32)> {
 mod tests {
     use super::*;
     use crate::math::Vector3;
+    use crate::scene::Phong;
     use crate::scene::color::{Color, colors::WHITE};
 
     fn white(_: TextureCoords) -> Color {
@@ -130,7 +119,8 @@ mod tests {
 
     #[test]
     fn basic() {
-        let mut sph = Sphere::new(WHITE, WHITE, WHITE, 60., 1., 0.);
+        let phong = Rc::new(Phong::new(WHITE, WHITE, WHITE, 60., 1., 0.));
+        let mut sph = Sphere::new(phong);
 
         assert_eq!(
             Matrix::identity(),
@@ -148,7 +138,9 @@ mod tests {
 
     #[test]
     fn intersection_no_transform() {
-        let sph = Sphere::new(WHITE, WHITE, WHITE, 60., 1., 0.);
+        let phong = Rc::new(Phong::new(WHITE, WHITE, WHITE, 60., 1., 0.));
+        let mut sph = Sphere::new(phong);
+
         let ray = Ray::new(&Point3::new(0., 0., 2.), &Vector3::new(0., 0., -1.));
         let intersect = sph.intersect(&ray);
         assert_eq!(true, intersect.is_some());
@@ -166,7 +158,9 @@ mod tests {
 
     #[test]
     fn intersection_transform() {
-        let mut sph = Sphere::new(WHITE, WHITE, WHITE, 60., 1., 0.);
+        let phong = Rc::new(Phong::new(WHITE, WHITE, WHITE, 60., 1., 0.));
+        let mut sph = Sphere::new(phong);
+
         let transform = Matrix::translate(0., 2., -2.) * Matrix::scale(2., 2., 2.);
         sph.set_transform(&transform);
 
@@ -189,13 +183,16 @@ mod tests {
 #[cfg(test)]
 mod benchmarks {
     extern crate test;
+    use std::rc::Rc;
     use super::*;
     use crate::math::Vector3;
+    use crate::scene::Phong;
     use crate::scene::color::colors::WHITE;
 
     #[bench]
     fn intersection(b: &mut test::Bencher) {
-        let sph = Sphere::new(WHITE, WHITE, WHITE, 60., 1., 0.);
+        let phong = Rc::new(Phong::new(WHITE, WHITE, WHITE, 60., 1., 0.));
+        let mut sph = Sphere::new(phong);
         let ray = Ray::new(&Point3::new(0., 0., 2.), &Vector3::new(0., 0., -1.));
 
         b.iter(|| sph.intersect(&ray));

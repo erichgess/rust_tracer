@@ -1,5 +1,6 @@
+use std::rc::Rc;
+
 use super::{Intersection, Phong, Renderable};
-/// Render a single triangle
 use crate::math::{Matrix, Point3, Ray, Vector3};
 
 pub struct Triangle {
@@ -70,7 +71,7 @@ impl Renderable for Triangle {
 
         Some(Intersection {
             t,
-            material: &self.material,
+            material: Rc::new(self.material),
             point: t * ray,
             eye_dir: -(ray.direction().norm()),
             normal,
