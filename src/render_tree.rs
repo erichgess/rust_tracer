@@ -32,7 +32,7 @@ fn build_ray_tree(scene: &Scene, ray: &Ray, depth: usize) -> RayTree {
                 // compute reflection vector
                 let reflect_ray = reflect_ray(ray, &i);
                 // compute incoming energy from the direction of the reflected ray
-                trace_ray(scene, &reflect_ray, depth - 1)
+                build_ray_tree(scene, &reflect_ray, depth - 1)
             } else {
                 RayTree::None
             };
@@ -41,7 +41,7 @@ fn build_ray_tree(scene: &Scene, ray: &Ray, depth: usize) -> RayTree {
                 let refract_ray = refract_ray(ray, &i, n1, n2);
                 refract_ray
                         .map(|r| {
-                            trace_ray(scene, &r, depth - 1)
+                            build_ray_tree(scene, &r, depth - 1)
                         })
                         .unwrap_or(RayTree::None)
             } else {
