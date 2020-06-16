@@ -148,13 +148,13 @@ pub fn get_light_energy(scene: &Scene, i: &Intersection) -> Vec<(Vector3, Color)
 }
 
 pub struct Camera {
-    origin: Point3,
-    x_min: f32,
-    x_max: f32,
-    y_min: f32,
-    y_max: f32,
-    x_res: usize,
-    y_res: usize,
+    pub origin: Point3,
+    pub x_min: f32,
+    pub x_max: f32,
+    pub y_min: f32,
+    pub y_max: f32,
+    pub x_res: usize,
+    pub y_res: usize,
 }
 
 impl Camera {

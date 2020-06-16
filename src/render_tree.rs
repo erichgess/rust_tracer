@@ -1,5 +1,5 @@
 use super::math::{Ray, Vector3};
-use super::render::{fresnel_reflection, fresnel_refraction, get_light_energy, reflect_ray, refract_ray};
+use super::render::{Camera, fresnel_reflection, fresnel_refraction, get_light_energy, RenderBuffer, reflect_ray, refract_ray};
 use super::scene::{
     colors::BLACK, Color, Intersection, PointLight, Renderable, Scene,
 };
@@ -7,6 +7,16 @@ use super::scene::{
 enum RayTree {
     None,
     Branch(Intersection, Vec<(Vector3,Color)>, Box<RayTree>, Box<RayTree>)
+}
+
+pub fn render(camera: &Camera, scene: &Scene, buffer: &mut RenderBuffer, depth: usize) {
+    for v in 0..camera.y_res {
+        for u in 0..camera.x_res {
+            let ray = camera.get_ray(u, v);
+            let tree = build_ray_tree(scene, &ray, depth);
+            buffer.buf[u][v] = render_ray(&tree, scene.ambient());
+        }
+    }
 }
 
 fn build_ray_tree(scene: &Scene, ray: &Ray, depth: usize) -> RayTree {
@@ -53,7 +63,7 @@ fn build_ray_tree(scene: &Scene, ray: &Ray, depth: usize) -> RayTree {
     }
 }
 
-fn render_ray(tree: &RayTree, ambient: Color) -> Color {
+fn render_ray(tree: &RayTree, ambient: &Color) -> Color {
     use std::f32::EPSILON;
 
     match tree {
@@ -64,8 +74,6 @@ fn render_ray(tree: &RayTree, ambient: Color) -> Color {
             } else {
                 (i.material.refraction_index(), 1.)
             };
-
-            let ambient = (i.material.ambient(i.tex_coord)) * ambient;
 
             let lights: Color = lights
                 .iter()
@@ -95,6 +103,7 @@ fn render_ray(tree: &RayTree, ambient: Color) -> Color {
                 BLACK
             };
 
+            let ambient = (i.material.ambient(i.tex_coord)) * ambient;
             ambient + lights + reflected + refracted
         }
     }
