@@ -158,6 +158,12 @@ impl PartialEq for Color {
     }
 }
 
+impl std::fmt::Display for Color {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "(r: {}, g: {}, b: {})", self.r, self.g, self.b)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

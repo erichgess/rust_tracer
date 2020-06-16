@@ -88,7 +88,7 @@ impl Material for Phong {
     }
 
     fn to_string(&self) -> String {
-        format!("Phong")
+        format!("Phong(Ambient: {}, Diffuse: {}, Specular: {})", self.ambient, self.diffuse, self.specular)
     }
 }
 

@@ -81,7 +81,7 @@ impl Renderable for Sphere {
     }
 
     fn to_string(&self) -> String {
-        "Sphere".into()
+        format!("Sphere(Material: {})", self.material.to_string())
     }
 }
 
