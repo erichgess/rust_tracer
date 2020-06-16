@@ -10,6 +10,7 @@ mod gui;
 mod math;
 mod my_scene;
 mod render;
+mod render_tree;
 mod scene;
 
 use std::rc::Rc;

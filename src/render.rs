@@ -98,14 +98,14 @@ fn trace_ray(scene: &Scene, ray: &Ray, depth: usize) -> Color {
     }
 }
 
-fn reflect_ray(ray: &Ray, i: &Intersection) -> Ray {
+pub fn reflect_ray(ray: &Ray, i: &Intersection) -> Ray {
     // compute reflection vector
     let reflected_dir = -ray.direction().reflect(&i.normal).norm();
     let p = i.point + 0.0002 * reflected_dir;
     Ray::new(&p, &reflected_dir)
 }
 
-fn refract_ray(ray: &Ray, i: &Intersection, n1: f32, n2: f32) -> Option<Ray> {
+pub fn refract_ray(ray: &Ray, i: &Intersection, n1: f32, n2: f32) -> Option<Ray> {
     let ratio = n1 / n2;
     let m_dot_r = -ray.direction().dot(&i.normal);
     let cos_theta_sqrd = 1. - ratio * ratio * (1. - m_dot_r * m_dot_r);
@@ -122,7 +122,7 @@ fn refract_ray(ray: &Ray, i: &Intersection, n1: f32, n2: f32) -> Option<Ray> {
 
 /// Use Schlick's approximation to compute the Fresnel coeffection for the amount of energy
 /// reflected off of a surface.
-fn fresnel_reflection(light_dir: &Vector3, normal: &Vector3, n1: f32, n2: f32) -> f32 {
+pub fn fresnel_reflection(light_dir: &Vector3, normal: &Vector3, n1: f32, n2: f32) -> f32 {
     let m_dot_r = light_dir.dot(&normal);
     let r0 = ((n1 - n2) / (n1 + n2)) * ((n1 - n2) / (n1 + n2));
 
@@ -131,11 +131,11 @@ fn fresnel_reflection(light_dir: &Vector3, normal: &Vector3, n1: f32, n2: f32) -
 
 /// Use Schlick's approximation to compute the amount of energy transmitted through a material
 /// (this is the energy which is not reflected)
-fn fresnel_refraction(light_dir: &Vector3, normal: &Vector3, n1: f32, n2: f32) -> f32 {
+pub fn fresnel_refraction(light_dir: &Vector3, normal: &Vector3, n1: f32, n2: f32) -> f32 {
     1. - fresnel_reflection(light_dir, normal, n1, n2)
 }
 
-fn get_light_energy(scene: &Scene, i: &Intersection) -> Vec<(Vector3, Color)> {
+pub fn get_light_energy(scene: &Scene, i: &Intersection) -> Vec<(Vector3, Color)> {
     // Move slightly away from the surface of intersection because rounding
     // errors in floating point arithmetic can easily cause the ray to intersect
     // with its surface.  This would cause random points to be colored as if
