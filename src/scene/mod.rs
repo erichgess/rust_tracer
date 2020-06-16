@@ -63,14 +63,17 @@ impl Renderable for Scene {
     fn set_transform(&mut self, _: &Matrix) {}
 
     fn intersect(&self, ray: &Ray) -> Option<Intersection> {
+        let mut nearest_t = None;
         let mut nearest_intersection = None;
         for shape in self.shapes.iter() {
             match shape.intersect(ray) {
                 None => (),
                 Some(intersection) => {
-                    if nearest_intersection.is_none() {
+                    if nearest_t.is_none() {
+                        nearest_t = Some(intersection.t);
                         nearest_intersection = Some(intersection);
-                    } else if intersection.t < nearest_intersection.unwrap().t {
+                    } else if intersection.t < nearest_t.unwrap() {
+                        nearest_t = Some(intersection.t);
                         nearest_intersection = Some(intersection);
                     }
                 }
@@ -120,7 +123,7 @@ pub trait Renderable {
 
 pub type TextureCoords = (f32, f32);
 
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Intersection {
     pub t: f32,
     pub material: Phong,
