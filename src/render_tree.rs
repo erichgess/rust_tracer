@@ -1,8 +1,7 @@
 use super::math::{Matrix, Point3, Ray, Vector3};
 use super::render::{fresnel_reflection, fresnel_refraction, get_light_energy, reflect_ray, refract_ray};
 use super::scene::{
-    colors::*, Color, Cube, Intersection, Material, Phong, Plane, PointLight, Renderable, Scene,
-    Sphere, TextureCoords,
+    colors::BLACK, Color, Intersection, Material, Renderable, Scene,
 };
 
 fn trace_ray(scene: &Scene, ray: &Ray, depth: usize) -> Color {
