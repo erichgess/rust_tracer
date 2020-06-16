@@ -2,15 +2,17 @@ use crate::math::{Matrix, Point3, Ray, Vector3};
 
 mod color;
 mod cube;
+mod intersection;
+mod material;
 mod plane;
 mod sphere;
 mod triangle;
-mod material;
 
 use std::rc::Rc;
 
 pub use color::Color;
 pub use color::colors;
+pub use intersection::Intersection;
 pub use sphere::Sphere;
 pub use plane::Plane;
 pub use cube::Cube;
@@ -107,53 +109,6 @@ pub trait Renderable {
 }
 
 pub type TextureCoords = (f32, f32);
-
-#[derive(Clone)]
-pub struct Intersection {
-    pub t: f32,
-    pub material: Rc<dyn Material>,
-    pub point: Point3,
-    pub eye_dir: Vector3,
-    pub normal: Vector3,
-    pub entering: bool,
-    pub tex_coord: TextureCoords,
-}
-
-impl PartialEq for Intersection{
-    fn eq(&self, other: &Intersection) -> bool {
-        (self.t - other.t).abs() < std::f32::EPSILON
-    }
-}
-
-impl PartialOrd for Intersection {
-    fn partial_cmp(&self, other: &Intersection) -> Option<std::cmp::Ordering> {
-        let diff = self.t - other.t;
-        if diff.abs() < std::f32::EPSILON {
-            Some(std::cmp::Ordering::Equal)
-        } else if self.t < other.t {
-            Some(std::cmp::Ordering::Less)
-        } else {
-            Some(std::cmp::Ordering::Greater)
-        }
-    }
-}
-
-impl Eq for Intersection {
-
-}
-
-impl Ord for Intersection {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        let diff = self.t - other.t;
-        if diff.abs() < std::f32::EPSILON {
-            std::cmp::Ordering::Equal
-        } else if self.t < other.t {
-            std::cmp::Ordering::Less
-        } else {
-            std::cmp::Ordering::Greater
-        }
-    }
-}
 
 pub trait LightSource {
     fn get_energy(&self, scene: &Scene, point: &Point3) -> (Vector3, Color);
