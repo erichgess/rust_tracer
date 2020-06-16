@@ -63,7 +63,7 @@ impl Renderable for Scene {
     fn set_transform(&mut self, _: &Matrix) {}
 
     fn intersect(&self, ray: &Ray) -> Option<Intersection> {
-        /*let mut nearest_intersection = None;
+        let mut nearest_intersection = None;
         for shape in self.shapes.iter() {
             match shape.intersect(ray) {
                 None => (),
@@ -76,9 +76,9 @@ impl Renderable for Scene {
                 }
             }
         }
-        nearest_intersection*/
+        nearest_intersection
 
-        let is:Vec<Intersection> = self.shapes.iter().map(|s| s.intersect(ray)).flatten().collect();
+        /*let is:Vec<Intersection> = self.shapes.iter().map(|s| s.intersect(ray)).flatten().collect();
         let len = is.len();
         if len == 0 {
             return None
@@ -90,7 +90,7 @@ impl Renderable for Scene {
             }
         }
         
-        Some(is[near])
+        Some(is[near])*/
     }
 
     fn to_string(&self) -> String {
@@ -160,7 +160,7 @@ impl LightSource for PointLight {
         let total_energy = match scene.intersect(&ray) {
             // If there is an intersection: make sure it happens between the light and the
             // surface point.
-            Some(ref i) => if (i.point - point).len2() < (self.pos - point).len2() {
+            Some(i) => if (i.point - point).len2() < (self.pos - point).len2() {
                 colors::BLACK
             } else {
                 self.color
