@@ -56,12 +56,12 @@ impl Renderable for Plane {
             let u = self.u.dot(&Vector3::from(point));
             let v = self.v.dot(&Vector3::from(point));
             let i = Intersection {
-                t: t,
-                material: Rc::clone(&self.material),
-                point: point,
+                t,
+                entering: t >= 0.,
+                point,
                 eye_dir: -ray.direction().norm(),
                 normal: (self.transform * self.normal),
-                entering: t >= 0.,
+                material: Rc::clone(&self.material),
                 tex_coord: (u, v),
             };
             Some(i)
