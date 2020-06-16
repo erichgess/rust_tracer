@@ -1,4 +1,6 @@
 /// Render a unit cube
+use std::rc::Rc;
+
 use crate::math::{Matrix, Point3, Ray};
 
 use super::Color;
@@ -23,14 +25,14 @@ impl Cube {
         reflectivity: f32,
         refraction_idx: f32,
     ) -> Cube {
-            let material = Phong::new(
-                ambient,
-                diffuse,
-                specular,
-                power,
-                reflectivity,
-                refraction_idx,
-            );
+        let material = Rc::new(Phong::new(
+            ambient,
+            diffuse,
+            specular,
+            power,
+            reflectivity,
+            refraction_idx,
+        ));
         let v0 = Point3::new(0.5, 0.5, -0.5);
         let v1 = Point3::new(0.5, -0.5, -0.5);
         let v2 = Point3::new(-0.5, -0.5, -0.5);
@@ -42,28 +44,28 @@ impl Cube {
         let v7 = Point3::new(0.5, -0.5, 0.5);
 
         // front
-        let tf1 = Triangle::new(&v1, &v2, &v3, &material);
-        let tf2 = Triangle::new(&v0, &v1, &v3, &material);
+        let tf1 = Triangle::new(&v1, &v2, &v3, material.clone());
+        let tf2 = Triangle::new(&v0, &v1, &v3, material.clone());
 
         // back
-        let tk1 = Triangle::new(&v7, &v5, &v4, &material);
-        let tk2 = Triangle::new(&v5, &v7, &v6, &material);
+        let tk1 = Triangle::new(&v7, &v5, &v4, material.clone());
+        let tk2 = Triangle::new(&v5, &v7, &v6, material.clone());
 
         // right side
-        let tr1 = Triangle::new(&v0, &v4, &v7, &material);
-        let tr2 = Triangle::new(&v7, &v1, &v0, &material);
+        let tr1 = Triangle::new(&v0, &v4, &v7, material.clone());
+        let tr2 = Triangle::new(&v7, &v1, &v0, material.clone());
 
         // left side
-        let tl1 = Triangle::new(&v5, &v3, &v6, &material);
-        let tl2 = Triangle::new(&v6, &v3, &v2, &material);
+        let tl1 = Triangle::new(&v5, &v3, &v6, material.clone());
+        let tl2 = Triangle::new(&v6, &v3, &v2, material.clone());
 
         // bottom
-        let tb1 = Triangle::new(&v1, &v7, &v6, &material);
-        let tb2 = Triangle::new(&v6, &v2, &v1, &material);
+        let tb1 = Triangle::new(&v1, &v7, &v6, material.clone());
+        let tb2 = Triangle::new(&v6, &v2, &v1, material.clone());
 
         // top
-        let tt1 = Triangle::new(&v5, &v4, &v0, &material);
-        let tt2 = Triangle::new(&v0, &v3, &v5, &material);
+        let tt1 = Triangle::new(&v5, &v4, &v0, material.clone());
+        let tt2 = Triangle::new(&v0, &v3, &v5, material.clone());
 
         //let tris = vec![tf1, tf2, tk1, tk2, tb1, tb2, tr1, tr2, tl1, tl2, tt1, tt2];
         let mut scene = Scene::new();

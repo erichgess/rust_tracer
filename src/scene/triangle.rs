@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use super::{Intersection, Phong, Renderable};
+use super::{Intersection, Material, Phong, Renderable};
 use crate::math::{Matrix, Point3, Ray, Vector3};
 
 pub struct Triangle {
@@ -8,11 +8,11 @@ pub struct Triangle {
     normal: Vector3,
     transform: Matrix,
     inv_transform: Matrix,
-    material: Phong,
+    material: Rc<dyn Material>,
 }
 
 impl Triangle {
-    pub fn new(v0: &Point3, v1: &Point3, v2: &Point3, material: &Phong) -> Triangle {
+    pub fn new(v0: &Point3, v1: &Point3, v2: &Point3, material: Rc::<dyn Material>) -> Triangle {
         let verts = vec![*v0, *v1, *v2];
 
         let normal = {
@@ -26,7 +26,7 @@ impl Triangle {
             normal,
             transform: Matrix::identity(),
             inv_transform: Matrix::identity(),
-            material: *material,
+            material: Rc::clone(&material),
         }
     }
 }
@@ -71,7 +71,7 @@ impl Renderable for Triangle {
 
         Some(Intersection {
             t,
-            material: Rc::new(self.material),
+            material: Rc::clone(&self.material),
             point: t * ray,
             eye_dir: -(ray.direction().norm()),
             normal,
@@ -99,13 +99,13 @@ mod tests {
 
     #[test]
     fn creation() {
-        let material = Phong::new(WHITE, WHITE, WHITE, 60., 0., 0.);
+        let material = Rc::new(Phong::new(WHITE, WHITE, WHITE, 60., 0., 0.));
         // CCW defined triangle the normal should point in the +Z axis
         let tri = Triangle::new(
             &Point3::new(0., 0., 0.),
             &Point3::new(1., 0., 0.),
             &Point3::new(0., 1., 0.),
-            &material,
+            material.clone(),
         );
         assert_eq!(Vector3::new(0., 0., 1.), tri.normal);
 
@@ -114,7 +114,7 @@ mod tests {
             &Point3::new(1., 0., 0.),
             &Point3::new(0., 0., 0.),
             &Point3::new(0., 1., 0.),
-            &material,
+            material.clone(),
         );
         assert_eq!(Vector3::new(0., 0., -1.), tri.normal);
     }
@@ -122,12 +122,12 @@ mod tests {
     #[test]
     fn intersection() {
         // CW defined triangle the normal should point in the -Z axis
-        let material = Phong::new(WHITE, WHITE, WHITE, 60., 0., 0.);
+        let material = Rc::new(Phong::new(WHITE, WHITE, WHITE, 60., 0., 0.));
         let tri = Triangle::new(
             &Point3::new(2., -2., 0.),
             &Point3::new(-2., -2., 0.),
             &Point3::new(-2., 2., 0.),
-            &material,
+            material,
         );
 
         let ray = Ray::new(&Point3::new(0., 0., -4.), &Vector3::new(0., 0., 1.));
@@ -146,12 +146,12 @@ mod tests {
     #[test]
     fn behind_ray_not_intersection() {
         // CW defined triangle the normal should point in the -Z axis
-        let material = Phong::new(WHITE, WHITE, WHITE, 60., 0., 0.);
+        let material = Rc::new(Phong::new(WHITE, WHITE, WHITE, 60., 0., 0.));
         let tri = Triangle::new(
             &Point3::new(2., -2., 0.),
             &Point3::new(-2., -2., 0.),
             &Point3::new(-2., 2., 0.),
-            &material,
+            material,
         );
 
         let ray = Ray::new(&Point3::new(0., 0., -4.), &Vector3::new(0., 0., -1.));
@@ -163,12 +163,12 @@ mod tests {
     #[test]
     fn shading() {
         // CW defined triangle the normal should point in the -Z axis
-        let material = Phong::new(0.5 * WHITE, 0.5 * WHITE, 0.5 * WHITE, 60., 0., 0.);
+        let material = Rc::new(Phong::new(0.5 * WHITE, 0.5 * WHITE, 0.5 * WHITE, 60., 0., 0.));
         let tri = Triangle::new(
             &Point3::new(2., -1., 0.),
             &Point3::new(-1., -1., 0.),
             &Point3::new(-1., 2., 0.),
-            &material,
+            material,
         );
 
         let ray = Ray::new(&Point3::new(0., 0., -4.), &Vector3::new(0., 0., 1.));

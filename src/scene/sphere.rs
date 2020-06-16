@@ -20,7 +20,7 @@ impl Sphere {
         Sphere {
             transform: Matrix::identity(),
             inv_transform: Matrix::identity(),
-            material,
+            material: Rc::clone(&material),
         }
     }
 
