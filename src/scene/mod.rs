@@ -62,21 +62,23 @@ impl Renderable for Scene {
     fn set_transform(&mut self, _: &Matrix) {}
 
     fn intersect(&self, ray: &Ray) -> Option<Intersection> {
-        /*let mut nearest_intersection = None;
+        let mut nearest = 0.;
+        let mut nearest_intersection = None;
         for shape in self.shapes.iter() {
             match shape.intersect(ray) {
                 None => (),
                 Some(intersection) => {
                     if nearest_intersection.is_none() {
+                        nearest = intersection.t;
                         nearest_intersection = Some(intersection);
-                    } else if intersection.t < nearest_intersection.unwrap().t {
+                    } else if intersection.t < nearest {
+                        nearest = intersection.t;
                         nearest_intersection = Some(intersection);
                     }
                 }
             }
         }
-        nearest_intersection*/
-        self.shapes.iter().map(|s| s.intersect(ray)).flatten().min()
+        nearest_intersection
     }
 
     fn to_string(&self) -> String {

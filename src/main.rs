@@ -1,4 +1,6 @@
 #![feature(test)]
+#![allow(unused_imports)]
+#![allow(dead_code)]
 
 extern crate gio;
 extern crate gtk;

@@ -139,7 +139,7 @@ mod tests {
     #[test]
     fn intersection_no_transform() {
         let phong = Rc::new(Phong::new(WHITE, WHITE, WHITE, 60., 1., 0.));
-        let mut sph = Sphere::new(phong);
+        let sph = Sphere::new(phong);
 
         let ray = Ray::new(&Point3::new(0., 0., 2.), &Vector3::new(0., 0., -1.));
         let intersect = sph.intersect(&ray);
@@ -192,7 +192,7 @@ mod benchmarks {
     #[bench]
     fn intersection(b: &mut test::Bencher) {
         let phong = Rc::new(Phong::new(WHITE, WHITE, WHITE, 60., 1., 0.));
-        let mut sph = Sphere::new(phong);
+        let sph = Sphere::new(phong);
         let ray = Ray::new(&Point3::new(0., 0., 2.), &Vector3::new(0., 0., -1.));
 
         b.iter(|| sph.intersect(&ray));
