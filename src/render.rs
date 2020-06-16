@@ -1,8 +1,7 @@
-use super::math::{Matrix, Point3, Ray, Vector3};
+use super::math::{Point3, Ray, Vector3};
 use super::scene::colors::*;
-use super::scene::Sphere;
 use super::scene::{
-    Color, Cube, Intersection, Material, Phong, Plane, PointLight, Renderable, Scene, TextureCoords,
+    Color, Intersection, Renderable, Scene,
 };
 
 pub struct RenderBuffer {
@@ -221,6 +220,8 @@ mod benchmarks {
     use std::rc::Rc;
 
     use super::*;
+    use super::super::math::Matrix;
+    use super::super::scene::{Phong, Sphere, TextureCoords};
 
     fn red(_: TextureCoords) -> Color {
         RED
