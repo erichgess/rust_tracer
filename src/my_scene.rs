@@ -76,23 +76,24 @@ pub fn create_scene(scene: &mut Scene) {
     sph4.set_transform(&transform);
     scene.add_shape(Box::new(sph4));
 
-    let plane_material = TexturePhong::new(dim_white, checkerboard, dim_white, 60., 0., 0.);
+    let plane_material = Rc::new(TexturePhong::new(dim_white, checkerboard, dim_white, 60., 0., 0.));
     let plane = Plane::new(
         &Point3::new(0., -2., 2.),
         &Vector3::new(0., 0., -1.),
-        &plane_material,
+        plane_material,
     );
     scene.add_shape(Box::new(plane));
 
-    let plane_material = TexturePhong::new(dim_white, checkerboard, dim_white, 60., 0., 0.);
+    let plane_material = Rc::new(TexturePhong::new(dim_white, checkerboard, dim_white, 60., 0., 0.));
     let plane = Plane::new(
         &Point3::new(0., -2., 0.),
         &Vector3::new(0., 1., 0.),
-        &plane_material,
+        plane_material,
     );
     scene.add_shape(Box::new(plane));
 
-    let mut cube = Cube::new(BLACK, WHITE, WHITE, 60., 0., 1.333);
+    let cube_material = Rc::new(Phong::new(BLACK, WHITE, WHITE, 60., 0., 1.333));
+    let mut cube = Cube::new(cube_material);
     let transform = Matrix::translate(-1., -1.0, -4.) * Matrix::rotate_x(-45.0);
     cube.set_transform(&transform);
     scene.add_shape(Box::new(cube));
