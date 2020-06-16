@@ -1,3 +1,6 @@
+#![allow(unused_imports)]
+#![allow(dead_code)]
+
 use crate::math::{Matrix, Point3, Ray, Vector3};
 
 mod color;
@@ -157,7 +160,7 @@ impl LightSource for PointLight {
         let total_energy = match scene.intersect(&ray) {
             // If there is an intersection: make sure it happens between the light and the
             // surface point.
-            Some(i) => if (i.point - point).len2() < (self.pos - point).len2() {
+            Some(ref i) => if (i.point - point).len2() < (self.pos - point).len2() {
                 colors::BLACK
             } else {
                 self.color
