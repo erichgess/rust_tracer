@@ -5,6 +5,7 @@ use super::render::{
 };
 use super::scene::{colors::BLACK, Color, Intersection, Renderable, Scene};
 
+#[derive(Clone)]
 enum RayTree {
     None,
     Branch(
@@ -16,22 +17,26 @@ enum RayTree {
 }
 
 pub fn render(camera: &Camera, scene: &Scene, buffer: &mut RenderBuffer, depth: usize) {
-    let mut build_time = std::time::Duration::default();
-    let mut render_time = std::time::Duration::default();
+    let mut ray_forest: Vec<Vec<RayTree>> = vec![vec![RayTree::None; buffer.h]; buffer.w];
+
+    let start = std::time::Instant::now();
     for v in 0..camera.y_res {
         for u in 0..camera.x_res {
-            let start = std::time::Instant::now();
             let ray = camera.get_ray(u, v);
             let tree = build_ray_tree(scene, &ray, depth);
-            let duration = start.elapsed();
-            build_time += duration;
-
-            let start = std::time::Instant::now();
-            buffer.buf[u][v] = render_ray_tree(&tree, scene.ambient()).0;
-            let duration = start.elapsed();
-            render_time += duration;
+            ray_forest[u][v] = tree;
         }
     }
+    let build_time = start.elapsed();
+
+    let start = std::time::Instant::now();
+    for v in 0..camera.y_res {
+        for u in 0..camera.x_res {
+            buffer.buf[u][v] = render_ray_tree(&ray_forest[u][v], scene.ambient()).0;
+        }
+    }
+    let render_time = start.elapsed();
+    
     println!("Total Time Building: {}", build_time.as_millis());
     println!("Total Time Rendering: {}", render_time.as_millis());
 }
@@ -103,7 +108,7 @@ fn render_ray_tree(tree: &RayTree, ambient: &Color) -> (Color, Vector3) {
                 fresnel * i.material.get_reflected_energy(&energy, &i.eye_dir, &i)
             };
 
-            let refracted =  {
+            let refracted = {
                 let (energy, dir) = render_ray_tree(refracted, ambient);
                 let fresnel = fresnel_refraction(&dir, &i.normal.neg(), n1, n2);
                 fresnel * energy
