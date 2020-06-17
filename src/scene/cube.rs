@@ -3,7 +3,6 @@ use std::rc::Rc;
 
 use crate::math::{Matrix, Point3, Ray};
 
-use super::Color;
 use super::Intersection;
 use super::Material;
 use super::Renderable;

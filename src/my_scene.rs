@@ -1,8 +1,8 @@
-use super::math::{Matrix, Point3, Ray, Vector3};
+use super::math::{Matrix, Point3, Vector3};
 use super::scene::colors::*;
 use super::scene::Sphere;
 use super::scene::{
-    Color, Cube, Intersection, Material, TexturePhong, Phong, Plane, PointLight, Renderable, Scene, TextureCoords,
+    Color, Cube, TexturePhong, Phong, Plane, PointLight, Renderable, Scene, TextureCoords,
 };
 
 fn black(_: TextureCoords) -> Color {

@@ -1,4 +1,3 @@
-use glib::clone;
 use gtk::prelude::*;
 
 pub struct Notebook {

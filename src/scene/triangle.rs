@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use super::{Intersection, Material, Phong, Renderable};
+use super::{Intersection, Material, Renderable};
 use crate::math::{Matrix, Point3, Ray, Vector3};
 
 pub struct Triangle {
@@ -95,7 +95,7 @@ mod tests {
     use super::*;
     use crate::math::Ray;
     use crate::scene::color::{Color, colors::*};
-    use crate::scene::{Material, Phong, PointLight};
+    use crate::scene::{Phong, PointLight};
 
     #[test]
     fn creation() {

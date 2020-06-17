@@ -8,8 +8,6 @@ mod plane;
 mod sphere;
 mod triangle;
 
-use std::rc::Rc;
-
 pub use color::Color;
 pub use color::colors;
 pub use intersection::Intersection;
