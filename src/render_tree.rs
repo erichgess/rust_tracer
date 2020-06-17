@@ -79,8 +79,6 @@ fn build_ray_tree(scene: &Scene, ray: &Ray, depth: usize) -> RayTree {
 }
 
 fn render_ray_tree(tree: &RayTree, ambient: &Color) -> (Color, Vector3) {
-    use std::f32::EPSILON;
-
     match tree {
         RayTree::None => (BLACK, Vector3::new(0., 0., 0.)),
         RayTree::Branch(ref i, lights, reflected, refracted) => {
@@ -98,21 +96,17 @@ fn render_ray_tree(tree: &RayTree, ambient: &Color) -> (Color, Vector3) {
                 })
                 .sum();
 
-            let reflected = if i.material.reflectivity() > EPSILON {
+            let reflected = {
                 // compute incoming energy from the direction of the reflected ray
                 let (energy, dir) = render_ray_tree(reflected, ambient);
                 let fresnel = fresnel_reflection(&dir, &i.normal, n1, n2);
                 fresnel * i.material.get_reflected_energy(&energy, &i.eye_dir, &i)
-            } else {
-                BLACK
             };
 
-            let refracted = if i.material.refraction_index() > EPSILON {
+            let refracted =  {
                 let (energy, dir) = render_ray_tree(refracted, ambient);
                 let fresnel = fresnel_refraction(&dir, &i.normal.neg(), n1, n2);
                 fresnel * energy
-            } else {
-                BLACK
             };
 
             let ambient = (i.material.ambient(i.tex_coord)) * ambient;
