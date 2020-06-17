@@ -263,7 +263,7 @@ fn render_to_image_surface(config: &Config, scene: &Scene) -> cairo::ImageSurfac
     let mut surface = ImageSurface::create(Format::Rgb24, config.width as i32, config.height as i32)
         .expect("Failed to crate ImageSurface");
     {
-        let mut sd = surface.get_data().unwrap();
+        let mut sd = surface.get_data().expect("Could not get SurfaceData");
         for y in 0..config.height {
             for x in 0..config.width {
                 let sd_idx = 4*config.width*y + 4*x;
