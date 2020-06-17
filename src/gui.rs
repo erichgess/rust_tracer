@@ -17,7 +17,6 @@ impl Notebook {
         let label = gtk::Label::new(Some(title));
         let tab = gtk::Box::new(gtk::Orientation::Horizontal, 0);
 
-
         tab.pack_start(&label, false, false, 0);
         tab.show_all();
 

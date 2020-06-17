@@ -3,9 +3,9 @@ use crate::math::{Matrix, Point3, Ray, Vector3};
 use std::rc::Rc;
 
 use super::Intersection;
+use super::Material;
 use super::Renderable;
 use super::TextureCoords;
-use super::Material;
 
 pub struct Sphere {
     transform: Matrix,
@@ -14,9 +14,7 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    pub fn new(
-        material: Rc<dyn Material>
-    ) -> Sphere {
+    pub fn new(material: Rc<dyn Material>) -> Sphere {
         Sphere {
             transform: Matrix::identity(),
             inv_transform: Matrix::identity(),
@@ -110,8 +108,8 @@ fn solve_quadratic(a: f32, b: f32, c: f32) -> Option<(f32, f32)> {
 mod tests {
     use super::*;
     use crate::math::Vector3;
+    use crate::scene::color::{colors::WHITE, Color};
     use crate::scene::Phong;
-    use crate::scene::color::{Color, colors::WHITE};
 
     fn white(_: TextureCoords) -> Color {
         WHITE
@@ -183,11 +181,11 @@ mod tests {
 #[cfg(test)]
 mod benchmarks {
     extern crate test;
-    use std::rc::Rc;
     use super::*;
     use crate::math::Vector3;
-    use crate::scene::Phong;
     use crate::scene::color::colors::WHITE;
+    use crate::scene::Phong;
+    use std::rc::Rc;
 
     #[bench]
     fn intersection(b: &mut test::Bencher) {

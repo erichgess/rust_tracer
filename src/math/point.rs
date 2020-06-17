@@ -36,11 +36,7 @@ impl Point3 {
     }
 
     pub fn sub(&self, q: &Point3) -> Vector3 {
-        Vector3::new(
-            self.x - q.x,
-            self.y - q.y,
-            self.z - q.z,
-            )
+        Vector3::new(self.x - q.x, self.y - q.y, self.z - q.z)
     }
 
     pub fn add(&self, v: &Vector3) -> Point3 {
@@ -202,7 +198,7 @@ mod test {
         let translate = Matrix::translate(2., 3., 4.);
         let r = v1 * translate;
         assert_eq!(Point3::new(1., 1., 1.), r);
-        
+
         let translate = Matrix::translate(2., 3., 4.);
         let r = translate * v1;
         assert_eq!(Point3::new(3., 4., 5.), r);
@@ -215,7 +211,7 @@ mod test {
             let rotx = Matrix::rotate_x(90.);
             let r = p * rotx;
             pt_assert_within_eps(&Point3::new(1., 1., -1.), &r);
-            
+
             let rotx = Matrix::rotate_x(90.);
             let r = rotx * p;
             pt_assert_within_eps(&Point3::new(1., -1., 1.), &r);
@@ -224,7 +220,7 @@ mod test {
             let roty = Matrix::rotate_y(90.);
             let r = p * roty;
             pt_assert_within_eps(&Point3::new(-1., 1., 1.), &r);
-            
+
             let roty = Matrix::rotate_y(90.);
             let r = roty * p;
             pt_assert_within_eps(&Point3::new(1., 1., -1.), &r);
@@ -233,7 +229,7 @@ mod test {
             let rotz = Matrix::rotate_z(90.);
             let r = p * rotz;
             pt_assert_within_eps(&Point3::new(1., -1., 1.), &r);
-            
+
             let rotz = Matrix::rotate_z(90.);
             let r = rotz * p;
             pt_assert_within_eps(&Point3::new(-1., 1., 1.), &r);

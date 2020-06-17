@@ -7,7 +7,12 @@ pub trait ColorTrait {
 }
 
 pub trait Material {
-    fn get_reflected_energy(&self, incoming: &Color, light_dir: &Vector3, i: &Intersection) -> Color;
+    fn get_reflected_energy(
+        &self,
+        incoming: &Color,
+        light_dir: &Vector3,
+        i: &Intersection,
+    ) -> Color;
     fn diffuse(&self, tx: TextureCoords) -> Color;
     fn ambient(&self, tx: TextureCoords) -> Color;
     fn reflectivity(&self) -> f32;
@@ -70,12 +75,7 @@ impl Material for Phong {
         light_dir: &Vector3,
         i: &Intersection,
     ) -> Color {
-        let diffuse = lambert(
-            &light_dir,
-            &i.normal,
-            &incoming,
-            &self.diffuse,
-        );
+        let diffuse = lambert(&light_dir, &i.normal, &incoming, &self.diffuse);
         let specular = phong(
             self.power,
             &i.eye_dir,
@@ -88,7 +88,10 @@ impl Material for Phong {
     }
 
     fn to_string(&self) -> String {
-        format!("Phong(Ambient: {}, Diffuse: {}, Specular: {})", self.ambient, self.diffuse, self.specular)
+        format!(
+            "Phong(Ambient: {}, Diffuse: {}, Specular: {})",
+            self.ambient, self.diffuse, self.specular
+        )
     }
 }
 
@@ -129,7 +132,7 @@ impl TexturePhong {
             self.power,
             self.reflectivity,
             self.refraction_index,
-            )
+        )
     }
 }
 

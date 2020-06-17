@@ -2,7 +2,7 @@ use super::math::{Matrix, Point3, Vector3};
 use super::scene::colors::*;
 use super::scene::Sphere;
 use super::scene::{
-    Color, Cube, TexturePhong, Phong, Plane, PointLight, Renderable, Scene, TextureCoords,
+    Color, Cube, Phong, Plane, PointLight, Renderable, Scene, TextureCoords, TexturePhong,
 };
 
 fn black(_: TextureCoords) -> Color {
@@ -33,8 +33,16 @@ fn dim_white(_: TextureCoords) -> Color {
     0.1 * WHITE
 }
 
-const DIM_WHITE:Color = Color{r: 0.1, g: 0.1, b: 0.1};
-const DIM_BLUE:Color = Color{r: 0., g: 0., b: 0.1};
+const DIM_WHITE: Color = Color {
+    r: 0.1,
+    g: 0.1,
+    b: 0.1,
+};
+const DIM_BLUE: Color = Color {
+    r: 0.,
+    g: 0.,
+    b: 0.1,
+};
 
 fn checkerboard(tx: TextureCoords) -> Color {
     let u = (tx.0).abs() as i32;
@@ -76,7 +84,14 @@ pub fn create_scene(scene: &mut Scene) {
     sph4.set_transform(&transform);
     scene.add_shape(Box::new(sph4));
 
-    let plane_material = Rc::new(TexturePhong::new(dim_white, checkerboard, dim_white, 60., 0., 0.));
+    let plane_material = Rc::new(TexturePhong::new(
+        dim_white,
+        checkerboard,
+        dim_white,
+        60.,
+        0.,
+        0.,
+    ));
     let plane = Plane::new(
         &Point3::new(0., -2., 2.),
         &Vector3::new(0., 0., -1.),
@@ -84,7 +99,14 @@ pub fn create_scene(scene: &mut Scene) {
     );
     scene.add_shape(Box::new(plane));
 
-    let plane_material = Rc::new(TexturePhong::new(dim_white, checkerboard, dim_white, 60., 0., 0.));
+    let plane_material = Rc::new(TexturePhong::new(
+        dim_white,
+        checkerboard,
+        dim_white,
+        60.,
+        0.,
+        0.,
+    ));
     let plane = Plane::new(
         &Point3::new(0., -2., 0.),
         &Vector3::new(0., 1., 0.),

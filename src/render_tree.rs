@@ -1,12 +1,18 @@
 use super::math::{Ray, Vector3};
-use super::render::{Camera, fresnel_reflection, fresnel_refraction, get_light_energy, RenderBuffer, reflect_ray, refract_ray};
-use super::scene::{
-    colors::BLACK, Color, Intersection, Renderable, Scene,
+use super::render::{
+    fresnel_reflection, fresnel_refraction, get_light_energy, reflect_ray, refract_ray, Camera,
+    RenderBuffer,
 };
+use super::scene::{colors::BLACK, Color, Intersection, Renderable, Scene};
 
 enum RayTree {
     None,
-    Branch(Intersection, Vec<(Vector3,Color)>, Box<RayTree>, Box<RayTree>)
+    Branch(
+        Intersection,
+        Vec<(Vector3, Color)>,
+        Box<RayTree>,
+        Box<RayTree>,
+    ),
 }
 
 pub fn render(camera: &Camera, scene: &Scene, buffer: &mut RenderBuffer, depth: usize) {
@@ -61,10 +67,8 @@ fn build_ray_tree(scene: &Scene, ray: &Ray, depth: usize) -> RayTree {
             let refracted = if i.material.refraction_index() > EPSILON {
                 let refract_ray = refract_ray(ray, &i, n1, n2);
                 refract_ray
-                        .map(|r| {
-                            build_ray_tree(scene, &r, depth - 1)
-                        })
-                        .unwrap_or(RayTree::None)
+                    .map(|r| build_ray_tree(scene, &r, depth - 1))
+                    .unwrap_or(RayTree::None)
             } else {
                 RayTree::None
             };
@@ -79,7 +83,7 @@ fn render_ray_tree(tree: &RayTree, ambient: &Color) -> (Color, Vector3) {
 
     match tree {
         RayTree::None => (BLACK, Vector3::new(0., 0., 0.)),
-     RayTree::Branch(ref i, lights, reflected, refracted) => {
+        RayTree::Branch(ref i, lights, reflected, refracted) => {
             let (n1, n2) = if i.entering {
                 (1., i.material.refraction_index())
             } else {

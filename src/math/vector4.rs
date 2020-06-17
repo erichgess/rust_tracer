@@ -1,7 +1,7 @@
 use std::ops;
 
-use super::vector3::Vector3;
 use super::matrix::Matrix;
+use super::vector3::Vector3;
 
 #[derive(Debug, PartialEq, Copy, Clone)]
 pub struct Vector4 {
@@ -199,10 +199,26 @@ mod vector4_tests {
     // f32::EPSILON in each dimension
     fn assert_within_eps(a: &Vector4, b: &Vector4) {
         let diff = a.sub(b);
-        assert_eq!(true, diff.x.abs() < f32::EPSILON, "X differs by more than epsilon");
-        assert_eq!(true, diff.y.abs() < f32::EPSILON, "Y differs by more than epsilon");
-        assert_eq!(true, diff.z.abs() < f32::EPSILON, "Z differs by more than epsilon");
-        assert_eq!(true, diff.w.abs() < f32::EPSILON, "W differs by more than epsilon");
+        assert_eq!(
+            true,
+            diff.x.abs() < f32::EPSILON,
+            "X differs by more than epsilon"
+        );
+        assert_eq!(
+            true,
+            diff.y.abs() < f32::EPSILON,
+            "Y differs by more than epsilon"
+        );
+        assert_eq!(
+            true,
+            diff.z.abs() < f32::EPSILON,
+            "Z differs by more than epsilon"
+        );
+        assert_eq!(
+            true,
+            diff.w.abs() < f32::EPSILON,
+            "W differs by more than epsilon"
+        );
     }
 
     #[test]

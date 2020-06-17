@@ -8,14 +8,14 @@ mod plane;
 mod sphere;
 mod triangle;
 
-pub use color::Color;
 pub use color::colors;
-pub use intersection::Intersection;
-pub use sphere::Sphere;
-pub use plane::Plane;
+pub use color::Color;
 pub use cube::Cube;
+pub use intersection::Intersection;
+pub use material::{ColorFun, Material, Phong, TexturePhong};
+pub use plane::Plane;
+pub use sphere::Sphere;
 pub use triangle::Triangle;
-pub use material::{ColorFun, TexturePhong, Phong, Material};
 
 pub struct Scene {
     ambient: Color,
@@ -135,20 +135,28 @@ impl LightSource for PointLight {
         let total_energy = match scene.intersect(&ray) {
             // If there is an intersection: make sure it happens between the light and the
             // surface point.
-            Some(i) => if (i.point - point).len2() < (self.pos - point).len2() {
-                colors::BLACK
-            } else {
-                self.color
-            },
+            Some(i) => {
+                if (i.point - point).len2() < (self.pos - point).len2() {
+                    colors::BLACK
+                } else {
+                    self.color
+                }
+            }
             None => self.color,
         };
         (dir_to_light, total_energy)
     }
 
     fn to_string(&self) -> String {
-        format!("Position: ({}, {}, {}), Color: ({}, {}, {})",
-            self.pos.x(), self.pos.y(), self.pos.z(),
-            self.color.r, self.color.g, self.color.b)
+        format!(
+            "Position: ({}, {}, {}), Color: ({}, {}, {})",
+            self.pos.x(),
+            self.pos.y(),
+            self.pos.z(),
+            self.color.r,
+            self.color.g,
+            self.color.b
+        )
     }
 }
 
@@ -172,7 +180,9 @@ impl LightSource for AmbientLight {
     }
 
     fn to_string(&self) -> String {
-        format!("Color: ({}, {}, {})",
-            self.color.r, self.color.g, self.color.b)
+        format!(
+            "Color: ({}, {}, {})",
+            self.color.r, self.color.g, self.color.b
+        )
     }
 }

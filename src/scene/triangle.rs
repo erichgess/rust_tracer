@@ -12,7 +12,7 @@ pub struct Triangle {
 }
 
 impl Triangle {
-    pub fn new(v0: &Point3, v1: &Point3, v2: &Point3, material: Rc::<dyn Material>) -> Triangle {
+    pub fn new(v0: &Point3, v1: &Point3, v2: &Point3, material: Rc<dyn Material>) -> Triangle {
         let verts = vec![*v0, *v1, *v2];
 
         let normal = {
@@ -59,15 +59,11 @@ impl Renderable for Triangle {
 
         let t = v0v2.dot(&qvec) * inv_det;
 
-        if t < 0.  {
+        if t < 0. {
             return None;
         }
 
-        let normal = if t < 0.  {
-            -self.normal
-        } else {
-            self.normal
-        };
+        let normal = if t < 0. { -self.normal } else { self.normal };
 
         Some(Intersection {
             t,
@@ -94,7 +90,7 @@ impl Renderable for Triangle {
 mod tests {
     use super::*;
     use crate::math::Ray;
-    use crate::scene::color::{Color, colors::*};
+    use crate::scene::color::{colors::*, Color};
     use crate::scene::{Phong, PointLight};
 
     #[test]
@@ -163,7 +159,14 @@ mod tests {
     #[test]
     fn shading() {
         // CW defined triangle the normal should point in the -Z axis
-        let material = Rc::new(Phong::new(0.5 * WHITE, 0.5 * WHITE, 0.5 * WHITE, 60., 0., 0.));
+        let material = Rc::new(Phong::new(
+            0.5 * WHITE,
+            0.5 * WHITE,
+            0.5 * WHITE,
+            60.,
+            0.,
+            0.,
+        ));
         let tri = Triangle::new(
             &Point3::new(2., -1., 0.),
             &Point3::new(-1., -1., 0.),
@@ -177,11 +180,9 @@ mod tests {
         let i = i.unwrap();
 
         let light = PointLight::new(Point3::new(0., 0., -4.), Color::new(1., 1., 1.));
-        let energy = tri.material.get_reflected_energy(
-                &light.color,
-                &(light.pos - i.point).norm(),
-                &i,
-            );
+        let energy =
+            tri.material
+                .get_reflected_energy(&light.color, &(light.pos - i.point).norm(), &i);
 
         assert_eq!(WHITE, energy);
     }

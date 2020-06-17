@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
-use crate::math::{Point3, Vector3};
 use super::{Material, TextureCoords};
+use crate::math::{Point3, Vector3};
 
 #[derive(Clone)]
 pub struct Intersection {
@@ -14,7 +14,7 @@ pub struct Intersection {
     pub tex_coord: TextureCoords,
 }
 
-impl PartialEq for Intersection{
+impl PartialEq for Intersection {
     fn eq(&self, other: &Intersection) -> bool {
         (self.t - other.t).abs() < std::f32::EPSILON
     }
@@ -33,9 +33,7 @@ impl PartialOrd for Intersection {
     }
 }
 
-impl Eq for Intersection {
-
-}
+impl Eq for Intersection {}
 
 impl Ord for Intersection {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
