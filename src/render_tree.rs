@@ -16,15 +16,28 @@ enum RayTree {
     ),
 }
 
+struct RayForest {
+    forest: Vec<Vec<RayTree>>,
+}
+
+impl RayForest {
+    pub fn new(w: usize, h: usize) -> RayForest {
+        RayForest{
+            forest: vec![vec![RayTree::None; h]; w],
+        }
+    }
+}
+
 pub fn render(camera: &Camera, scene: &Scene, buffer: &mut RenderBuffer, depth: usize) {
-    let mut ray_forest: Vec<Vec<RayTree>> = vec![vec![RayTree::None; buffer.h]; buffer.w];
+    //let mut ray_forest: Vec<Vec<RayTree>> = vec![vec![RayTree::None; buffer.h]; buffer.w];
+    let mut ray_forest = RayForest::new(buffer.w, buffer.h);
 
     let start = std::time::Instant::now();
     for v in 0..camera.y_res {
         for u in 0..camera.x_res {
             let ray = camera.get_ray(u, v);
             let tree = build_ray_tree(scene, &ray, depth);
-            ray_forest[u][v] = tree;
+            ray_forest.forest[u][v] = tree;
         }
     }
     let build_time = start.elapsed();
@@ -32,13 +45,25 @@ pub fn render(camera: &Camera, scene: &Scene, buffer: &mut RenderBuffer, depth: 
     let start = std::time::Instant::now();
     for v in 0..camera.y_res {
         for u in 0..camera.x_res {
-            buffer.buf[u][v] = render_ray_tree(&ray_forest[u][v], scene.ambient()).0;
+            buffer.buf[u][v] = render_ray_tree(&ray_forest.forest[u][v], scene.ambient()).0;
         }
     }
     let render_time = start.elapsed();
     
     println!("Total Time Building: {}", build_time.as_millis());
     println!("Total Time Rendering: {}", render_time.as_millis());
+}
+
+fn generate_ray_forest(camera: &Camera, scene: &Scene, w: usize, h: usize, depth: usize) -> RayForest {
+    let mut ray_forest = RayForest::new(w, h);
+    for v in 0..camera.y_res {
+        for u in 0..camera.x_res {
+            let ray = camera.get_ray(u, v);
+            let tree = build_ray_tree(scene, &ray, depth);
+            ray_forest.forest[u][v] = tree;
+        }
+    }
+    ray_forest
 }
 
 fn build_ray_tree(scene: &Scene, ray: &Ray, depth: usize) -> RayTree {
