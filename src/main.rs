@@ -261,7 +261,7 @@ fn render_scene(config: &Config, scene: &Scene) -> RenderBuffer {
     let camera = Camera::new(x_res, y_res);
     let mut buffer = RenderBuffer::new(x_res, y_res);
 
-    render(&camera, &scene, &mut buffer, config.depth);
+    render_tree::render(&camera, &scene, &mut buffer, config.depth);
 
     if config.to_terminal {
         draw_to_terminal(&scene);

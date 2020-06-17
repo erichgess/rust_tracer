@@ -10,13 +10,24 @@ enum RayTree {
 }
 
 pub fn render(camera: &Camera, scene: &Scene, buffer: &mut RenderBuffer, depth: usize) {
+    let mut build_time = std::time::Duration::default();
+    let mut render_time = std::time::Duration::default();
     for v in 0..camera.y_res {
         for u in 0..camera.x_res {
+            let start = std::time::Instant::now();
             let ray = camera.get_ray(u, v);
             let tree = build_ray_tree(scene, &ray, depth);
-            buffer.buf[u][v] = render_ray(&tree, scene.ambient());
+            let duration = start.elapsed();
+            build_time += duration;
+
+            let start = std::time::Instant::now();
+            buffer.buf[u][v] = render_ray(&tree, scene.ambient()).0;
+            let duration = start.elapsed();
+            render_time += duration;
         }
     }
+    println!("Total Time Building: {}", build_time.as_millis());
+    println!("Total Time Rendering: {}", render_time.as_millis());
 }
 
 fn build_ray_tree(scene: &Scene, ray: &Ray, depth: usize) -> RayTree {
@@ -63,11 +74,14 @@ fn build_ray_tree(scene: &Scene, ray: &Ray, depth: usize) -> RayTree {
     }
 }
 
-fn render_ray(tree: &RayTree, ambient: &Color) -> Color {
+//TODO: I think using `i.eye_dir` for the reflection and refration directions when
+// computing the fresnel coefficients is wrong and is causing colors to be much brighter
+// than they should be
+fn render_ray(tree: &RayTree, ambient: &Color) -> (Color, Vector3) {
     use std::f32::EPSILON;
 
     match tree {
-        RayTree::None => BLACK,
+        RayTree::None => (BLACK, Vector3::new(0., 0., 0.)),
      RayTree::Branch(ref i, lights, reflected, refracted) => {
             let (n1, n2) = if i.entering {
                 (1., i.material.refraction_index())
@@ -85,26 +99,23 @@ fn render_ray(tree: &RayTree, ambient: &Color) -> Color {
 
             let reflected = if i.material.reflectivity() > EPSILON {
                 // compute incoming energy from the direction of the reflected ray
-                let energy = render_ray(reflected, ambient);
-                let fresnel = fresnel_reflection(&i.eye_dir, &i.normal, n1, n2);
-                fresnel
-                    * i.material
-                        .get_reflected_energy(&energy, &i.eye_dir, &i)
+                let (energy, dir) = render_ray(reflected, ambient);
+                let fresnel = fresnel_reflection(&dir, &i.normal, n1, n2);
+                fresnel * i.material.get_reflected_energy(&energy, &i.eye_dir, &i)
             } else {
                 BLACK
             };
 
             let refracted = if i.material.refraction_index() > EPSILON {
-                let energy = render_ray(refracted, ambient);
-                let fresnel =
-                    fresnel_refraction(&i.eye_dir, &i.normal.neg(), n1, n2);
+                let (energy, dir) = render_ray(refracted, ambient);
+                let fresnel = fresnel_refraction(&dir, &i.normal.neg(), n1, n2);
                 fresnel * energy
             } else {
                 BLACK
             };
 
             let ambient = (i.material.ambient(i.tex_coord)) * ambient;
-            ambient + lights + reflected + refracted
+            (ambient + lights + reflected + refracted, -i.eye_dir)
         }
     }
 }
