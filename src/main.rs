@@ -170,12 +170,6 @@ fn build_render_view<'a>(config: Config, scene: Rc<Scene>) -> gtk::Box {
         };
 
         println!("Rendering...");
-        let timestamp = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .expect("Invalid time");
-        //let file = format!("{}.png", timestamp.as_secs());
-        //render_to_file(&config, &scene, "./output/", &file);
-        //img.set_from_file(format!("./output/{}", file));
         let is = render_to_image_surface(&config, &scene);
         img.set_from_surface(Some(&is));
     });
