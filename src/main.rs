@@ -2,6 +2,7 @@
 //#![allow(unused_imports)]
 #![allow(dead_code)]
 
+extern crate cairo;
 extern crate gio;
 extern crate gtk;
 
@@ -172,9 +173,11 @@ fn build_render_view<'a>(config: Config, scene: Rc<Scene>) -> gtk::Box {
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .expect("Invalid time");
-        let file = format!("{}.png", timestamp.as_secs());
-        render_to_file(&config, &scene, "./output/", &file);
-        img.set_from_file(format!("./output/{}", file));
+        //let file = format!("{}.png", timestamp.as_secs());
+        //render_to_file(&config, &scene, "./output/", &file);
+        //img.set_from_file(format!("./output/{}", file));
+        let is = render_to_image_surface(&config, &scene);
+        img.set_from_surface(Some(&is));
     });
 
     vbox
@@ -253,6 +256,32 @@ fn render_to_file(config: &Config, scene: &Scene, dir: &str, file: &str) {
     println!("Render and draw time: {}ms", duration.as_millis());
 
     bmp::save_to_bmp(dir, file, &buffer).expect("Failed to save image to disk");
+}
+
+fn render_to_image_surface(config: &Config, scene: &Scene) -> cairo::ImageSurface {
+    use cairo::{Format, ImageSurface};
+
+    let start = std::time::Instant::now();
+    let buffer = render_scene(config, scene);
+    let duration = start.elapsed();
+    println!("Render and draw time: {}ms", duration.as_millis());
+
+    let mut surface = ImageSurface::create(Format::Rgb24, config.width as i32, config.height as i32)
+        .expect("Failed to crate ImageSurface");
+    {
+        let mut sd = surface.get_data().unwrap();
+        for y in 0..config.height {
+            for x in 0..config.width {
+                let sd_idx = 4*config.width*y + 4*x;
+                let (r,g,b) = buffer.buf[x][y].as_u8();
+                sd[sd_idx+0] = b;
+                sd[sd_idx+1] = g;
+                sd[sd_idx+2] = r;
+            }
+        }
+    }
+
+    surface
 }
 
 fn render_scene(config: &Config, scene: &Scene) -> RenderBuffer {

@@ -720,6 +720,7 @@ dependencies = [
 name = "ray_tracer"
 version = "0.1.0"
 dependencies = [
+ "cairo-rs",
  "clap",
  "gio",
  "glib",
