@@ -1,5 +1,6 @@
 use crate::math::{Matrix, Point3, Ray, Vector3};
 
+use std::cell::RefCell;
 use std::rc::Rc;
 
 use super::Intersection;
