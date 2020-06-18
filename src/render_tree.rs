@@ -22,7 +22,7 @@ struct RayForest {
 
 impl RayForest {
     pub fn new(w: usize, h: usize) -> RayForest {
-        RayForest{
+        RayForest {
             forest: vec![vec![RayTree::None; h]; w],
         }
     }
@@ -37,7 +37,7 @@ pub fn render(camera: &Camera, scene: &Scene, buffer: &mut RenderBuffer, depth: 
     let start = std::time::Instant::now();
     reduce_forest(&ray_forest, buffer, scene.ambient());
     let render_time = start.elapsed();
-    
+
     println!("Total Time Building: {}", build_time.as_millis());
     println!("Total Time Rendering: {}", render_time.as_millis());
 }
@@ -50,7 +50,13 @@ fn reduce_forest(forest: &RayForest, buffer: &mut RenderBuffer, ambient: &Color)
     }
 }
 
-fn generate_ray_forest(camera: &Camera, scene: &Scene, w: usize, h: usize, depth: usize) -> RayForest {
+fn generate_ray_forest(
+    camera: &Camera,
+    scene: &Scene,
+    w: usize,
+    h: usize,
+    depth: usize,
+) -> RayForest {
     let mut ray_forest = RayForest::new(w, h);
     for v in 0..camera.y_res {
         for u in 0..camera.x_res {

@@ -146,6 +146,11 @@ fn build_render_view<'a>(config: Config, scene: Rc<Scene>) -> gtk::Box {
     d_input.set_text(&format!("{}", config.depth));
     wbox.pack_start(&d_input, false, false, 4);
 
+    let cbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+    vbox.pack_start(&cbox, false, false, 0);
+    let label = gtk::Label::new(Some("Sphere Color"));
+    cbox.pack_start(&label, false, false, 0);
+
     // Setup Render button to render and display the scene
     let img = img.clone();
     let scene = Rc::clone(&scene);
@@ -260,17 +265,18 @@ fn render_to_image_surface(config: &Config, scene: &Scene) -> cairo::ImageSurfac
     let duration = start.elapsed();
     println!("Render and draw time: {}ms", duration.as_millis());
 
-    let mut surface = ImageSurface::create(Format::Rgb24, config.width as i32, config.height as i32)
-        .expect("Failed to crate ImageSurface");
+    let mut surface =
+        ImageSurface::create(Format::Rgb24, config.width as i32, config.height as i32)
+            .expect("Failed to crate ImageSurface");
     {
         let mut sd = surface.get_data().expect("Could not get SurfaceData");
         for y in 0..config.height {
             for x in 0..config.width {
-                let sd_idx = 4*config.width*y + 4*x;
-                let (r,g,b) = buffer.buf[x][y].as_u8();
-                sd[sd_idx+0] = b;
-                sd[sd_idx+1] = g;
-                sd[sd_idx+2] = r;
+                let sd_idx = 4 * config.width * y + 4 * x;
+                let (r, g, b) = buffer.buf[x][y].as_u8();
+                sd[sd_idx + 0] = b;
+                sd[sd_idx + 1] = g;
+                sd[sd_idx + 2] = r;
             }
         }
     }
