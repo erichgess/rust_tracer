@@ -1,4 +1,5 @@
 /// A basic plane
+use std::cell::RefCell;
 use std::rc::Rc;
 
 use super::{Intersection, Material, Renderable};
@@ -7,7 +8,7 @@ use crate::math::{Matrix, Point3, Ray, Vector3};
 pub struct Plane {
     origin: Point3,
     normal: Vector3,
-    material: Rc<dyn Material>,
+    material: Rc<RefCell<dyn Material>>,
     transform: Matrix,
     inv_transform: Matrix,
 
@@ -17,7 +18,7 @@ pub struct Plane {
 }
 
 impl Plane {
-    pub fn new(origin: &Point3, normal: &Vector3, material: Rc<dyn Material>) -> Plane {
+    pub fn new(origin: &Point3, normal: &Vector3, material: Rc<RefCell<dyn Material>>) -> Plane {
         let w = if normal.cross(&Vector3::new(1., 0., 0.)).len() <= std::f32::EPSILON {
             Vector3::new(0., 1., 0.)
         } else {
@@ -92,7 +93,7 @@ mod test {
 
     #[test]
     fn texture_coords() {
-        let phong = Rc::new(TexturePhong::new(white, white, white, 60., 0., 0.));
+        let phong = Rc::new(RefCell::new(TexturePhong::new(white, white, white, 60., 0., 0.)));
         let normal = Vector3::new(0., 1., 0.);
         let plane = Plane::new(&Point3::new(0., 0., 0.), &normal, phong);
 

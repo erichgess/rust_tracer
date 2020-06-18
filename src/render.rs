@@ -48,37 +48,37 @@ fn trace_ray(scene: &Scene, ray: &Ray, depth: usize) -> Color {
         None => BLACK,
         Some(i) => {
             let (n1, n2) = if i.entering {
-                (1., i.material.refraction_index())
+                (1., i.material.borrow().refraction_index())
             } else {
-                (i.material.refraction_index(), 1.)
+                (i.material.borrow().refraction_index(), 1.)
             };
 
-            let ambient = (i.material.ambient(i.tex_coord)) * scene.ambient();
+            let ambient = (i.material.borrow().ambient(i.tex_coord)) * scene.ambient();
 
             let lights: Color = get_light_energy(scene, &i)
                 .iter()
                 .map(|(ldir, lenergy)| {
                     let fresnel = fresnel_reflection(&ldir, &i.normal, n1, n2);
-                    fresnel * i.material.get_reflected_energy(&lenergy, &ldir, &i)
+                    fresnel * i.material.borrow().get_reflected_energy(&lenergy, &ldir, &i)
                 })
                 .sum();
 
-            let reflected = if i.material.reflectivity() > EPSILON {
+            let reflected = if i.material.borrow().reflectivity() > EPSILON {
                 // compute reflection vector
                 let reflect_ray = reflect_ray(ray, &i);
                 // compute incoming energy from the direction of the reflected ray
                 let energy = trace_ray(scene, &reflect_ray, depth - 1);
                 let fresnel = fresnel_reflection(&reflect_ray.direction(), &i.normal, n1, n2);
                 fresnel
-                    * i.material
+                    * i.material.borrow()
                         .get_reflected_energy(&energy, &reflect_ray.direction(), &i)
             } else {
                 BLACK
             };
 
-            let refracted = if i.material.refraction_index() > EPSILON {
+            let refracted = if i.material.borrow().refraction_index() > EPSILON {
                 let refract_ray = refract_ray(ray, &i, n1, n2);
-                (i.material.diffuse(i.tex_coord))
+                (i.material.borrow().diffuse(i.tex_coord))
                     * refract_ray
                         .map(|r| {
                             let fresnel =
@@ -215,6 +215,7 @@ mod benchmarks {
     extern crate test;
     use test::Bencher;
 
+    use std::cell::RefCell;
     use std::rc::Rc;
 
     use super::super::math::Matrix;
@@ -237,7 +238,7 @@ mod benchmarks {
         let mut buffer = RenderBuffer::new(x_res, y_res);
 
         let mut scene = Scene::new();
-        let phong = Rc::new(Phong::new(WHITE, RED, WHITE, 60., 1., 0.));
+        let phong = Rc::new(RefCell::new(Phong::new(WHITE, RED, WHITE, 60., 1., 0.)));
         let mut sph = Sphere::new(phong);
         let transform = Matrix::scale(1.0, 2.25, 1.0);
         sph.set_transform(&transform);

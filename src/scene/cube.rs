@@ -1,4 +1,5 @@
 /// Render a unit cube
+use std::cell::RefCell;
 use std::rc::Rc;
 
 use crate::math::{Matrix, Point3, Ray};
@@ -16,7 +17,7 @@ pub struct Cube {
 }
 
 impl Cube {
-    pub fn new(material: Rc<dyn Material>) -> Cube {
+    pub fn new(material: Rc<RefCell<dyn Material>>) -> Cube {
         let v0 = Point3::new(0.5, 0.5, -0.5);
         let v1 = Point3::new(0.5, -0.5, -0.5);
         let v2 = Point3::new(-0.5, -0.5, -0.5);

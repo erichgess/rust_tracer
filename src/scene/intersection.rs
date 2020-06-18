@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use std::rc::Rc;
 
 use super::{Material, TextureCoords};
@@ -6,7 +7,7 @@ use crate::math::{Point3, Vector3};
 #[derive(Clone)]
 pub struct Intersection {
     pub t: f32,
-    pub material: Rc<dyn Material>,
+    pub material: Rc<RefCell<dyn Material>>,
     pub point: Point3,
     pub eye_dir: Vector3,
     pub normal: Vector3,
