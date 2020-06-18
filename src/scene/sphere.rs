@@ -1,6 +1,6 @@
 use crate::math::{Matrix, Point3, Ray, Vector3};
 
-use std::cell::RefCell;
+use std::cell::*;
 use std::rc::Rc;
 
 use super::Intersection;
@@ -12,6 +12,7 @@ pub struct Sphere {
     transform: Matrix,
     inv_transform: Matrix,
     material: Rc<RefCell<dyn Material>>,
+    name: String,
 }
 
 impl Sphere {
@@ -20,6 +21,16 @@ impl Sphere {
             transform: Matrix::identity(),
             inv_transform: Matrix::identity(),
             material: Rc::clone(&material),
+            name: String::from(""),
+        }
+    }
+
+    pub fn new_with_name(name: &str, material: Rc<RefCell<dyn Material>>) -> Sphere {
+        Sphere {
+            transform: Matrix::identity(),
+            inv_transform: Matrix::identity(),
+            material: Rc::clone(&material),
+            name: String::from(name),
         }
     }
 
@@ -77,6 +88,14 @@ impl Renderable for Sphere {
     fn set_transform(&mut self, mat: &Matrix) {
         self.transform = *mat;
         self.inv_transform = self.transform.inverse();
+    }
+
+    fn get_name(&self) -> String {
+        self.name.clone()
+    }
+
+    fn get_material_mut(&mut self) -> Option<RefMut<dyn Material>> {
+        Some(self.material.borrow_mut())
     }
 
     fn to_string(&self) -> String {

@@ -1,4 +1,4 @@
-use std::cell::RefCell;
+use std::cell::*;
 use std::rc::Rc;
 
 use super::{Intersection, Material, Renderable};
@@ -85,6 +85,14 @@ impl Renderable for Triangle {
     fn set_transform(&mut self, m: &Matrix) {
         self.transform = *m;
         self.inv_transform = m.inverse();
+    }
+
+    fn get_name(&self) -> String {
+        self.to_string()
+    }
+
+    fn get_material_mut(&mut self) -> Option<RefMut<dyn Material>> {
+        Some(self.material.borrow_mut())
     }
 
     fn to_string(&self) -> String {

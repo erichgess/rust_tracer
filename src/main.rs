@@ -150,6 +150,9 @@ fn build_render_view<'a>(config: Config, scene: Rc<Scene>) -> gtk::Box {
     vbox.pack_start(&cbox, false, false, 0);
     let label = gtk::Label::new(Some("Sphere Color"));
     cbox.pack_start(&label, false, false, 0);
+    
+    // Setup material adjuster slider
+    //let sphere = scene.find_shape("sphere");
 
     // Setup Render button to render and display the scene
     let img = img.clone();
@@ -178,6 +181,7 @@ fn build_render_view<'a>(config: Config, scene: Rc<Scene>) -> gtk::Box {
         let is = render_to_image_surface(&config, &scene);
         img.set_from_surface(Some(&is));
     });
+
 
     vbox
 }

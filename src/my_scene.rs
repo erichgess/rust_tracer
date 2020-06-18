@@ -1,3 +1,6 @@
+use std::cell::RefCell;
+use std::rc::Rc;
+
 use super::math::{Matrix, Point3, Vector3};
 use super::scene::colors::*;
 use super::scene::Sphere;
@@ -64,8 +67,6 @@ fn checkerboard(tx: TextureCoords) -> Color {
 }
 
 pub fn create_scene(scene: &mut Scene) {
-    use std::cell::RefCell;
-    use std::rc::Rc;
 
     let phong = Rc::new(RefCell::new(Phong::new(
         DIM_WHITE, RED, WHITE, 60., 0.5, 0.,
@@ -79,10 +80,11 @@ pub fn create_scene(scene: &mut Scene) {
     let phong = Rc::new(RefCell::new(Phong::new(
         BLACK, BLUE, DIM_BLUE, 600., 0.4, 0.,
     )));
-    let mut sph2 = Sphere::new(phong);
+    let mut sph2 = Sphere::new_with_name("blue", phong);
     let transform = Matrix::translate(1., -1., 0.);
     sph2.set_transform(&transform);
-    scene.add_shape(Box::new(sph2));
+    let sph2 = Box::new(sph2);
+    scene.add_shape(sph2);
 
     let phong = Rc::new(RefCell::new(Phong::new(
         BLACK, WHITE, WHITE, 60., 0.7, 1.333,
