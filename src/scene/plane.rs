@@ -93,7 +93,9 @@ mod test {
 
     #[test]
     fn texture_coords() {
-        let phong = Rc::new(RefCell::new(TexturePhong::new(white, white, white, 60., 0., 0.)));
+        let phong = Rc::new(RefCell::new(TexturePhong::new(
+            white, white, white, 60., 0., 0.,
+        )));
         let normal = Vector3::new(0., 1., 0.);
         let plane = Plane::new(&Point3::new(0., 0., 0.), &normal, phong);
 

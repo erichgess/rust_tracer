@@ -59,7 +59,10 @@ fn trace_ray(scene: &Scene, ray: &Ray, depth: usize) -> Color {
                 .iter()
                 .map(|(ldir, lenergy)| {
                     let fresnel = fresnel_reflection(&ldir, &i.normal, n1, n2);
-                    fresnel * i.material.borrow().get_reflected_energy(&lenergy, &ldir, &i)
+                    fresnel
+                        * i.material
+                            .borrow()
+                            .get_reflected_energy(&lenergy, &ldir, &i)
                 })
                 .sum();
 
@@ -70,8 +73,11 @@ fn trace_ray(scene: &Scene, ray: &Ray, depth: usize) -> Color {
                 let energy = trace_ray(scene, &reflect_ray, depth - 1);
                 let fresnel = fresnel_reflection(&reflect_ray.direction(), &i.normal, n1, n2);
                 fresnel
-                    * i.material.borrow()
-                        .get_reflected_energy(&energy, &reflect_ray.direction(), &i)
+                    * i.material.borrow().get_reflected_energy(
+                        &energy,
+                        &reflect_ray.direction(),
+                        &i,
+                    )
             } else {
                 BLACK
             };

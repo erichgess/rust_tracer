@@ -13,7 +13,12 @@ pub struct Triangle {
 }
 
 impl Triangle {
-    pub fn new(v0: &Point3, v1: &Point3, v2: &Point3, material: Rc<RefCell<dyn Material>>) -> Triangle {
+    pub fn new(
+        v0: &Point3,
+        v1: &Point3,
+        v2: &Point3,
+        material: Rc<RefCell<dyn Material>>,
+    ) -> Triangle {
         let verts = vec![*v0, *v1, *v2];
 
         let normal = {
@@ -181,9 +186,11 @@ mod tests {
         let i = i.unwrap();
 
         let light = PointLight::new(Point3::new(0., 0., -4.), Color::new(1., 1., 1.));
-        let energy =
-            tri.material.borrow()
-                .get_reflected_energy(&light.color, &(light.pos - i.point).norm(), &i);
+        let energy = tri.material.borrow().get_reflected_energy(
+            &light.color,
+            &(light.pos - i.point).norm(),
+            &i,
+        );
 
         assert_eq!(WHITE, energy);
     }

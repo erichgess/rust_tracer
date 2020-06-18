@@ -64,23 +64,29 @@ fn checkerboard(tx: TextureCoords) -> Color {
 }
 
 pub fn create_scene(scene: &mut Scene) {
-    use std::rc::Rc;
     use std::cell::RefCell;
+    use std::rc::Rc;
 
-    let phong = Rc::new(RefCell::new(Phong::new(DIM_WHITE, RED, WHITE, 60., 0.5, 0.)));
+    let phong = Rc::new(RefCell::new(Phong::new(
+        DIM_WHITE, RED, WHITE, 60., 0.5, 0.,
+    )));
     let mut sph = Sphere::new(phong);
     let transform =
         Matrix::translate(-1.0, 0., 0.) * Matrix::rotate_z(75.) * Matrix::scale(1.0, 0.25, 1.0);
     sph.set_transform(&transform);
     scene.add_shape(Box::new(sph));
 
-    let phong = Rc::new(RefCell::new(Phong::new(BLACK, BLUE, DIM_BLUE, 600., 0.4, 0.)));
+    let phong = Rc::new(RefCell::new(Phong::new(
+        BLACK, BLUE, DIM_BLUE, 600., 0.4, 0.,
+    )));
     let mut sph2 = Sphere::new(phong);
     let transform = Matrix::translate(1., -1., 0.);
     sph2.set_transform(&transform);
     scene.add_shape(Box::new(sph2));
 
-    let phong = Rc::new(RefCell::new(Phong::new(BLACK, WHITE, WHITE, 60., 0.7, 1.333)));
+    let phong = Rc::new(RefCell::new(Phong::new(
+        BLACK, WHITE, WHITE, 60., 0.7, 1.333,
+    )));
     let mut sph4 = Sphere::new(phong);
     let transform = Matrix::translate(0., -0.5, -3.) * Matrix::scale(0.6, 0.6, 0.6);
     sph4.set_transform(&transform);
@@ -116,7 +122,9 @@ pub fn create_scene(scene: &mut Scene) {
     );
     scene.add_shape(Box::new(plane));
 
-    let cube_material = Rc::new(RefCell::new(Phong::new(BLACK, WHITE, WHITE, 60., 0., 1.333)));
+    let cube_material = Rc::new(RefCell::new(Phong::new(
+        BLACK, WHITE, WHITE, 60., 0., 1.333,
+    )));
     let mut cube = Cube::new(cube_material);
     let transform = Matrix::translate(-1., -1.0, -4.) * Matrix::rotate_x(-45.0);
     cube.set_transform(&transform);

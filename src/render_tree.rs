@@ -124,7 +124,10 @@ fn render_ray_tree(tree: &RayTree, ambient: &Color) -> (Color, Vector3) {
                 .iter()
                 .map(|(ldir, lenergy)| {
                     let fresnel = fresnel_reflection(&ldir, &i.normal, n1, n2);
-                    fresnel * i.material.borrow().get_reflected_energy(&lenergy, &ldir, &i)
+                    fresnel
+                        * i.material
+                            .borrow()
+                            .get_reflected_energy(&lenergy, &ldir, &i)
                 })
                 .sum();
 
@@ -132,7 +135,10 @@ fn render_ray_tree(tree: &RayTree, ambient: &Color) -> (Color, Vector3) {
                 // compute incoming energy from the direction of the reflected ray
                 let (energy, dir) = render_ray_tree(reflected, ambient);
                 let fresnel = fresnel_reflection(&dir, &i.normal, n1, n2);
-                fresnel * i.material.borrow().get_reflected_energy(&energy, &i.eye_dir, &i)
+                fresnel
+                    * i.material
+                        .borrow()
+                        .get_reflected_energy(&energy, &i.eye_dir, &i)
             };
 
             let refracted = {
