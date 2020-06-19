@@ -14,6 +14,7 @@ mod render;
 mod render_tree;
 mod scene;
 
+use std::cell::RefCell;
 use std::rc::Rc;
 
 use clap::{App, Arg, ArgMatches};
@@ -40,7 +41,7 @@ fn main() {
 
     let mut scene = Scene::new();
     create_scene(&mut scene);
-    let scene = Rc::new(scene);
+    let scene = Rc::new(RefCell::new(scene));
 
     if config.gui {
         let app =
@@ -57,11 +58,11 @@ fn main() {
             .duration_since(std::time::UNIX_EPOCH)
             .expect("Invalid time");
         let file = format!("{}.png", timestamp.as_secs());
-        render_to_file(&config, &scene, "./output/", &file);
+        render_to_file(&config, &scene.borrow(), "./output/", &file);
     }
 }
 
-fn build_gui<'a>(app: &gtk::Application, config: Config, scene: Rc<Scene>) {
+fn build_gui<'a>(app: &gtk::Application, config: Config, scene: Rc<RefCell<Scene>>) {
     let window = gtk::ApplicationWindow::new(app);
     window.set_title("Rust Tracer");
     window.set_border_width(10);
@@ -75,7 +76,7 @@ fn build_gui<'a>(app: &gtk::Application, config: Config, scene: Rc<Scene>) {
     let title = "Render";
     notebook.create_tab(title, render_box.upcast());
 
-    let scene_desc = build_scene_description_view(&Rc::clone(&scene));
+    let scene_desc = build_scene_description_view(&scene.borrow());
     let title = "Scene";
     notebook.create_tab(title, scene_desc.upcast());
 
@@ -109,7 +110,7 @@ fn build_scene_description_view(scene: &Scene) -> gtk::TextView {
     text
 }
 
-fn build_render_view<'a>(config: Config, scene: Rc<Scene>) -> gtk::Box {
+fn build_render_view<'a>(config: Config, scene: Rc<RefCell<Scene>>) -> gtk::Box {
     let vbox = gtk::Box::new(gtk::Orientation::Vertical, 0);
 
     let scrolled_box = gtk::ScrolledWindow::new(None::<&gtk::Adjustment>, None::<&gtk::Adjustment>);
@@ -152,7 +153,14 @@ fn build_render_view<'a>(config: Config, scene: Rc<Scene>) -> gtk::Box {
     cbox.pack_start(&label, false, false, 0);
     
     // Setup material adjuster slider
-    //let sphere = scene.find_shape("sphere");
+    let mut ss = scene.borrow_mut();
+    let sphere = ss.find_shape("blue").unwrap();
+    let mut m = sphere.get_material_mut();
+    let mut m = m.unwrap();
+    m.set_diffuse(crate::scene::colors::GREEN);
+    let s = m.to_string();
+    let label = gtk::Label::new(Some(&s));
+    cbox.pack_start(&label, false, false, 0);
 
     // Setup Render button to render and display the scene
     let img = img.clone();
@@ -178,7 +186,7 @@ fn build_render_view<'a>(config: Config, scene: Rc<Scene>) -> gtk::Box {
         };
 
         println!("Rendering...");
-        let is = render_to_image_surface(&config, &scene);
+        let is = render_to_image_surface(&config, &scene.borrow());
         img.set_from_surface(Some(&is));
     });
 

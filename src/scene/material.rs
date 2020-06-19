@@ -14,6 +14,7 @@ pub trait Material {
         i: &Intersection,
     ) -> Color;
     fn diffuse(&self, tx: TextureCoords) -> Color;
+    fn set_diffuse(&mut self, c: Color);
     fn ambient(&self, tx: TextureCoords) -> Color;
     fn reflectivity(&self) -> f32;
     fn refraction_index(&self) -> f32;
@@ -53,6 +54,10 @@ impl Phong {
 impl Material for Phong {
     fn diffuse(&self, _: TextureCoords) -> Color {
         self.diffuse
+    }
+
+    fn set_diffuse(&mut self, c: Color) {
+        self.diffuse = c;
     }
 
     fn ambient(&self, _: TextureCoords) -> Color {
@@ -139,6 +144,10 @@ impl TexturePhong {
 impl Material for TexturePhong {
     fn diffuse(&self, tx: TextureCoords) -> Color {
         (self.diffuse)(tx)
+    }
+
+    fn set_diffuse(&mut self, _: Color) {
+        
     }
 
     fn ambient(&self, tx: TextureCoords) -> Color {
