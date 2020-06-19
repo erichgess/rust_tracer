@@ -23,6 +23,7 @@ use gtk::prelude::*;
 
 use my_scene::*;
 use render::*;
+use render_tree::RayForest;
 use scene::Scene;
 
 #[derive(Debug, Clone, Copy)]
@@ -39,8 +40,14 @@ fn main() {
     let config = parse_args(&cargs);
     println!("Rendering configuration: {:?}", config);
 
+    println!("Create Scene");
     let mut scene = Scene::new();
     create_scene(&mut scene);
+    println!("Done Creating Scene");
+    println!("Generate Forest");
+    let forest = generate_forest(&config, &scene);
+    println!("Done Generating Forest");
+    let forest = Rc::new(forest);
     let scene = Rc::new(RefCell::new(scene));
 
     if config.gui {
@@ -49,7 +56,8 @@ fn main() {
                 .expect("Initialization failed...");
         app.connect_activate(move |app| {
             let scene = Rc::clone(&scene);
-            build_gui(app, config, scene);
+            let forest = Rc::clone(&forest);
+            build_gui(app, config, scene, forest);
         });
 
         app.run(&vec![]); // Give an empty list of args bc we already processed the args above.
@@ -62,7 +70,7 @@ fn main() {
     }
 }
 
-fn build_gui<'a>(app: &gtk::Application, config: Config, scene: Rc<RefCell<Scene>>) {
+fn build_gui<'a>(app: &gtk::Application, config: Config, scene: Rc<RefCell<Scene>>, forest: Rc<RayForest>) {
     let window = gtk::ApplicationWindow::new(app);
     window.set_title("Rust Tracer");
     window.set_border_width(10);
@@ -72,7 +80,7 @@ fn build_gui<'a>(app: &gtk::Application, config: Config, scene: Rc<RefCell<Scene
     let mut notebook = gui::Notebook::new();
     window.add(&notebook.notebook);
 
-    let render_box = build_render_view(config, Rc::clone(&scene));
+    let render_box = build_render_view(config, Rc::clone(&scene), forest);
     let title = "Render";
     notebook.create_tab(title, render_box.upcast());
 
@@ -110,7 +118,7 @@ fn build_scene_description_view(scene: &Scene) -> gtk::TextView {
     text
 }
 
-fn build_render_view<'a>(config: Config, scene: Rc<RefCell<Scene>>) -> gtk::Box {
+fn build_render_view<'a>(config: Config, scene: Rc<RefCell<Scene>>, forest: Rc<RayForest>) -> gtk::Box {
     let vbox = gtk::Box::new(gtk::Orientation::Vertical, 0);
 
     let scrolled_box = gtk::ScrolledWindow::new(None::<&gtk::Adjustment>, None::<&gtk::Adjustment>);
@@ -155,7 +163,7 @@ fn build_render_view<'a>(config: Config, scene: Rc<RefCell<Scene>>) -> gtk::Box 
     // Setup material adjuster slider
     let mut ss = scene.borrow_mut();
     let sphere = ss.find_shape("blue").unwrap();
-    let mut m = sphere.get_material_mut();
+    let m = sphere.get_material_mut();
     let mut m = m.unwrap();
     m.set_diffuse(crate::scene::colors::GREEN);
     let s = m.to_string();
@@ -165,6 +173,7 @@ fn build_render_view<'a>(config: Config, scene: Rc<RefCell<Scene>>) -> gtk::Box 
     // Setup Render button to render and display the scene
     let img = img.clone();
     let scene = Rc::clone(&scene);
+    let forest = Rc::new(forest);
     btn.connect_clicked(move |_btn| {
         let width = w_input
             .get_text()
@@ -186,7 +195,7 @@ fn build_render_view<'a>(config: Config, scene: Rc<RefCell<Scene>>) -> gtk::Box 
         };
 
         println!("Rendering...");
-        let is = render_to_image_surface(&config, &scene.borrow());
+        let is = render_forest_to_image_surface(&config, &forest, scene.borrow().ambient());
         img.set_from_surface(Some(&is));
     });
 
@@ -296,6 +305,33 @@ fn render_to_image_surface(config: &Config, scene: &Scene) -> cairo::ImageSurfac
     surface
 }
 
+fn render_forest_to_image_surface(config: &Config, forest: &RayForest, ambient: &crate::scene::Color) -> cairo::ImageSurface {
+    use cairo::{Format, ImageSurface};
+
+    let start = std::time::Instant::now();
+    let buffer = render_forest(config, forest, ambient);
+    let duration = start.elapsed();
+    println!("Render and draw time: {}ms", duration.as_millis());
+
+    let mut surface =
+        ImageSurface::create(Format::Rgb24, config.width as i32, config.height as i32)
+            .expect("Failed to crate ImageSurface");
+    {
+        let mut sd = surface.get_data().expect("Could not get SurfaceData");
+        for y in 0..config.height {
+            for x in 0..config.width {
+                let sd_idx = 4 * config.width * y + 4 * x;
+                let (r, g, b) = buffer.buf[x][y].as_u8();
+                sd[sd_idx + 0] = b;
+                sd[sd_idx + 1] = g;
+                sd[sd_idx + 2] = r;
+            }
+        }
+    }
+
+    surface
+}
+
 fn render_scene(config: &Config, scene: &Scene) -> RenderBuffer {
     let x_res = config.width;
     let y_res = config.height;
@@ -307,6 +343,26 @@ fn render_scene(config: &Config, scene: &Scene) -> RenderBuffer {
     if config.to_terminal {
         draw_to_terminal(&scene);
     }
+
+    buffer
+}
+
+fn generate_forest(config: &Config, scene: &Scene) -> RayForest {
+    let x_res = config.width;
+    let y_res = config.height;
+    let camera = Camera::new(x_res, y_res);
+
+    //render_tree::render(&camera, &scene, &mut buffer, config.depth);
+    render_tree::generate_ray_forest(&camera, scene, x_res, y_res, config.depth)
+}
+
+fn render_forest(config: &Config, scene: &RayForest, ambient: &crate::scene::Color) -> RenderBuffer {
+    let x_res = config.width;
+    let y_res = config.height;
+    let mut buffer = RenderBuffer::new(x_res, y_res);
+
+    //render_tree::render(&camera, &scene, &mut buffer, config.depth);
+    render_tree::render_forest(scene, &mut buffer, ambient);
 
     buffer
 }

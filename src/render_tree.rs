@@ -16,7 +16,7 @@ enum RayTree {
     ),
 }
 
-struct RayForest {
+pub struct RayForest {
     forest: Vec<Vec<RayTree>>,
 }
 
@@ -35,14 +35,14 @@ pub fn render(camera: &Camera, scene: &Scene, buffer: &mut RenderBuffer, depth: 
     let build_time = start.elapsed();
 
     let start = std::time::Instant::now();
-    reduce_forest(&ray_forest, buffer, scene.ambient());
+    render_forest(&ray_forest, buffer, scene.ambient());
     let render_time = start.elapsed();
 
     println!("Total Time Building: {}", build_time.as_millis());
     println!("Total Time Rendering: {}", render_time.as_millis());
 }
 
-fn reduce_forest(forest: &RayForest, buffer: &mut RenderBuffer, ambient: &Color) {
+pub fn render_forest(forest: &RayForest, buffer: &mut RenderBuffer, ambient: &Color) {
     for u in 0..buffer.w {
         for v in 0..buffer.h {
             buffer.buf[u][v] = render_ray_tree(&forest.forest[u][v], ambient).0;
@@ -50,7 +50,7 @@ fn reduce_forest(forest: &RayForest, buffer: &mut RenderBuffer, ambient: &Color)
     }
 }
 
-fn generate_ray_forest(
+pub fn generate_ray_forest(
     camera: &Camera,
     scene: &Scene,
     w: usize,
