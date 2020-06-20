@@ -171,16 +171,16 @@ fn build_render_view<'a>(
 
     {
         // Setup material adjuster slider
-        let mut ss = scene.borrow_mut();
-        let sphere = ss.find_shape("blue").unwrap();
-        let m = sphere.get_material_mut();
-        let mut m = m.unwrap();
-        m.set_diffuse(crate::scene::colors::GREEN);
         let slider = gtk::Scale::new(gtk::Orientation::Horizontal, None::<&gtk::Adjustment>);
         slider.set_range(0., 1.);
-        let v = slider.get_value() as f32;
+        let scene = Rc::clone(&scene);
         let f = move |slider: &gtk::Scale| {
+            let v = slider.get_value() as f32;
             println!("{}", v);
+            let mut ss = scene.borrow_mut();
+            let sphere = ss.find_shape("blue").unwrap();
+            let m = sphere.get_material_mut();
+            let mut m = m.unwrap();
             m.set_diffuse(v * crate::scene::colors::GREEN);
         };
         slider.connect_value_changed(f);
