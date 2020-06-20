@@ -164,27 +164,80 @@ fn build_render_view<'a>(
     d_input.set_text(&format!("{}", config.depth));
     wbox.pack_start(&d_input, false, false, 4);
 
-    let cbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);
-    vbox.pack_start(&cbox, false, false, 0);
-    let label = gtk::Label::new(Some("Sphere Green"));
-    cbox.pack_start(&label, false, false, 0);
-
     {
-        // Setup material adjuster slider
-        let slider = gtk::Scale::new(gtk::Orientation::Horizontal, None::<&gtk::Adjustment>);
-        slider.set_range(0., 1.);
-        let scene = Rc::clone(&scene);
-        let f = move |slider: &gtk::Scale| {
-            let v = slider.get_value() as f32;
-            println!("{}", v);
-            let mut ss = scene.borrow_mut();
-            let sphere = ss.find_shape("blue").unwrap();
-            let m = sphere.get_material_mut();
-            let mut m = m.unwrap();
-            m.set_diffuse(v * crate::scene::colors::GREEN);
-        };
-        slider.connect_value_changed(f);
-        cbox.pack_start(&slider, true, true, 0);
+        let cbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+        vbox.pack_start(&cbox, false, false, 0);
+        let mut ss = scene.borrow_mut();
+        let sphere = ss.find_shape("blue").unwrap();
+        let m = sphere.get_material_mut();
+        let m = m.unwrap();
+        let orig_c = m.diffuse((0., 0.));
+        {
+            // Setup material adjuster slider
+            let label = gtk::Label::new(Some("R"));
+            cbox.pack_start(&label, false, false, 0);
+            let slider = gtk::Scale::new(gtk::Orientation::Horizontal, None::<&gtk::Adjustment>);
+            slider.set_range(0., 1.);
+            slider.set_value(orig_c.r as f64);
+            let scene = Rc::clone(&scene);
+            let f = move |slider: &gtk::Scale| {
+                let v = slider.get_value() as f32;
+                println!("{}", v);
+                let mut ss = scene.borrow_mut();
+                let sphere = ss.find_shape("blue").unwrap();
+                let m = sphere.get_material_mut();
+                let mut m = m.unwrap();
+                let mut c = m.diffuse((0., 0.));
+                c.r = v;
+                m.set_diffuse(c);
+            };
+            slider.connect_value_changed(f);
+            cbox.pack_start(&slider, true, true, 0);
+        }
+        {
+            // Setup material adjuster slider
+            let label = gtk::Label::new(Some("G"));
+            cbox.pack_start(&label, false, false, 0);
+            let slider = gtk::Scale::new(gtk::Orientation::Horizontal, None::<&gtk::Adjustment>);
+            slider.set_range(0., 1.);
+            slider.set_value(orig_c.g as f64);
+            let scene = Rc::clone(&scene);
+            let f = move |slider: &gtk::Scale| {
+                let v = slider.get_value() as f32;
+                println!("{}", v);
+                let mut ss = scene.borrow_mut();
+                let sphere = ss.find_shape("blue").unwrap();
+                let m = sphere.get_material_mut();
+                let mut m = m.unwrap();
+                let mut c = m.diffuse((0., 0.));
+                c.g = v;
+                m.set_diffuse(c);
+            };
+            slider.connect_value_changed(f);
+            cbox.pack_start(&slider, true, true, 5);
+        }
+        {
+            // Setup material adjuster slider
+            let label = gtk::Label::new(Some("B"));
+            cbox.pack_start(&label, false, false, 0);
+            let slider = gtk::Scale::new(gtk::Orientation::Horizontal, None::<&gtk::Adjustment>);
+            slider.set_range(0., 1.);
+            slider.set_value(orig_c.b as f64);
+            let scene = Rc::clone(&scene);
+            let f = move |slider: &gtk::Scale| {
+                let v = slider.get_value() as f32;
+                println!("{}", v);
+                let mut ss = scene.borrow_mut();
+                let sphere = ss.find_shape("blue").unwrap();
+                let m = sphere.get_material_mut();
+                let mut m = m.unwrap();
+                let mut c = m.diffuse((0., 0.));
+                c.b = v;
+                m.set_diffuse(c);
+            };
+            slider.connect_value_changed(f);
+            cbox.pack_start(&slider, true, true, 0);
+        }
     }
 
     // Setup Render button to render and display the scene
