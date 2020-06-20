@@ -70,7 +70,12 @@ fn main() {
     }
 }
 
-fn build_gui<'a>(app: &gtk::Application, config: Config, scene: Rc<RefCell<Scene>>, forest: Rc<RayForest>) {
+fn build_gui<'a>(
+    app: &gtk::Application,
+    config: Config,
+    scene: Rc<RefCell<Scene>>,
+    forest: Rc<RayForest>,
+) {
     let window = gtk::ApplicationWindow::new(app);
     window.set_title("Rust Tracer");
     window.set_border_width(10);
@@ -118,7 +123,11 @@ fn build_scene_description_view(scene: &Scene) -> gtk::TextView {
     text
 }
 
-fn build_render_view<'a>(config: Config, scene: Rc<RefCell<Scene>>, forest: Rc<RayForest>) -> gtk::Box {
+fn build_render_view<'a>(
+    config: Config,
+    scene: Rc<RefCell<Scene>>,
+    forest: Rc<RayForest>,
+) -> gtk::Box {
     let vbox = gtk::Box::new(gtk::Orientation::Vertical, 0);
 
     let scrolled_box = gtk::ScrolledWindow::new(None::<&gtk::Adjustment>, None::<&gtk::Adjustment>);
@@ -159,16 +168,24 @@ fn build_render_view<'a>(config: Config, scene: Rc<RefCell<Scene>>, forest: Rc<R
     vbox.pack_start(&cbox, false, false, 0);
     let label = gtk::Label::new(Some("Sphere Color"));
     cbox.pack_start(&label, false, false, 0);
-    
-    // Setup material adjuster slider
-    let mut ss = scene.borrow_mut();
-    let sphere = ss.find_shape("blue").unwrap();
-    let m = sphere.get_material_mut();
-    let mut m = m.unwrap();
-    m.set_diffuse(crate::scene::colors::GREEN);
-    let s = m.to_string();
-    let label = gtk::Label::new(Some(&s));
-    cbox.pack_start(&label, false, false, 0);
+
+    {
+        // Setup material adjuster slider
+        let mut ss = scene.borrow_mut();
+        let sphere = ss.find_shape("blue").unwrap();
+        let m = sphere.get_material_mut();
+        let mut m = m.unwrap();
+        m.set_diffuse(crate::scene::colors::GREEN);
+        let slider = gtk::Scale::new(gtk::Orientation::Horizontal, None::<&gtk::Adjustment>);
+        slider.set_range(0., 1.);
+        let v = slider.get_value() as f32;
+        let f = move |slider: &gtk::Scale| {
+            println!("{}", v);
+            m.set_diffuse(v * crate::scene::colors::GREEN);
+        };
+        slider.connect_value_changed(f);
+        cbox.pack_start(&slider, true, true, 0);
+    }
 
     // Setup Render button to render and display the scene
     let img = img.clone();
@@ -198,7 +215,6 @@ fn build_render_view<'a>(config: Config, scene: Rc<RefCell<Scene>>, forest: Rc<R
         let is = render_forest_to_image_surface(&config, &forest, scene.borrow().ambient());
         img.set_from_surface(Some(&is));
     });
-
 
     vbox
 }
@@ -305,7 +321,11 @@ fn render_to_image_surface(config: &Config, scene: &Scene) -> cairo::ImageSurfac
     surface
 }
 
-fn render_forest_to_image_surface(config: &Config, forest: &RayForest, ambient: &crate::scene::Color) -> cairo::ImageSurface {
+fn render_forest_to_image_surface(
+    config: &Config,
+    forest: &RayForest,
+    ambient: &crate::scene::Color,
+) -> cairo::ImageSurface {
     use cairo::{Format, ImageSurface};
 
     let start = std::time::Instant::now();
@@ -356,7 +376,11 @@ fn generate_forest(config: &Config, scene: &Scene) -> RayForest {
     render_tree::generate_ray_forest(&camera, scene, x_res, y_res, config.depth)
 }
 
-fn render_forest(config: &Config, scene: &RayForest, ambient: &crate::scene::Color) -> RenderBuffer {
+fn render_forest(
+    config: &Config,
+    scene: &RayForest,
+    ambient: &crate::scene::Color,
+) -> RenderBuffer {
     let x_res = config.width;
     let y_res = config.height;
     let mut buffer = RenderBuffer::new(x_res, y_res);
