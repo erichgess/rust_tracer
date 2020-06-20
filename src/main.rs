@@ -166,7 +166,7 @@ fn build_render_view<'a>(
 
     let cbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);
     vbox.pack_start(&cbox, false, false, 0);
-    let label = gtk::Label::new(Some("Sphere Color"));
+    let label = gtk::Label::new(Some("Sphere Green"));
     cbox.pack_start(&label, false, false, 0);
 
     {
@@ -188,33 +188,35 @@ fn build_render_view<'a>(
     }
 
     // Setup Render button to render and display the scene
-    let img = img.clone();
-    let scene = Rc::clone(&scene);
-    let forest = Rc::new(forest);
-    btn.connect_clicked(move |_btn| {
-        let width = w_input
-            .get_text()
-            .map(|v| v.parse::<usize>().unwrap_or(config.width))
-            .unwrap();
-        let height = h_input
-            .get_text()
-            .map(|v| v.parse::<usize>().unwrap_or(config.height))
-            .unwrap();
-        let depth = d_input
-            .get_text()
-            .map(|v| v.parse::<usize>().unwrap_or(config.depth))
-            .unwrap();
-        let config = Config {
-            width,
-            height,
-            depth,
-            ..config
-        };
+    {
+        let img = img.clone();
+        let scene = Rc::clone(&scene);
+        let forest = Rc::new(forest);
+        btn.connect_clicked(move |_btn| {
+            let width = w_input
+                .get_text()
+                .map(|v| v.parse::<usize>().unwrap_or(config.width))
+                .unwrap();
+            let height = h_input
+                .get_text()
+                .map(|v| v.parse::<usize>().unwrap_or(config.height))
+                .unwrap();
+            let depth = d_input
+                .get_text()
+                .map(|v| v.parse::<usize>().unwrap_or(config.depth))
+                .unwrap();
+            let config = Config {
+                width,
+                height,
+                depth,
+                ..config
+            };
 
-        println!("Rendering...");
-        let is = render_forest_to_image_surface(&config, &forest, scene.borrow().ambient());
-        img.set_from_surface(Some(&is));
-    });
+            println!("Rendering...");
+            let is = render_forest_to_image_surface(&config, &forest, scene.borrow().ambient());
+            img.set_from_surface(Some(&is));
+        });
+    }
 
     vbox
 }
