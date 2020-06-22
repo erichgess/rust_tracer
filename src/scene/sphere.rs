@@ -1,6 +1,6 @@
 use crate::math::{Matrix, Point3, Ray, Vector3};
 
-use std::cell::RefCell;
+use std::cell::*;
 use std::rc::Rc;
 
 use super::Intersection;
@@ -11,15 +11,26 @@ use super::TextureCoords;
 pub struct Sphere {
     transform: Matrix,
     inv_transform: Matrix,
-    material: Rc<dyn Material>,
+    material: Rc<RefCell<dyn Material>>,
+    name: String,
 }
 
 impl Sphere {
-    pub fn new(material: Rc<dyn Material>) -> Sphere {
+    pub fn new(material: Rc<RefCell<dyn Material>>) -> Sphere {
         Sphere {
             transform: Matrix::identity(),
             inv_transform: Matrix::identity(),
             material: Rc::clone(&material),
+            name: String::from("Sphere"),
+        }
+    }
+
+    pub fn new_with_name(name: &str, material: Rc<RefCell<dyn Material>>) -> Sphere {
+        Sphere {
+            transform: Matrix::identity(),
+            inv_transform: Matrix::identity(),
+            material: Rc::clone(&material),
+            name: String::from(name),
         }
     }
 
@@ -79,8 +90,20 @@ impl Renderable for Sphere {
         self.inv_transform = self.transform.inverse();
     }
 
+    fn get_name(&self) -> String {
+        self.name.clone()
+    }
+
+    fn get_material_mut(&mut self) -> Option<RefMut<dyn Material>> {
+        Some(self.material.borrow_mut())
+    }
+
+    fn get_material(&self) -> Option<Ref<dyn Material>> {
+        Some(self.material.borrow())
+    }
+
     fn to_string(&self) -> String {
-        format!("Sphere(Material: {})", self.material.to_string())
+        format!("Sphere(Name: {}, Material: {})", self.get_name(), self.material.borrow().to_string())
     }
 }
 
@@ -118,7 +141,7 @@ mod tests {
 
     #[test]
     fn basic() {
-        let phong = Rc::new(Phong::new(WHITE, WHITE, WHITE, 60., 1., 0.));
+        let phong = Rc::new(RefCell::new(Phong::new(WHITE, WHITE, WHITE, 60., 1., 0.)));
         let mut sph = Sphere::new(phong);
 
         assert_eq!(
@@ -137,7 +160,7 @@ mod tests {
 
     #[test]
     fn intersection_no_transform() {
-        let phong = Rc::new(Phong::new(WHITE, WHITE, WHITE, 60., 1., 0.));
+        let phong = Rc::new(RefCell::new(Phong::new(WHITE, WHITE, WHITE, 60., 1., 0.)));
         let sph = Sphere::new(phong);
 
         let ray = Ray::new(&Point3::new(0., 0., 2.), &Vector3::new(0., 0., -1.));
@@ -157,7 +180,7 @@ mod tests {
 
     #[test]
     fn intersection_transform() {
-        let phong = Rc::new(Phong::new(WHITE, WHITE, WHITE, 60., 1., 0.));
+        let phong = Rc::new(RefCell::new(Phong::new(WHITE, WHITE, WHITE, 60., 1., 0.)));
         let mut sph = Sphere::new(phong);
 
         let transform = Matrix::translate(0., 2., -2.) * Matrix::scale(2., 2., 2.);
@@ -190,7 +213,7 @@ mod benchmarks {
 
     #[bench]
     fn intersection(b: &mut test::Bencher) {
-        let phong = Rc::new(Phong::new(WHITE, WHITE, WHITE, 60., 1., 0.));
+        let phong = Rc::new(RefCell::new(Phong::new(WHITE, WHITE, WHITE, 60., 1., 0.)));
         let sph = Sphere::new(phong);
         let ray = Ray::new(&Point3::new(0., 0., 2.), &Vector3::new(0., 0., -1.));
 

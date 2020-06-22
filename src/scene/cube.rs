@@ -1,4 +1,5 @@
 /// Render a unit cube
+use std::cell::*;
 use std::rc::Rc;
 
 use crate::math::{Matrix, Point3, Ray};
@@ -16,7 +17,7 @@ pub struct Cube {
 }
 
 impl Cube {
-    pub fn new(material: Rc<dyn Material>) -> Cube {
+    pub fn new(material: Rc<RefCell<dyn Material>>) -> Cube {
         let v0 = Point3::new(0.5, 0.5, -0.5);
         let v1 = Point3::new(0.5, -0.5, -0.5);
         let v2 = Point3::new(-0.5, -0.5, -0.5);
@@ -95,7 +96,19 @@ impl Renderable for Cube {
         self.inv_transform = self.transform.inverse();
     }
 
+    fn get_name(&self) -> String {
+        self.to_string()
+    }
+
     fn to_string(&self) -> String {
         "Cube".into()
+    }
+
+    fn get_material_mut(&mut self) -> Option<RefMut<dyn Material>> {
+        None
+    }
+
+    fn get_material(&self) -> Option<Ref<dyn Material>> {
+        None
     }
 }

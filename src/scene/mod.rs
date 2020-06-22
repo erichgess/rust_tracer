@@ -8,6 +8,8 @@ mod plane;
 mod sphere;
 mod triangle;
 
+use std::cell::*;
+
 pub use color::colors;
 pub use color::Color;
 pub use cube::Cube;
@@ -56,6 +58,26 @@ impl Scene {
     pub fn shapes(&self) -> &Vec<Box<dyn Renderable>> {
         &self.shapes
     }
+
+    pub fn find_shape_mut(&mut self, name: &str) -> Option<&mut dyn Renderable> {
+        for i in 0..self.shapes.len() {
+            if self.shapes[i].get_name() == name {
+                return Some(&mut (*self.shapes[i]))
+            }
+        }
+
+        None
+    }
+
+    pub fn find_shape(&self, name: &str) -> Option<&dyn Renderable> {
+        for i in 0..self.shapes.len() {
+            if self.shapes[i].get_name() == name {
+                return Some(&(*self.shapes[i]))
+            }
+        }
+
+        None
+    }
 }
 
 impl Renderable for Scene {
@@ -81,6 +103,18 @@ impl Renderable for Scene {
         nearest_intersection
     }
 
+    fn get_name(&self) -> String {
+        self.to_string()
+    }
+
+    fn get_material_mut(&mut self) -> Option<RefMut<dyn Material>> {
+        None
+    }
+
+    fn get_material(&self) -> Option<Ref<dyn Material>> {
+        None
+    }
+
     fn to_string(&self) -> String {
         "The Scene".into()
     }
@@ -103,7 +137,12 @@ pub trait Renderable {
     // and scale the sphere within the scene
     fn set_transform(&mut self, mat: &Matrix);
 
+    fn get_name(&self) -> String;
+
     fn to_string(&self) -> String;
+
+    fn get_material_mut(&mut self) -> Option<RefMut<dyn Material>>;
+    fn get_material(&self) -> Option<Ref<dyn Material>>;
 }
 
 pub type TextureCoords = (f32, f32);

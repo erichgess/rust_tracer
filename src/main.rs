@@ -14,6 +14,7 @@ mod render;
 mod render_tree;
 mod scene;
 
+use std::cell::RefCell;
 use std::rc::Rc;
 
 use clap::{App, Arg, ArgMatches};
@@ -22,6 +23,7 @@ use gtk::prelude::*;
 
 use my_scene::*;
 use render::*;
+use render_tree::RayForest;
 use scene::Scene;
 
 #[derive(Debug, Clone, Copy)]
@@ -38,9 +40,15 @@ fn main() {
     let config = parse_args(&cargs);
     println!("Rendering configuration: {:?}", config);
 
+    println!("Create Scene");
     let mut scene = Scene::new();
     create_scene(&mut scene);
-    let scene = Rc::new(scene);
+    println!("Done Creating Scene");
+    println!("Generate Forest");
+    let forest = generate_forest(&config, &scene);
+    println!("Done Generating Forest");
+    let forest = Rc::new(forest);
+    let scene = Rc::new(RefCell::new(scene));
 
     if config.gui {
         let app =
@@ -48,7 +56,8 @@ fn main() {
                 .expect("Initialization failed...");
         app.connect_activate(move |app| {
             let scene = Rc::clone(&scene);
-            build_gui(app, config, scene);
+            let forest = Rc::clone(&forest);
+            build_gui(app, config, scene, forest);
         });
 
         app.run(&vec![]); // Give an empty list of args bc we already processed the args above.
@@ -57,11 +66,16 @@ fn main() {
             .duration_since(std::time::UNIX_EPOCH)
             .expect("Invalid time");
         let file = format!("{}.png", timestamp.as_secs());
-        render_to_file(&config, &scene, "./output/", &file);
+        render_to_file(&config, &scene.borrow(), "./output/", &file);
     }
 }
 
-fn build_gui<'a>(app: &gtk::Application, config: Config, scene: Rc<Scene>) {
+fn build_gui<'a>(
+    app: &gtk::Application,
+    config: Config,
+    scene: Rc<RefCell<Scene>>,
+    forest: Rc<RayForest>,
+) {
     let window = gtk::ApplicationWindow::new(app);
     window.set_title("Rust Tracer");
     window.set_border_width(10);
@@ -71,11 +85,11 @@ fn build_gui<'a>(app: &gtk::Application, config: Config, scene: Rc<Scene>) {
     let mut notebook = gui::Notebook::new();
     window.add(&notebook.notebook);
 
-    let render_box = build_render_view(config, Rc::clone(&scene));
+    let render_box = build_render_view(config, Rc::clone(&scene), forest);
     let title = "Render";
     notebook.create_tab(title, render_box.upcast());
 
-    let scene_desc = build_scene_description_view(&Rc::clone(&scene));
+    let scene_desc = build_scene_description_view(&scene.borrow());
     let title = "Scene";
     notebook.create_tab(title, scene_desc.upcast());
 
@@ -109,7 +123,11 @@ fn build_scene_description_view(scene: &Scene) -> gtk::TextView {
     text
 }
 
-fn build_render_view<'a>(config: Config, scene: Rc<Scene>) -> gtk::Box {
+fn build_render_view<'a>(
+    config: Config,
+    scene: Rc<RefCell<Scene>>,
+    forest: Rc<RayForest>,
+) -> gtk::Box {
     let vbox = gtk::Box::new(gtk::Orientation::Vertical, 0);
 
     let scrolled_box = gtk::ScrolledWindow::new(None::<&gtk::Adjustment>, None::<&gtk::Adjustment>);
@@ -146,40 +164,157 @@ fn build_render_view<'a>(config: Config, scene: Rc<Scene>) -> gtk::Box {
     d_input.set_text(&format!("{}", config.depth));
     wbox.pack_start(&d_input, false, false, 4);
 
-    let cbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+    let cbox = create_shape_editor(Rc::clone(&scene));
     vbox.pack_start(&cbox, false, false, 0);
-    let label = gtk::Label::new(Some("Sphere Color"));
-    cbox.pack_start(&label, false, false, 0);
 
     // Setup Render button to render and display the scene
-    let img = img.clone();
-    let scene = Rc::clone(&scene);
-    btn.connect_clicked(move |_btn| {
-        let width = w_input
-            .get_text()
-            .map(|v| v.parse::<usize>().unwrap_or(config.width))
-            .unwrap();
-        let height = h_input
-            .get_text()
-            .map(|v| v.parse::<usize>().unwrap_or(config.height))
-            .unwrap();
-        let depth = d_input
-            .get_text()
-            .map(|v| v.parse::<usize>().unwrap_or(config.depth))
-            .unwrap();
-        let config = Config {
-            width,
-            height,
-            depth,
-            ..config
-        };
+    {
+        let img = img.clone();
+        let scene = Rc::clone(&scene);
+        let forest = Rc::new(forest);
+        btn.connect_clicked(move |_btn| {
+            let width = w_input
+                .get_text()
+                .map(|v| v.parse::<usize>().unwrap_or(config.width))
+                .unwrap();
+            let height = h_input
+                .get_text()
+                .map(|v| v.parse::<usize>().unwrap_or(config.height))
+                .unwrap();
+            let depth = d_input
+                .get_text()
+                .map(|v| v.parse::<usize>().unwrap_or(config.depth))
+                .unwrap();
+            let config = Config {
+                width,
+                height,
+                depth,
+                ..config
+            };
 
-        println!("Rendering...");
-        let is = render_to_image_surface(&config, &scene);
-        img.set_from_surface(Some(&is));
-    });
+            println!("Rendering...");
+            let is = render_forest_to_image_surface(&config, &forest, scene.borrow().ambient());
+            img.set_from_surface(Some(&is));
+        });
+    }
 
     vbox
+}
+
+fn create_shape_editor(scene: Rc<RefCell<Scene>>) -> gtk::Box {
+    let cbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+
+    let mut ss = scene.borrow_mut();
+
+    let shape_names = ss.shapes().iter().map(|sh| sh.get_name());
+    let shape_list = gtk::ComboBoxText::new();
+    for (i, n) in shape_names.enumerate() {
+        shape_list.insert_text(i as i32, &n);
+    }
+    shape_list.set_active(Some(0));
+    cbox.pack_start(&shape_list, false, false, 10);
+
+    let shape = shape_list.get_active_text().unwrap().to_string();
+    let sphere = ss.find_shape_mut(&shape).unwrap();
+    let m = sphere.get_material_mut();
+    let m = m.unwrap();
+    let orig_c = m.diffuse((0., 0.));
+
+    // Setup material adjuster slider
+    let label = gtk::Label::new(Some("R"));
+    cbox.pack_start(&label, false, false, 0);
+    let r_slider = gtk::Scale::new(gtk::Orientation::Horizontal, None::<&gtk::Adjustment>);
+    r_slider.set_range(0., 1.);
+    r_slider.set_value(orig_c.r as f64);
+
+    let shape_list = Rc::new(shape_list);
+    {
+        let scene = Rc::clone(&scene);
+        let shape_list = Rc::clone(&shape_list);
+        let f = move |slider: &gtk::Scale| {
+            let v = slider.get_value() as f32;
+            println!("Set Red: {}", v);
+            let shape = shape_list.get_active_text().unwrap().to_string();
+            let mut ss = scene.borrow_mut();
+            let sphere = ss.find_shape_mut(&shape).unwrap();
+            let m = sphere.get_material_mut();
+            let mut m = m.unwrap();
+            let mut c = m.diffuse((0., 0.));
+            c.r = v;
+            m.set_diffuse(c);
+        };
+        r_slider.connect_value_changed(f);
+        cbox.pack_start(&r_slider, true, true, 0);
+    }
+
+    // Setup material adjuster slider
+    let label = gtk::Label::new(Some("G"));
+    cbox.pack_start(&label, false, false, 0);
+    let g_slider = gtk::Scale::new(gtk::Orientation::Horizontal, None::<&gtk::Adjustment>);
+    g_slider.set_range(0., 1.);
+    g_slider.set_value(orig_c.g as f64);
+    {
+        let scene = Rc::clone(&scene);
+        let shape_list = Rc::clone(&shape_list);
+        let f = move |slider: &gtk::Scale| {
+            let v = slider.get_value() as f32;
+            println!("Set Green: {}", v);
+            let shape = shape_list.get_active_text().unwrap().to_string();
+            let mut ss = scene.borrow_mut();
+            let sphere = ss.find_shape_mut(&shape).unwrap();
+            let m = sphere.get_material_mut();
+            let mut m = m.unwrap();
+            let mut c = m.diffuse((0., 0.));
+            c.g = v;
+            m.set_diffuse(c);
+        };
+        g_slider.connect_value_changed(f);
+        cbox.pack_start(&g_slider, true, true, 5);
+    }
+
+    // Setup material adjuster slider
+    let label = gtk::Label::new(Some("B"));
+    cbox.pack_start(&label, false, false, 0);
+    let b_slider = gtk::Scale::new(gtk::Orientation::Horizontal, None::<&gtk::Adjustment>);
+    b_slider.set_range(0., 1.);
+    b_slider.set_value(orig_c.b as f64);
+    {
+        let scene = Rc::clone(&scene);
+        let shape_list = Rc::clone(&shape_list);
+        let f = move |slider: &gtk::Scale| {
+            let v = slider.get_value() as f32;
+            println!("Set Blue: {}", v);
+            let shape = shape_list.get_active_text().unwrap().to_string();
+            let mut ss = scene.borrow_mut();
+            let sphere = ss.find_shape_mut(&shape).unwrap();
+            let m = sphere.get_material_mut();
+            let mut m = m.unwrap();
+            let mut c = m.diffuse((0., 0.));
+            c.b = v;
+            m.set_diffuse(c);
+        };
+        b_slider.connect_value_changed(f);
+        cbox.pack_start(&b_slider, true, true, 0);
+    }
+
+    let scene = Rc::clone(&scene);
+    shape_list.connect_changed(move |list| {
+        let color = {
+            let shape = list.get_active_text().unwrap().to_string();
+            let ss = scene.borrow();
+            let sphere = ss.find_shape(&shape).unwrap();
+            println!("Selected: {}", sphere.to_string());
+            let m = sphere.get_material();
+            let m = m.unwrap();
+            m.diffuse((0., 0.))
+        };
+        println!("Changed");
+        r_slider.set_value(color.r as f64);
+        g_slider.set_value(color.g as f64);
+        b_slider.set_value(color.b as f64);
+    });
+
+    cbox
 }
 
 fn configure_cli<'a, 'b>() -> App<'a, 'b> {
@@ -284,6 +419,37 @@ fn render_to_image_surface(config: &Config, scene: &Scene) -> cairo::ImageSurfac
     surface
 }
 
+fn render_forest_to_image_surface(
+    config: &Config,
+    forest: &RayForest,
+    ambient: &crate::scene::Color,
+) -> cairo::ImageSurface {
+    use cairo::{Format, ImageSurface};
+
+    let start = std::time::Instant::now();
+    let buffer = render_forest(config, forest, ambient);
+    let duration = start.elapsed();
+    println!("Render and draw time: {}ms", duration.as_millis());
+
+    let mut surface =
+        ImageSurface::create(Format::Rgb24, config.width as i32, config.height as i32)
+            .expect("Failed to crate ImageSurface");
+    {
+        let mut sd = surface.get_data().expect("Could not get SurfaceData");
+        for y in 0..config.height {
+            for x in 0..config.width {
+                let sd_idx = 4 * config.width * y + 4 * x;
+                let (r, g, b) = buffer.buf[x][y].as_u8();
+                sd[sd_idx + 0] = b;
+                sd[sd_idx + 1] = g;
+                sd[sd_idx + 2] = r;
+            }
+        }
+    }
+
+    surface
+}
+
 fn render_scene(config: &Config, scene: &Scene) -> RenderBuffer {
     let x_res = config.width;
     let y_res = config.height;
@@ -295,6 +461,30 @@ fn render_scene(config: &Config, scene: &Scene) -> RenderBuffer {
     if config.to_terminal {
         draw_to_terminal(&scene);
     }
+
+    buffer
+}
+
+fn generate_forest(config: &Config, scene: &Scene) -> RayForest {
+    let x_res = config.width;
+    let y_res = config.height;
+    let camera = Camera::new(x_res, y_res);
+
+    //render_tree::render(&camera, &scene, &mut buffer, config.depth);
+    render_tree::generate_ray_forest(&camera, scene, x_res, y_res, config.depth)
+}
+
+fn render_forest(
+    config: &Config,
+    scene: &RayForest,
+    ambient: &crate::scene::Color,
+) -> RenderBuffer {
+    let x_res = config.width;
+    let y_res = config.height;
+    let mut buffer = RenderBuffer::new(x_res, y_res);
+
+    //render_tree::render(&camera, &scene, &mut buffer, config.depth);
+    render_tree::render_forest(scene, &mut buffer, ambient);
 
     buffer
 }

@@ -1,3 +1,4 @@
+use std::cell::*;
 use std::rc::Rc;
 
 use super::{Intersection, Material, Renderable};
@@ -8,11 +9,16 @@ pub struct Triangle {
     normal: Vector3,
     transform: Matrix,
     inv_transform: Matrix,
-    material: Rc<dyn Material>,
+    material: Rc<RefCell<dyn Material>>,
 }
 
 impl Triangle {
-    pub fn new(v0: &Point3, v1: &Point3, v2: &Point3, material: Rc<dyn Material>) -> Triangle {
+    pub fn new(
+        v0: &Point3,
+        v1: &Point3,
+        v2: &Point3,
+        material: Rc<RefCell<dyn Material>>,
+    ) -> Triangle {
         let verts = vec![*v0, *v1, *v2];
 
         let normal = {
@@ -81,6 +87,18 @@ impl Renderable for Triangle {
         self.inv_transform = m.inverse();
     }
 
+    fn get_name(&self) -> String {
+        self.to_string()
+    }
+
+    fn get_material_mut(&mut self) -> Option<RefMut<dyn Material>> {
+        Some(self.material.borrow_mut())
+    }
+
+    fn get_material(&self) -> Option<Ref<dyn Material>> {
+        Some(self.material.borrow())
+    }
+
     fn to_string(&self) -> String {
         "Triable".into()
     }
@@ -95,7 +113,7 @@ mod tests {
 
     #[test]
     fn creation() {
-        let material = Rc::new(Phong::new(WHITE, WHITE, WHITE, 60., 0., 0.));
+        let material = Rc::new(RefCell::new(Phong::new(WHITE, WHITE, WHITE, 60., 0., 0.)));
         // CCW defined triangle the normal should point in the +Z axis
         let tri = Triangle::new(
             &Point3::new(0., 0., 0.),
@@ -118,7 +136,7 @@ mod tests {
     #[test]
     fn intersection() {
         // CW defined triangle the normal should point in the -Z axis
-        let material = Rc::new(Phong::new(WHITE, WHITE, WHITE, 60., 0., 0.));
+        let material = Rc::new(RefCell::new(Phong::new(WHITE, WHITE, WHITE, 60., 0., 0.)));
         let tri = Triangle::new(
             &Point3::new(2., -2., 0.),
             &Point3::new(-2., -2., 0.),
@@ -142,7 +160,7 @@ mod tests {
     #[test]
     fn behind_ray_not_intersection() {
         // CW defined triangle the normal should point in the -Z axis
-        let material = Rc::new(Phong::new(WHITE, WHITE, WHITE, 60., 0., 0.));
+        let material = Rc::new(RefCell::new(Phong::new(WHITE, WHITE, WHITE, 60., 0., 0.)));
         let tri = Triangle::new(
             &Point3::new(2., -2., 0.),
             &Point3::new(-2., -2., 0.),
@@ -159,14 +177,14 @@ mod tests {
     #[test]
     fn shading() {
         // CW defined triangle the normal should point in the -Z axis
-        let material = Rc::new(Phong::new(
+        let material = Rc::new(RefCell::new(Phong::new(
             0.5 * WHITE,
             0.5 * WHITE,
             0.5 * WHITE,
             60.,
             0.,
             0.,
-        ));
+        )));
         let tri = Triangle::new(
             &Point3::new(2., -1., 0.),
             &Point3::new(-1., -1., 0.),
@@ -180,9 +198,11 @@ mod tests {
         let i = i.unwrap();
 
         let light = PointLight::new(Point3::new(0., 0., -4.), Color::new(1., 1., 1.));
-        let energy =
-            tri.material
-                .get_reflected_energy(&light.color, &(light.pos - i.point).norm(), &i);
+        let energy = tri.material.borrow().get_reflected_energy(
+            &light.color,
+            &(light.pos - i.point).norm(),
+            &i,
+        );
 
         assert_eq!(WHITE, energy);
     }
