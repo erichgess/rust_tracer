@@ -21,7 +21,7 @@ impl Sphere {
             transform: Matrix::identity(),
             inv_transform: Matrix::identity(),
             material: Rc::clone(&material),
-            name: String::from(""),
+            name: String::from("Sphere"),
         }
     }
 

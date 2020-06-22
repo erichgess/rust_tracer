@@ -165,79 +165,8 @@ fn build_render_view<'a>(
     wbox.pack_start(&d_input, false, false, 4);
 
     {
-        let cbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+        let cbox = create_shape_editor(Rc::clone(&scene));
         vbox.pack_start(&cbox, false, false, 0);
-        let mut ss = scene.borrow_mut();
-        let sphere = ss.find_shape("blue").unwrap();
-        let m = sphere.get_material_mut();
-        let m = m.unwrap();
-        let orig_c = m.diffuse((0., 0.));
-        {
-            // Setup material adjuster slider
-            let label = gtk::Label::new(Some("R"));
-            cbox.pack_start(&label, false, false, 0);
-            let slider = gtk::Scale::new(gtk::Orientation::Horizontal, None::<&gtk::Adjustment>);
-            slider.set_range(0., 1.);
-            slider.set_value(orig_c.r as f64);
-            let scene = Rc::clone(&scene);
-            let f = move |slider: &gtk::Scale| {
-                let v = slider.get_value() as f32;
-                println!("{}", v);
-                let mut ss = scene.borrow_mut();
-                let sphere = ss.find_shape("blue").unwrap();
-                let m = sphere.get_material_mut();
-                let mut m = m.unwrap();
-                let mut c = m.diffuse((0., 0.));
-                c.r = v;
-                m.set_diffuse(c);
-            };
-            slider.connect_value_changed(f);
-            cbox.pack_start(&slider, true, true, 0);
-        }
-        {
-            // Setup material adjuster slider
-            let label = gtk::Label::new(Some("G"));
-            cbox.pack_start(&label, false, false, 0);
-            let slider = gtk::Scale::new(gtk::Orientation::Horizontal, None::<&gtk::Adjustment>);
-            slider.set_range(0., 1.);
-            slider.set_value(orig_c.g as f64);
-            let scene = Rc::clone(&scene);
-            let f = move |slider: &gtk::Scale| {
-                let v = slider.get_value() as f32;
-                println!("{}", v);
-                let mut ss = scene.borrow_mut();
-                let sphere = ss.find_shape("blue").unwrap();
-                let m = sphere.get_material_mut();
-                let mut m = m.unwrap();
-                let mut c = m.diffuse((0., 0.));
-                c.g = v;
-                m.set_diffuse(c);
-            };
-            slider.connect_value_changed(f);
-            cbox.pack_start(&slider, true, true, 5);
-        }
-        {
-            // Setup material adjuster slider
-            let label = gtk::Label::new(Some("B"));
-            cbox.pack_start(&label, false, false, 0);
-            let slider = gtk::Scale::new(gtk::Orientation::Horizontal, None::<&gtk::Adjustment>);
-            slider.set_range(0., 1.);
-            slider.set_value(orig_c.b as f64);
-            let scene = Rc::clone(&scene);
-            let f = move |slider: &gtk::Scale| {
-                let v = slider.get_value() as f32;
-                println!("{}", v);
-                let mut ss = scene.borrow_mut();
-                let sphere = ss.find_shape("blue").unwrap();
-                let m = sphere.get_material_mut();
-                let mut m = m.unwrap();
-                let mut c = m.diffuse((0., 0.));
-                c.b = v;
-                m.set_diffuse(c);
-            };
-            slider.connect_value_changed(f);
-            cbox.pack_start(&slider, true, true, 0);
-        }
     }
 
     // Setup Render button to render and display the scene
@@ -272,6 +201,100 @@ fn build_render_view<'a>(
     }
 
     vbox
+}
+
+fn create_shape_editor(
+    scene: Rc<RefCell<Scene>>,
+    ) -> gtk::Box {
+    let cbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+
+    let mut ss = scene.borrow_mut();
+
+    let shape_names = ss.shapes().iter().map(|sh| sh.get_name());
+    let shape_list = gtk::ComboBoxText::new();
+    for (i, n) in shape_names.enumerate() {
+        shape_list.insert_text(i as i32, &n);
+    }
+    shape_list.set_active(Some(0));
+    cbox.pack_start(&shape_list, false, false, 10);
+
+    let sphere = ss.find_shape("blue").unwrap();
+    let m = sphere.get_material_mut();
+    let m = m.unwrap();
+    let orig_c = m.diffuse((0., 0.));
+    {
+        // Setup material adjuster slider
+        let label = gtk::Label::new(Some("R"));
+        cbox.pack_start(&label, false, false, 0);
+        let slider = gtk::Scale::new(gtk::Orientation::Horizontal, None::<&gtk::Adjustment>);
+        slider.set_range(0., 1.);
+        slider.set_value(orig_c.r as f64);
+        let scene = Rc::clone(&scene);
+        let f = move |slider: &gtk::Scale| {
+            let v = slider.get_value() as f32;
+            println!("{}", v);
+            let mut ss = scene.borrow_mut();
+            let sphere = ss.find_shape("blue").unwrap();
+            let m = sphere.get_material_mut();
+            let mut m = m.unwrap();
+            let mut c = m.diffuse((0., 0.));
+            c.r = v;
+            m.set_diffuse(c);
+        };
+        slider.connect_value_changed(f);
+        cbox.pack_start(&slider, true, true, 0);
+
+        shape_list.connect_changed(move |_| {
+            println!("Changed");
+            slider.set_value(0.5);
+        });
+    }
+    {
+        // Setup material adjuster slider
+        let label = gtk::Label::new(Some("G"));
+        cbox.pack_start(&label, false, false, 0);
+        let slider = gtk::Scale::new(gtk::Orientation::Horizontal, None::<&gtk::Adjustment>);
+        slider.set_range(0., 1.);
+        slider.set_value(orig_c.g as f64);
+        let scene = Rc::clone(&scene);
+        let f = move |slider: &gtk::Scale| {
+            let v = slider.get_value() as f32;
+            println!("{}", v);
+            let mut ss = scene.borrow_mut();
+            let sphere = ss.find_shape("blue").unwrap();
+            let m = sphere.get_material_mut();
+            let mut m = m.unwrap();
+            let mut c = m.diffuse((0., 0.));
+            c.g = v;
+            m.set_diffuse(c);
+        };
+        slider.connect_value_changed(f);
+        cbox.pack_start(&slider, true, true, 5);
+    }
+    {
+        // Setup material adjuster slider
+        let label = gtk::Label::new(Some("B"));
+        cbox.pack_start(&label, false, false, 0);
+        let slider = gtk::Scale::new(gtk::Orientation::Horizontal, None::<&gtk::Adjustment>);
+        slider.set_range(0., 1.);
+        slider.set_value(orig_c.b as f64);
+        let scene = Rc::clone(&scene);
+        let f = move |slider: &gtk::Scale| {
+            let v = slider.get_value() as f32;
+            println!("{}", v);
+            let mut ss = scene.borrow_mut();
+            let sphere = ss.find_shape("blue").unwrap();
+            let m = sphere.get_material_mut();
+            let mut m = m.unwrap();
+            let mut c = m.diffuse((0., 0.));
+            c.b = v;
+            m.set_diffuse(c);
+        };
+        slider.connect_value_changed(f);
+        cbox.pack_start(&slider, true, true, 0);
+    }
+
+    cbox
 }
 
 fn configure_cli<'a, 'b>() -> App<'a, 'b> {
