@@ -15,6 +15,7 @@ mod render_tree;
 mod scene;
 
 use std::cell::RefCell;
+use std::collections::HashSet;
 use std::rc::Rc;
 
 use clap::{App, Arg, ArgMatches};
@@ -49,6 +50,7 @@ fn main() {
     println!("Done Generating Forest");
     let forest = Rc::new(forest);
     let scene = Rc::new(RefCell::new(scene));
+    let mutated_shapes = Rc::new(RefCell::new(HashSet::new()));
 
     if config.gui {
         let app =
@@ -57,7 +59,8 @@ fn main() {
         app.connect_activate(move |app| {
             let scene = Rc::clone(&scene);
             let forest = Rc::clone(&forest);
-            build_gui(app, config, scene, forest);
+            let mutated_shapes = Rc::clone(&mutated_shapes);
+            build_gui(app, config, scene, forest, mutated_shapes);
         });
 
         app.run(&vec![]); // Give an empty list of args bc we already processed the args above.
@@ -75,6 +78,7 @@ fn build_gui<'a>(
     config: Config,
     scene: Rc<RefCell<Scene>>,
     forest: Rc<RayForest>,
+    mutated_shapes: Rc<RefCell<HashSet<i32>>>,
 ) {
     let window = gtk::ApplicationWindow::new(app);
     window.set_title("Rust Tracer");
@@ -85,7 +89,7 @@ fn build_gui<'a>(
     let mut notebook = gui::Notebook::new();
     window.add(&notebook.notebook);
 
-    let render_box = build_render_view(config, Rc::clone(&scene), forest);
+    let render_box = build_render_view(config, Rc::clone(&scene), forest, mutated_shapes);
     let title = "Render";
     notebook.create_tab(title, render_box.upcast());
 
@@ -127,6 +131,7 @@ fn build_render_view<'a>(
     config: Config,
     scene: Rc<RefCell<Scene>>,
     forest: Rc<RayForest>,
+    mutated_shapes: Rc<RefCell<HashSet<i32>>>,
 ) -> gtk::Box {
     let vbox = gtk::Box::new(gtk::Orientation::Vertical, 0);
 
@@ -164,14 +169,18 @@ fn build_render_view<'a>(
     d_input.set_text(&format!("{}", config.depth));
     wbox.pack_start(&d_input, false, false, 4);
 
-    let cbox = create_shape_editor(Rc::clone(&scene));
-    vbox.pack_start(&cbox, false, false, 0);
+    {
+        let mutated_shapes = Rc::clone(&mutated_shapes);
+        let cbox = create_shape_editor(Rc::clone(&scene), mutated_shapes);
+        vbox.pack_start(&cbox, false, false, 0);
+    }
 
     // Setup Render button to render and display the scene
     {
         let img = img.clone();
         let scene = Rc::clone(&scene);
         let forest = Rc::new(forest);
+        let mutated_shapes = Rc::clone(&mutated_shapes);
         btn.connect_clicked(move |_btn| {
             let width = w_input
                 .get_text()
@@ -193,15 +202,17 @@ fn build_render_view<'a>(
             };
 
             println!("Rendering...");
+            println!("Mutated Shapes: {:?}", mutated_shapes.borrow());
             let is = render_forest_to_image_surface(&config, &forest, scene.borrow().ambient());
             img.set_from_surface(Some(&is));
+            mutated_shapes.borrow_mut().clear();
         });
     }
 
     vbox
 }
 
-fn create_shape_editor(scene: Rc<RefCell<Scene>>) -> gtk::Box {
+fn create_shape_editor(scene: Rc<RefCell<Scene>>, mutated_shapes: Rc<RefCell<HashSet<i32>>>) -> gtk::Box {
     let cbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);
 
     let mut ss = scene.borrow_mut();
@@ -231,12 +242,14 @@ fn create_shape_editor(scene: Rc<RefCell<Scene>>) -> gtk::Box {
     {
         let scene = Rc::clone(&scene);
         let shape_list = Rc::clone(&shape_list);
+        let mutated_shapes = Rc::clone(&mutated_shapes);
         let f = move |slider: &gtk::Scale| {
             let v = slider.get_value() as f32;
             println!("Set Red: {}", v);
             let shape = shape_list.get_active_text().unwrap().to_string();
             let mut ss = scene.borrow_mut();
             let sphere = ss.find_shape_mut(&shape).unwrap();
+            mutated_shapes.borrow_mut().insert(sphere.id());
             let m = sphere.get_material_mut();
             let mut m = m.unwrap();
             let mut c = m.diffuse((0., 0.));
@@ -256,12 +269,14 @@ fn create_shape_editor(scene: Rc<RefCell<Scene>>) -> gtk::Box {
     {
         let scene = Rc::clone(&scene);
         let shape_list = Rc::clone(&shape_list);
+        let mutated_shapes = Rc::clone(&mutated_shapes);
         let f = move |slider: &gtk::Scale| {
             let v = slider.get_value() as f32;
             println!("Set Green: {}", v);
             let shape = shape_list.get_active_text().unwrap().to_string();
             let mut ss = scene.borrow_mut();
             let sphere = ss.find_shape_mut(&shape).unwrap();
+            mutated_shapes.borrow_mut().insert(sphere.id());
             let m = sphere.get_material_mut();
             let mut m = m.unwrap();
             let mut c = m.diffuse((0., 0.));
@@ -281,12 +296,14 @@ fn create_shape_editor(scene: Rc<RefCell<Scene>>) -> gtk::Box {
     {
         let scene = Rc::clone(&scene);
         let shape_list = Rc::clone(&shape_list);
+        let mutated_shapes = Rc::clone(&mutated_shapes);
         let f = move |slider: &gtk::Scale| {
             let v = slider.get_value() as f32;
             println!("Set Blue: {}", v);
             let shape = shape_list.get_active_text().unwrap().to_string();
             let mut ss = scene.borrow_mut();
             let sphere = ss.find_shape_mut(&shape).unwrap();
+            mutated_shapes.borrow_mut().insert(sphere.id());
             let m = sphere.get_material_mut();
             let mut m = m.unwrap();
             let mut c = m.diffuse((0., 0.));
