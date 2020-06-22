@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use super::math::{Ray, Vector3};
 use super::render::{
     fresnel_reflection, fresnel_refraction, get_light_energy, reflect_ray, refract_ray, Camera,
@@ -19,6 +20,7 @@ enum RayTreeNode {
 #[derive(Clone)]
 struct RayTree {
     dirty: bool,
+    shapes: HashSet<i32>,
     root: RayTreeNode,
 }
 
@@ -26,6 +28,7 @@ impl RayTree {
     pub fn new() -> RayTree {
         RayTree {
             dirty: false,
+            shapes: HashSet::new(),
             root: RayTreeNode::None,
         }
     }
@@ -78,7 +81,7 @@ pub fn generate_ray_forest(
     for v in 0..camera.y_res {
         for u in 0..camera.x_res {
             let ray = camera.get_ray(u, v);
-            let tree = build_ray_tree(scene, &ray, depth);
+            let tree = build_ray_tree(scene, &ray, depth, &mut ray_forest.forest[u][v].shapes);
             ray_forest.forest[u][v].root = tree;
             ray_forest.forest[u][v].dirty = true;
         }
@@ -86,7 +89,7 @@ pub fn generate_ray_forest(
     ray_forest
 }
 
-fn build_ray_tree(scene: &Scene, ray: &Ray, depth: usize) -> RayTreeNode {
+fn build_ray_tree(scene: &Scene, ray: &Ray, depth: usize, shapes: &mut HashSet<i32>) -> RayTreeNode {
     use std::f32::EPSILON;
 
     if depth == 0 {
@@ -97,6 +100,7 @@ fn build_ray_tree(scene: &Scene, ray: &Ray, depth: usize) -> RayTreeNode {
     match hit {
         None => RayTreeNode::None,
         Some(i) => {
+            shapes.insert(i.id);
             let (n1, n2) = if i.entering {
                 (1., i.material.borrow().refraction_index())
             } else {
@@ -109,7 +113,7 @@ fn build_ray_tree(scene: &Scene, ray: &Ray, depth: usize) -> RayTreeNode {
                 // compute reflection vector
                 let reflect_ray = reflect_ray(ray, &i);
                 // compute incoming energy from the direction of the reflected ray
-                build_ray_tree(scene, &reflect_ray, depth - 1)
+                build_ray_tree(scene, &reflect_ray, depth - 1, shapes)
             } else {
                 RayTreeNode::None
             };
@@ -117,7 +121,7 @@ fn build_ray_tree(scene: &Scene, ray: &Ray, depth: usize) -> RayTreeNode {
             let refracted = if i.material.borrow().refraction_index() > EPSILON {
                 let refract_ray = refract_ray(ray, &i, n1, n2);
                 refract_ray
-                    .map(|r| build_ray_tree(scene, &r, depth - 1))
+                    .map(|r| build_ray_tree(scene, &r, depth - 1, shapes))
                     .unwrap_or(RayTreeNode::None)
             } else {
                 RayTreeNode::None

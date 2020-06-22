@@ -6,6 +6,7 @@ use crate::math::{Point3, Vector3};
 
 #[derive(Clone)]
 pub struct Intersection {
+    pub id: i32,
     pub t: f32,
     pub material: Rc<RefCell<dyn Material>>,
     pub point: Point3,

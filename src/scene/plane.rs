@@ -67,6 +67,7 @@ impl Renderable for Plane {
             let u = self.u.dot(&Vector3::from(point));
             let v = self.v.dot(&Vector3::from(point));
             let i = Intersection {
+                id: self.id,
                 t,
                 entering: t >= 0.,
                 point,

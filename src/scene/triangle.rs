@@ -82,6 +82,7 @@ impl Renderable for Triangle {
         let normal = if t < 0. { -self.normal } else { self.normal };
 
         Some(Intersection {
+            id: self.id,
             t,
             material: Rc::clone(&self.material),
             point: t * ray,

@@ -84,6 +84,7 @@ impl Renderable for Sphere {
                 }
                 let eye_dir = -ray.direction().norm();
                 Some(Intersection {
+                    id: self.id,
                     t,
                     material: Rc::clone(&self.material),
                     point,
