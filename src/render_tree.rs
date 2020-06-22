@@ -16,13 +16,13 @@ enum RayTree {
     ),
 }
 
-struct RayForest<'a> {
-    ambient: &'a Color,
+struct RayForest {
+    ambient: Color,
     forest: Vec<Vec<RayTree>>,
 }
 
-impl<'a> RayForest<'a> {
-    pub fn new(w: usize, h: usize, ambient: &'a Color) -> RayForest {
+impl RayForest {
+    pub fn new(w: usize, h: usize, ambient: Color) -> RayForest {
         RayForest {
             ambient,
             forest: vec![vec![RayTree::None; h]; w],
@@ -52,14 +52,14 @@ fn reduce_forest(forest: &RayForest, buffer: &mut RenderBuffer, ambient: &Color)
     }
 }
 
-fn generate_ray_forest<'a>(
-    camera: &'a Camera,
-    scene: &'a Scene,
+fn generate_ray_forest(
+    camera: &Camera,
+    scene: &Scene,
     w: usize,
     h: usize,
     depth: usize,
-) -> RayForest<'a> {
-    let mut ray_forest = RayForest::new(w, h, scene.ambient());
+) -> RayForest {
+    let mut ray_forest = RayForest::new(w, h, *scene.ambient());
     for v in 0..camera.y_res {
         for u in 0..camera.x_res {
             let ray = camera.get_ray(u, v);
