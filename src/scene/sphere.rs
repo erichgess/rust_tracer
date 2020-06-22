@@ -98,8 +98,12 @@ impl Renderable for Sphere {
         Some(self.material.borrow_mut())
     }
 
+    fn get_material(&self) -> Option<Ref<dyn Material>> {
+        Some(self.material.borrow())
+    }
+
     fn to_string(&self) -> String {
-        format!("Sphere(Material: {})", self.material.borrow().to_string())
+        format!("Sphere(Name: {}, Material: {})", self.get_name(), self.material.borrow().to_string())
     }
 }
 

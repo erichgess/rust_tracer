@@ -95,6 +95,10 @@ impl Renderable for Triangle {
         Some(self.material.borrow_mut())
     }
 
+    fn get_material(&self) -> Option<Ref<dyn Material>> {
+        Some(self.material.borrow())
+    }
+
     fn to_string(&self) -> String {
         "Triable".into()
     }

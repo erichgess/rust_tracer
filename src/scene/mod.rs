@@ -59,10 +59,20 @@ impl Scene {
         &self.shapes
     }
 
-    pub fn find_shape(&mut self, name: &str) -> Option<&mut dyn Renderable> {
+    pub fn find_shape_mut(&mut self, name: &str) -> Option<&mut dyn Renderable> {
         for i in 0..self.shapes.len() {
             if self.shapes[i].get_name() == name {
                 return Some(&mut (*self.shapes[i]))
+            }
+        }
+
+        None
+    }
+
+    pub fn find_shape(&self, name: &str) -> Option<&dyn Renderable> {
+        for i in 0..self.shapes.len() {
+            if self.shapes[i].get_name() == name {
+                return Some(&(*self.shapes[i]))
             }
         }
 
@@ -101,6 +111,10 @@ impl Renderable for Scene {
         None
     }
 
+    fn get_material(&self) -> Option<Ref<dyn Material>> {
+        None
+    }
+
     fn to_string(&self) -> String {
         "The Scene".into()
     }
@@ -128,6 +142,7 @@ pub trait Renderable {
     fn to_string(&self) -> String;
 
     fn get_material_mut(&mut self) -> Option<RefMut<dyn Material>>;
+    fn get_material(&self) -> Option<Ref<dyn Material>>;
 }
 
 pub type TextureCoords = (f32, f32);

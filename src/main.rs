@@ -164,10 +164,8 @@ fn build_render_view<'a>(
     d_input.set_text(&format!("{}", config.depth));
     wbox.pack_start(&d_input, false, false, 4);
 
-    {
-        let cbox = create_shape_editor(Rc::clone(&scene));
-        vbox.pack_start(&cbox, false, false, 0);
-    }
+    let cbox = create_shape_editor(Rc::clone(&scene));
+    vbox.pack_start(&cbox, false, false, 0);
 
     // Setup Render button to render and display the scene
     {
@@ -203,9 +201,7 @@ fn build_render_view<'a>(
     vbox
 }
 
-fn create_shape_editor(
-    scene: Rc<RefCell<Scene>>,
-    ) -> gtk::Box {
+fn create_shape_editor(scene: Rc<RefCell<Scene>>) -> gtk::Box {
     let cbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);
 
     let mut ss = scene.borrow_mut();
@@ -218,81 +214,105 @@ fn create_shape_editor(
     shape_list.set_active(Some(0));
     cbox.pack_start(&shape_list, false, false, 10);
 
-    let sphere = ss.find_shape("blue").unwrap();
+    let shape = shape_list.get_active_text().unwrap().to_string();
+    let sphere = ss.find_shape_mut(&shape).unwrap();
     let m = sphere.get_material_mut();
     let m = m.unwrap();
     let orig_c = m.diffuse((0., 0.));
+
+    // Setup material adjuster slider
+    let label = gtk::Label::new(Some("R"));
+    cbox.pack_start(&label, false, false, 0);
+    let r_slider = gtk::Scale::new(gtk::Orientation::Horizontal, None::<&gtk::Adjustment>);
+    r_slider.set_range(0., 1.);
+    r_slider.set_value(orig_c.r as f64);
+
+    let shape_list = Rc::new(shape_list);
     {
-        // Setup material adjuster slider
-        let label = gtk::Label::new(Some("R"));
-        cbox.pack_start(&label, false, false, 0);
-        let slider = gtk::Scale::new(gtk::Orientation::Horizontal, None::<&gtk::Adjustment>);
-        slider.set_range(0., 1.);
-        slider.set_value(orig_c.r as f64);
         let scene = Rc::clone(&scene);
+        let shape_list = Rc::clone(&shape_list);
         let f = move |slider: &gtk::Scale| {
             let v = slider.get_value() as f32;
-            println!("{}", v);
+            println!("Set Red: {}", v);
+            let shape = shape_list.get_active_text().unwrap().to_string();
             let mut ss = scene.borrow_mut();
-            let sphere = ss.find_shape("blue").unwrap();
+            let sphere = ss.find_shape_mut(&shape).unwrap();
             let m = sphere.get_material_mut();
             let mut m = m.unwrap();
             let mut c = m.diffuse((0., 0.));
             c.r = v;
             m.set_diffuse(c);
         };
-        slider.connect_value_changed(f);
-        cbox.pack_start(&slider, true, true, 0);
-
-        shape_list.connect_changed(move |_| {
-            println!("Changed");
-            slider.set_value(0.5);
-        });
+        r_slider.connect_value_changed(f);
+        cbox.pack_start(&r_slider, true, true, 0);
     }
+
+    // Setup material adjuster slider
+    let label = gtk::Label::new(Some("G"));
+    cbox.pack_start(&label, false, false, 0);
+    let g_slider = gtk::Scale::new(gtk::Orientation::Horizontal, None::<&gtk::Adjustment>);
+    g_slider.set_range(0., 1.);
+    g_slider.set_value(orig_c.g as f64);
     {
-        // Setup material adjuster slider
-        let label = gtk::Label::new(Some("G"));
-        cbox.pack_start(&label, false, false, 0);
-        let slider = gtk::Scale::new(gtk::Orientation::Horizontal, None::<&gtk::Adjustment>);
-        slider.set_range(0., 1.);
-        slider.set_value(orig_c.g as f64);
         let scene = Rc::clone(&scene);
+        let shape_list = Rc::clone(&shape_list);
         let f = move |slider: &gtk::Scale| {
             let v = slider.get_value() as f32;
-            println!("{}", v);
+            println!("Set Green: {}", v);
+            let shape = shape_list.get_active_text().unwrap().to_string();
             let mut ss = scene.borrow_mut();
-            let sphere = ss.find_shape("blue").unwrap();
+            let sphere = ss.find_shape_mut(&shape).unwrap();
             let m = sphere.get_material_mut();
             let mut m = m.unwrap();
             let mut c = m.diffuse((0., 0.));
             c.g = v;
             m.set_diffuse(c);
         };
-        slider.connect_value_changed(f);
-        cbox.pack_start(&slider, true, true, 5);
+        g_slider.connect_value_changed(f);
+        cbox.pack_start(&g_slider, true, true, 5);
     }
+
+    // Setup material adjuster slider
+    let label = gtk::Label::new(Some("B"));
+    cbox.pack_start(&label, false, false, 0);
+    let b_slider = gtk::Scale::new(gtk::Orientation::Horizontal, None::<&gtk::Adjustment>);
+    b_slider.set_range(0., 1.);
+    b_slider.set_value(orig_c.b as f64);
     {
-        // Setup material adjuster slider
-        let label = gtk::Label::new(Some("B"));
-        cbox.pack_start(&label, false, false, 0);
-        let slider = gtk::Scale::new(gtk::Orientation::Horizontal, None::<&gtk::Adjustment>);
-        slider.set_range(0., 1.);
-        slider.set_value(orig_c.b as f64);
         let scene = Rc::clone(&scene);
+        let shape_list = Rc::clone(&shape_list);
         let f = move |slider: &gtk::Scale| {
             let v = slider.get_value() as f32;
-            println!("{}", v);
+            println!("Set Blue: {}", v);
+            let shape = shape_list.get_active_text().unwrap().to_string();
             let mut ss = scene.borrow_mut();
-            let sphere = ss.find_shape("blue").unwrap();
+            let sphere = ss.find_shape_mut(&shape).unwrap();
             let m = sphere.get_material_mut();
             let mut m = m.unwrap();
             let mut c = m.diffuse((0., 0.));
             c.b = v;
             m.set_diffuse(c);
         };
-        slider.connect_value_changed(f);
-        cbox.pack_start(&slider, true, true, 0);
+        b_slider.connect_value_changed(f);
+        cbox.pack_start(&b_slider, true, true, 0);
     }
+
+    let scene = Rc::clone(&scene);
+    shape_list.connect_changed(move |list| {
+        let color = {
+            let shape = list.get_active_text().unwrap().to_string();
+            let ss = scene.borrow();
+            let sphere = ss.find_shape(&shape).unwrap();
+            println!("Selected: {}", sphere.to_string());
+            let m = sphere.get_material();
+            let m = m.unwrap();
+            m.diffuse((0., 0.))
+        };
+        println!("Changed");
+        r_slider.set_value(color.r as f64);
+        g_slider.set_value(color.g as f64);
+        b_slider.set_value(color.b as f64);
+    });
 
     cbox
 }

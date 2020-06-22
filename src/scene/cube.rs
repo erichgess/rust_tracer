@@ -107,4 +107,8 @@ impl Renderable for Cube {
     fn get_material_mut(&mut self) -> Option<RefMut<dyn Material>> {
         None
     }
+
+    fn get_material(&self) -> Option<Ref<dyn Material>> {
+        None
+    }
 }
