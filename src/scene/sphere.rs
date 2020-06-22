@@ -9,6 +9,7 @@ use super::Renderable;
 use super::TextureCoords;
 
 pub struct Sphere {
+    id: i32,
     transform: Matrix,
     inv_transform: Matrix,
     material: Rc<RefCell<dyn Material>>,
@@ -18,6 +19,7 @@ pub struct Sphere {
 impl Sphere {
     pub fn new(material: Rc<RefCell<dyn Material>>) -> Sphere {
         Sphere {
+            id: 0,
             transform: Matrix::identity(),
             inv_transform: Matrix::identity(),
             material: Rc::clone(&material),
@@ -27,6 +29,7 @@ impl Sphere {
 
     pub fn new_with_name(name: &str, material: Rc<RefCell<dyn Material>>) -> Sphere {
         Sphere {
+            id: 0,
             transform: Matrix::identity(),
             inv_transform: Matrix::identity(),
             material: Rc::clone(&material),
@@ -43,6 +46,14 @@ impl Sphere {
 }
 
 impl Renderable for Sphere {
+    fn id(&self) -> i32 {
+        self.id
+    }
+
+    fn set_id(&mut self, id: i32) {
+        self.id = id;
+    }
+
     fn intersect(&self, ray: &Ray) -> Option<Intersection> {
         // apply transformation to the ray
         let transformed_ray = self.inv_transform * ray;

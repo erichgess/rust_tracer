@@ -20,6 +20,7 @@ pub use sphere::Sphere;
 pub use triangle::Triangle;
 
 pub struct Scene {
+    id: i32,
     ambient: Color,
     lights: Vec<Box<dyn LightSource>>,
     shapes: Vec<Box<dyn Renderable>>,
@@ -28,6 +29,7 @@ pub struct Scene {
 impl Scene {
     pub fn new() -> Scene {
         Scene {
+            id: 0,
             ambient: colors::BLACK,
             lights: vec![],
             shapes: vec![],
@@ -36,6 +38,8 @@ impl Scene {
 
     /// Adds `shape` to the scene so that it will be rendered.
     pub fn add_shape(&mut self, shape: Box<dyn Renderable>) {
+        let mut shape = shape;
+        shape.set_id(self.shapes.len() as i32);
         self.shapes.push(shape);
     }
 
@@ -81,6 +85,14 @@ impl Scene {
 }
 
 impl Renderable for Scene {
+    fn id(&self) -> i32 {
+        self.id
+    }
+
+    fn set_id(&mut self ,id: i32) {
+        self.id = id;
+    }
+
     fn set_transform(&mut self, _: &Matrix) {}
 
     fn intersect(&self, ray: &Ray) -> Option<Intersection> {
@@ -129,6 +141,9 @@ impl Renderable for Scene {
  * and which are required for the object to be rendered.
  */
 pub trait Renderable {
+    fn id(&self) -> i32;
+    fn set_id(&mut self, id: i32);
+
     // Tests if a ray will intersect the object and if it does
     // returns where the intersection occurred.
     fn intersect(&self, ray: &Ray) -> Option<Intersection>;

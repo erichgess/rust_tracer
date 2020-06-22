@@ -11,6 +11,7 @@ use super::Scene;
 use super::Triangle;
 
 pub struct Cube {
+    id: i32,
     triangles: Scene,
     transform: Matrix,
     inv_transform: Matrix,
@@ -68,6 +69,7 @@ impl Cube {
         scene.add_shape(Box::new(tb2));
 
         Cube {
+            id: 0,
             transform: Matrix::identity(),
             inv_transform: Matrix::identity(),
             triangles: scene,
@@ -76,6 +78,14 @@ impl Cube {
 }
 
 impl Renderable for Cube {
+    fn id(&self) -> i32 {
+        self.id
+    }
+
+    fn set_id(&mut self, id: i32) {
+        self.id = id
+    }
+
     fn intersect(&self, ray: &Ray) -> Option<Intersection> {
         // apply transformation to the ray
         let transformed_ray = self.inv_transform * ray;
