@@ -1,4 +1,7 @@
+use std::cell::*;
 use std::collections::HashSet;
+use std::rc::Rc;
+
 use super::math::{Ray, Vector3};
 use super::render::{
     fresnel_reflection, fresnel_refraction, get_light_energy, reflect_ray, refract_ray, Camera,
@@ -63,7 +66,18 @@ pub fn render(camera: &Camera, scene: &Scene, buffer: &mut RenderBuffer, depth: 
 pub fn render_forest(forest: &RayForest, buffer: &mut RenderBuffer, ambient: &Color) {
     for u in 0..buffer.w {
         for v in 0..buffer.h {
-            if forest.forest[u][v].dirty {
+            buffer.buf[u][v] = render_ray_tree(&forest.forest[u][v].root, ambient).0;
+        }
+    }
+}
+
+pub fn render_forest_filter(forest: &RayForest, buffer: &mut RenderBuffer, ambient: &Color, mutated_shapes: Rc<RefCell<HashSet<i32>>>) {
+    let mutated_shapes = mutated_shapes.borrow();
+    for u in 0..buffer.w {
+        for v in 0..buffer.h {
+            let i = forest.forest[u][v].shapes.intersection(&mutated_shapes);
+            let i: HashSet<_> = i.collect();
+            if !i.is_empty() {
                 buffer.buf[u][v] = render_ray_tree(&forest.forest[u][v].root, ambient).0;
             }
         }

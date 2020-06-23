@@ -203,7 +203,7 @@ fn build_render_view<'a>(
 
             println!("Rendering...");
             println!("Mutated Shapes: {:?}", mutated_shapes.borrow());
-            let is = render_forest_to_image_surface(&config, &forest, scene.borrow().ambient());
+            let is = render_forest_to_image_surface(&config, &forest, scene.borrow().ambient(), mutated_shapes.clone());
             img.set_from_surface(Some(&is));
             mutated_shapes.borrow_mut().clear();
         });
@@ -440,11 +440,12 @@ fn render_forest_to_image_surface(
     config: &Config,
     forest: &RayForest,
     ambient: &crate::scene::Color,
+    mutated_shapes: Rc<RefCell<HashSet<i32>>>,
 ) -> cairo::ImageSurface {
     use cairo::{Format, ImageSurface};
 
     let start = std::time::Instant::now();
-    let buffer = render_forest(config, forest, ambient);
+    let buffer = render_forest_filter(config, forest, ambient, mutated_shapes.clone());
     let duration = start.elapsed();
     println!("Render and draw time: {}ms", duration.as_millis());
 
@@ -502,6 +503,22 @@ fn render_forest(
 
     //render_tree::render(&camera, &scene, &mut buffer, config.depth);
     render_tree::render_forest(scene, &mut buffer, ambient);
+
+    buffer
+}
+
+fn render_forest_filter(
+    config: &Config,
+    scene: &RayForest,
+    ambient: &crate::scene::Color,
+    mutated_shapes: Rc<RefCell<HashSet<i32>>>,
+) -> RenderBuffer {
+    let x_res = config.width;
+    let y_res = config.height;
+    let mut buffer = RenderBuffer::new(x_res, y_res);
+
+    //render_tree::render(&camera, &scene, &mut buffer, config.depth);
+    render_tree::render_forest_filter(scene, &mut buffer, ambient, mutated_shapes.clone());
 
     buffer
 }
