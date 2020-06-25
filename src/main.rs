@@ -223,13 +223,18 @@ fn build_render_view<'a>(
 
             println!("Rendering...");
             println!("Mutated Shapes: {:?}", mutated_shapes.borrow());
-            let is = render_forest_to_image_surface(
+            use cairo::{Format, ImageSurface};
+            let mut surface =
+                ImageSurface::create(Format::Rgb24, config.width as i32, config.height as i32)
+                .expect("Failed to crate ImageSurface");
+            render_forest_to_image_surface(
                 &config,
                 &forest,
                 scene.borrow().ambient(),
                 mutated_shapes.clone(),
+                &mut surface,
             );
-            img.set_from_surface(Some(&is));
+            img.set_from_surface(Some(&surface));
             mutated_shapes.borrow_mut().clear();
         });
     }
@@ -498,17 +503,18 @@ fn render_forest_to_image_surface(
     forest: &RayForest,
     ambient: &crate::scene::Color,
     mutated_shapes: Rc<RefCell<HashSet<i32>>>,
-) -> cairo::ImageSurface {
-    use cairo::{Format, ImageSurface};
+    surface: &mut cairo::ImageSurface,
+) {
 
     let start = std::time::Instant::now();
     let buffer = render_forest_filter(config, forest, ambient, mutated_shapes.clone());
     let duration = start.elapsed();
     println!("Render and draw time: {}ms", duration.as_millis());
 
-    let mut surface =
+    //use cairo::{Format, ImageSurface};
+    /*let mut surface =
         ImageSurface::create(Format::Rgb24, config.width as i32, config.height as i32)
-            .expect("Failed to crate ImageSurface");
+            .expect("Failed to crate ImageSurface");*/
     {
         let mut sd = surface.get_data().expect("Could not get SurfaceData");
         for y in 0..config.height {
@@ -521,8 +527,6 @@ fn render_forest_to_image_surface(
             }
         }
     }
-
-    surface
 }
 
 fn render_scene(config: &Config, scene: &Scene) -> RenderBuffer {
