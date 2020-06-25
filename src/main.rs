@@ -34,6 +34,13 @@ struct Config {
     depth: usize,
     to_terminal: bool,
     gui: bool,
+    method: Method,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum Method {
+    Basic,
+    RayForest,
 }
 
 fn main() {
@@ -65,11 +72,24 @@ fn main() {
 
         app.run(&vec![]); // Give an empty list of args bc we already processed the args above.
     } else {
-        let timestamp = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .expect("Invalid time");
-        let file = format!("{}.png", timestamp.as_secs());
-        render_to_file(&config, &scene.borrow(), "./output/", &file);
+        if config.method == Method::Basic {
+            let timestamp = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("Invalid time");
+            let file = format!("{}.png", timestamp.as_secs());
+            render_to_file(&config, &scene.borrow(), "./output/", &file);
+        } else if config.method == Method::RayForest {
+            println!("Generate Forest");
+            let forest = generate_forest(&config, &scene.borrow());
+            println!("Done Generating Forest");
+            let forest = Rc::new(forest);
+            let timestamp = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("Invalid time");
+            let file = format!("{}.png", timestamp.as_secs());
+            let forest = Rc::clone(&forest);
+            render_forest_to_file(&config, &forest, scene.borrow().ambient(), "./output/", &file);
+        }
     }
 }
 
@@ -203,7 +223,12 @@ fn build_render_view<'a>(
 
             println!("Rendering...");
             println!("Mutated Shapes: {:?}", mutated_shapes.borrow());
-            let is = render_forest_to_image_surface(&config, &forest, scene.borrow().ambient(), mutated_shapes.clone());
+            let is = render_forest_to_image_surface(
+                &config,
+                &forest,
+                scene.borrow().ambient(),
+                mutated_shapes.clone(),
+            );
             img.set_from_surface(Some(&is));
             mutated_shapes.borrow_mut().clear();
         });
@@ -212,7 +237,10 @@ fn build_render_view<'a>(
     vbox
 }
 
-fn create_shape_editor(scene: Rc<RefCell<Scene>>, mutated_shapes: Rc<RefCell<HashSet<i32>>>) -> gtk::Box {
+fn create_shape_editor(
+    scene: Rc<RefCell<Scene>>,
+    mutated_shapes: Rc<RefCell<HashSet<i32>>>,
+) -> gtk::Box {
     let cbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);
 
     let mut ss = scene.borrow_mut();
@@ -369,6 +397,13 @@ fn configure_cli<'a, 'b>() -> App<'a, 'b> {
                 .help("Open a GUI for interacting with the ray tracer.")
         )
         .arg(
+            Arg::with_name("method")
+            .long("method")
+            .takes_value(true)
+            .default_value("basic")
+            .help("Sets the rendering method that will be used: 1. Basic recursive rendering or 2. the RayForest method.")
+            )
+        .arg(
             Arg::with_name("to-terminal")
                 .long("to-terminal")
                 .short("t")
@@ -391,12 +426,25 @@ fn parse_args(args: &ArgMatches) -> Config {
         .unwrap();
     let to_terminal = args.is_present("to-terminal");
     let gui = args.is_present("gui");
+    let method = match args.value_of("method").map(|v| v.to_lowercase()) {
+        None => Method::Basic,
+        Some(x) => {
+            if x == "rayforest" {
+                Method::RayForest
+            } else if x == "basic"{
+                Method::Basic
+            } else {
+                panic!("Unexpected value provided for `--method`: {}", x);
+            }
+        }
+    };
     Config {
         width,
         height,
         depth,
         to_terminal,
         gui,
+        method,
     }
 }
 
@@ -434,6 +482,15 @@ fn render_to_image_surface(config: &Config, scene: &Scene) -> cairo::ImageSurfac
     }
 
     surface
+}
+
+fn render_forest_to_file(config: &Config, forest: &RayForest, ambient: &crate::scene::Color, dir: &str, file: &str) {
+    let start = std::time::Instant::now();
+    let buffer = render_forest(config, forest, ambient);
+    let duration = start.elapsed();
+    println!("Render and draw time: {}ms", duration.as_millis());
+
+    bmp::save_to_bmp(dir, file, &buffer).expect("Failed to save image to disk");
 }
 
 fn render_forest_to_image_surface(
