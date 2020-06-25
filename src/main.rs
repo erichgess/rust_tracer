@@ -44,15 +44,15 @@ fn main() {
     println!("Create Scene");
     let mut scene = Scene::new();
     create_scene(&mut scene);
-    println!("Done Creating Scene");
-    println!("Generate Forest");
-    let forest = generate_forest(&config, &scene);
-    println!("Done Generating Forest");
-    let forest = Rc::new(forest);
     let scene = Rc::new(RefCell::new(scene));
-    let mutated_shapes = Rc::new(RefCell::new(HashSet::new()));
+    println!("Done Creating Scene");
 
     if config.gui {
+        println!("Generate Forest");
+        let forest = generate_forest(&config, &scene.borrow());
+        println!("Done Generating Forest");
+        let forest = Rc::new(forest);
+        let mutated_shapes = Rc::new(RefCell::new(HashSet::new()));
         let app =
             gtk::Application::new(Some("com.github.erichgess.rust-tracer"), Default::default())
                 .expect("Initialization failed...");
