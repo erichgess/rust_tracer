@@ -205,12 +205,17 @@ fn build_render_view<'a>(
         btn.connect_clicked(move |_btn| {
             println!("Rendering...");
             println!("Mutated Shapes: {:?}", mutated_shapes.borrow());
+
+            let start = std::time::Instant::now();
             render_tree::render_forest_filter(
                 &forest,
                 &mut buffer.borrow_mut(),
                 scene.borrow().ambient(),
                 mutated_shapes.clone(),
             );
+            let duration = start.elapsed();
+            println!("render_forest_filter: {}ms", duration.as_millis());
+
             let surface = render_buffer_to_image_surface(&buffer.borrow());
             img.set_from_surface(Some(&surface));
             mutated_shapes.borrow_mut().clear();
@@ -256,13 +261,15 @@ fn create_shape_editor(
         let mutated_shapes = Rc::clone(&mutated_shapes);
         let f = move |slider: &gtk::Scale| {
             let v = slider.get_value() as f32;
-            println!("Set Red: {}", v);
             let shape = shape_list.get_active_text().unwrap().to_string();
             let mut ss = scene.borrow_mut();
             let sphere = ss.find_shape_mut(&shape).unwrap();
             mutated_shapes.borrow_mut().insert(sphere.id());
             let m = sphere.get_material_mut();
-            let mut m = m.unwrap();
+            let mut m = match m {
+                None => return,
+                Some(m) => m,
+            };
             let mut c = m.diffuse((0., 0.));
             c.r = v;
             m.set_diffuse(c);
@@ -283,13 +290,15 @@ fn create_shape_editor(
         let mutated_shapes = Rc::clone(&mutated_shapes);
         let f = move |slider: &gtk::Scale| {
             let v = slider.get_value() as f32;
-            println!("Set Green: {}", v);
             let shape = shape_list.get_active_text().unwrap().to_string();
             let mut ss = scene.borrow_mut();
             let sphere = ss.find_shape_mut(&shape).unwrap();
             mutated_shapes.borrow_mut().insert(sphere.id());
             let m = sphere.get_material_mut();
-            let mut m = m.unwrap();
+            let mut m = match m {
+                None => return,
+                Some(m) => m,
+            };
             let mut c = m.diffuse((0., 0.));
             c.g = v;
             m.set_diffuse(c);
@@ -310,13 +319,15 @@ fn create_shape_editor(
         let mutated_shapes = Rc::clone(&mutated_shapes);
         let f = move |slider: &gtk::Scale| {
             let v = slider.get_value() as f32;
-            println!("Set Blue: {}", v);
             let shape = shape_list.get_active_text().unwrap().to_string();
             let mut ss = scene.borrow_mut();
             let sphere = ss.find_shape_mut(&shape).unwrap();
             mutated_shapes.borrow_mut().insert(sphere.id());
             let m = sphere.get_material_mut();
-            let mut m = m.unwrap();
+            let mut m = match m {
+                None => return,
+                Some(m) => m,
+            };
             let mut c = m.diffuse((0., 0.));
             c.b = v;
             m.set_diffuse(c);
@@ -333,10 +344,12 @@ fn create_shape_editor(
             let sphere = ss.find_shape(&shape).unwrap();
             println!("Selected: {}", sphere.to_string());
             let m = sphere.get_material();
-            let m = m.unwrap();
+            let m = match m {
+                None => return,
+                Some(m) => m,
+            };
             m.diffuse((0., 0.))
         };
-        println!("Changed");
         r_slider.set_value(color.r as f64);
         g_slider.set_value(color.g as f64);
         b_slider.set_value(color.b as f64);
@@ -481,7 +494,10 @@ fn render_scene(config: &Config, scene: &Scene) -> RenderBuffer {
     let camera = Camera::new(x_res, y_res);
     let mut buffer = RenderBuffer::new(x_res, y_res);
 
+    let start = std::time::Instant::now();
     render_tree::render(&camera, &scene, &mut buffer, config.depth);
+    let duration = start.elapsed();
+    println!("render_scene: {}ms", duration.as_millis());
 
     if config.to_terminal {
         draw_to_terminal(&scene);
@@ -495,7 +511,12 @@ fn generate_forest(config: &Config, scene: &Scene) -> RayForest {
     let y_res = config.height;
     let camera = Camera::new(x_res, y_res);
 
-    render_tree::generate_ray_forest(&camera, scene, x_res, y_res, config.depth)
+    let start = std::time::Instant::now();
+    let forest = render_tree::generate_ray_forest(&camera, scene, x_res, y_res, config.depth);
+    let duration = start.elapsed();
+    println!("generate_forest: {}ms", duration.as_millis());
+
+    forest
 }
 
 fn render_forest(
@@ -507,7 +528,10 @@ fn render_forest(
     let y_res = config.height;
     let mut buffer = RenderBuffer::new(x_res, y_res);
 
+    let start = std::time::Instant::now();
     render_tree::render_forest(scene, &mut buffer, ambient);
+    let duration = start.elapsed();
+    println!("render_forest: {}ms", duration.as_millis());
 
     buffer
 }
