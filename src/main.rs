@@ -88,7 +88,7 @@ fn main() {
                     .duration_since(std::time::UNIX_EPOCH)
                     .expect("Invalid time");
                 let file = format!("{}.png", timestamp.as_secs());
-                render_to_file(&config, &scene.borrow(), "./output/", &file);
+                render_basic_to_file(&config, &scene.borrow(), "./output/", &file);
             }
             Method::RayForest => {
                 println!("Rendering in RayForest Mode");
@@ -446,9 +446,9 @@ fn parse_args(args: &ArgMatches) -> Config {
     }
 }
 
-fn render_to_file(config: &Config, scene: &Scene, dir: &str, file: &str) {
+fn render_basic_to_file(config: &Config, scene: &Scene, dir: &str, file: &str) {
     let start = std::time::Instant::now();
-    let buffer = render_scene(config, scene);
+    let buffer = render_scene_basic(config, scene);
     let duration = start.elapsed();
     println!("Render and draw time: {}ms", duration.as_millis());
 
@@ -490,7 +490,7 @@ fn render_buffer_to_image_surface(buf: &RenderBuffer) -> cairo::ImageSurface {
     surface
 }
 
-fn render_scene(config: &Config, scene: &Scene) -> RenderBuffer {
+fn render_scene_basic(config: &Config, scene: &Scene) -> RenderBuffer {
     let x_res = config.width;
     let y_res = config.height;
     let camera = Camera::new(x_res, y_res);
