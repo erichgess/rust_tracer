@@ -6,6 +6,7 @@ use super::{Intersection, Material, Renderable};
 use crate::math::{Matrix, Point3, Ray, Vector3};
 
 pub struct Plane {
+    id: i32,
     origin: Point3,
     normal: Vector3,
     material: Rc<RefCell<dyn Material>>,
@@ -29,6 +30,7 @@ impl Plane {
         let v = normal.cross(&u).norm();
 
         Plane {
+            id: 0,
             origin: *origin,
             normal: *normal,
             material: Rc::clone(&material),
@@ -41,6 +43,14 @@ impl Plane {
 }
 
 impl Renderable for Plane {
+    fn id(&self) -> i32 {
+        self.id
+    }
+
+    fn set_id(&mut self, id: i32) {
+        self.id = id;
+    }
+
     fn set_transform(&mut self, m: &Matrix) {
         self.transform = *m;
         self.inv_transform = m.inverse();
@@ -57,6 +67,7 @@ impl Renderable for Plane {
             let u = self.u.dot(&Vector3::from(point));
             let v = self.v.dot(&Vector3::from(point));
             let i = Intersection {
+                id: self.id,
                 t,
                 entering: t >= 0.,
                 point,

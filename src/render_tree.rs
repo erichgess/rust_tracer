@@ -1,3 +1,7 @@
+use std::cell::*;
+use std::collections::HashSet;
+use std::rc::Rc;
+
 use super::math::{Ray, Vector3};
 use super::render::{
     fresnel_reflection, fresnel_refraction, get_light_energy, reflect_ray, refract_ray, Camera,
@@ -6,14 +10,31 @@ use super::render::{
 use super::scene::{colors::BLACK, Color, Intersection, Renderable, Scene};
 
 #[derive(Clone)]
-enum RayTree {
+enum RayTreeNode {
     None,
     Branch(
         Intersection,
         Vec<(Vector3, Color)>,
-        Box<RayTree>,
-        Box<RayTree>,
+        Box<RayTreeNode>,
+        Box<RayTreeNode>,
     ),
+}
+
+#[derive(Clone)]
+struct RayTree {
+    dirty: bool,
+    shapes: HashSet<i32>,
+    root: RayTreeNode,
+}
+
+impl RayTree {
+    pub fn new() -> RayTree {
+        RayTree {
+            dirty: false,
+            shapes: HashSet::new(),
+            root: RayTreeNode::None,
+        }
+    }
 }
 
 pub struct RayForest {
@@ -23,7 +44,7 @@ pub struct RayForest {
 impl RayForest {
     pub fn new(w: usize, h: usize) -> RayForest {
         RayForest {
-            forest: vec![vec![RayTree::None; h]; w],
+            forest: vec![vec![RayTree::new(); h]; w],
         }
     }
 }
@@ -38,14 +59,32 @@ pub fn render(camera: &Camera, scene: &Scene, buffer: &mut RenderBuffer, depth: 
     render_forest(&ray_forest, buffer, scene.ambient());
     let render_time = start.elapsed();
 
-    println!("Total Time Building: {}", build_time.as_millis());
-    println!("Total Time Rendering: {}", render_time.as_millis());
+    println!("generate_ray_forest: {}", build_time.as_millis());
+    println!("render_forest: {}", render_time.as_millis());
 }
 
 pub fn render_forest(forest: &RayForest, buffer: &mut RenderBuffer, ambient: &Color) {
     for u in 0..buffer.w {
         for v in 0..buffer.h {
-            buffer.buf[u][v] = render_ray_tree(&forest.forest[u][v], ambient).0;
+            buffer.buf[u][v] = render_ray_tree(&forest.forest[u][v].root, ambient).0;
+        }
+    }
+}
+
+pub fn render_forest_filter(
+    forest: &RayForest,
+    buffer: &mut RenderBuffer,
+    ambient: &Color,
+    mutated_shapes: Rc<RefCell<HashSet<i32>>>,
+) {
+    let mutated_shapes = mutated_shapes.borrow();
+    for u in 0..buffer.w {
+        for v in 0..buffer.h {
+            let i = forest.forest[u][v].shapes.intersection(&mutated_shapes);
+            let i: HashSet<_> = i.collect();
+            if !i.is_empty() {
+                buffer.buf[u][v] = render_ray_tree(&forest.forest[u][v].root, ambient).0;
+            }
         }
     }
 }
@@ -61,24 +100,31 @@ pub fn generate_ray_forest(
     for v in 0..camera.y_res {
         for u in 0..camera.x_res {
             let ray = camera.get_ray(u, v);
-            let tree = build_ray_tree(scene, &ray, depth);
-            ray_forest.forest[u][v] = tree;
+            let tree = build_ray_tree(scene, &ray, depth, &mut ray_forest.forest[u][v].shapes);
+            ray_forest.forest[u][v].root = tree;
+            ray_forest.forest[u][v].dirty = true;
         }
     }
     ray_forest
 }
 
-fn build_ray_tree(scene: &Scene, ray: &Ray, depth: usize) -> RayTree {
+fn build_ray_tree(
+    scene: &Scene,
+    ray: &Ray,
+    depth: usize,
+    shapes: &mut HashSet<i32>,
+) -> RayTreeNode {
     use std::f32::EPSILON;
 
     if depth == 0 {
-        return RayTree::None;
+        return RayTreeNode::None;
     }
 
     let hit = scene.intersect(&ray);
     match hit {
-        None => RayTree::None,
+        None => RayTreeNode::None,
         Some(i) => {
+            shapes.insert(i.id);
             let (n1, n2) = if i.entering {
                 (1., i.material.borrow().refraction_index())
             } else {
@@ -91,29 +137,29 @@ fn build_ray_tree(scene: &Scene, ray: &Ray, depth: usize) -> RayTree {
                 // compute reflection vector
                 let reflect_ray = reflect_ray(ray, &i);
                 // compute incoming energy from the direction of the reflected ray
-                build_ray_tree(scene, &reflect_ray, depth - 1)
+                build_ray_tree(scene, &reflect_ray, depth - 1, shapes)
             } else {
-                RayTree::None
+                RayTreeNode::None
             };
 
             let refracted = if i.material.borrow().refraction_index() > EPSILON {
                 let refract_ray = refract_ray(ray, &i, n1, n2);
                 refract_ray
-                    .map(|r| build_ray_tree(scene, &r, depth - 1))
-                    .unwrap_or(RayTree::None)
+                    .map(|r| build_ray_tree(scene, &r, depth - 1, shapes))
+                    .unwrap_or(RayTreeNode::None)
             } else {
-                RayTree::None
+                RayTreeNode::None
             };
 
-            RayTree::Branch(i, lights, Box::new(reflected), Box::new(refracted))
+            RayTreeNode::Branch(i, lights, Box::new(reflected), Box::new(refracted))
         }
     }
 }
 
-fn render_ray_tree(tree: &RayTree, ambient: &Color) -> (Color, Vector3) {
+fn render_ray_tree(tree: &RayTreeNode, ambient: &Color) -> (Color, Vector3) {
     match tree {
-        RayTree::None => (BLACK, Vector3::new(0., 0., 0.)),
-        RayTree::Branch(ref i, lights, reflected, refracted) => {
+        RayTreeNode::None => (BLACK, Vector3::new(0., 0., 0.)),
+        RayTreeNode::Branch(ref i, lights, reflected, refracted) => {
             let (n1, n2) = if i.entering {
                 (1., i.material.borrow().refraction_index())
             } else {

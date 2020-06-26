@@ -5,6 +5,7 @@ use super::{Intersection, Material, Renderable};
 use crate::math::{Matrix, Point3, Ray, Vector3};
 
 pub struct Triangle {
+    id: i32,
     verts: Vec<Point3>,
     normal: Vector3,
     transform: Matrix,
@@ -28,6 +29,7 @@ impl Triangle {
         };
 
         Triangle {
+            id: 0,
             verts,
             normal,
             transform: Matrix::identity(),
@@ -38,6 +40,14 @@ impl Triangle {
 }
 
 impl Renderable for Triangle {
+    fn id(&self) -> i32 {
+        self.id
+    }
+
+    fn set_id(&mut self, id: i32) {
+        self.id = id;
+    }
+
     fn intersect(&self, ray: &Ray) -> Option<Intersection> {
         let v0v1 = self.verts[1] - self.verts[0];
         let v0v2 = self.verts[2] - self.verts[0];
@@ -72,6 +82,7 @@ impl Renderable for Triangle {
         let normal = if t < 0. { -self.normal } else { self.normal };
 
         Some(Intersection {
+            id: self.id,
             t,
             material: Rc::clone(&self.material),
             point: t * ray,
