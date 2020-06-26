@@ -8,30 +8,6 @@ use super::scene::{
     Color, Cube, Phong, Plane, PointLight, Renderable, Scene, TextureCoords, TexturePhong,
 };
 
-fn black(_: TextureCoords) -> Color {
-    BLACK
-}
-
-fn red(_: TextureCoords) -> Color {
-    RED
-}
-
-fn blue(_: TextureCoords) -> Color {
-    0.8 * BLUE
-}
-
-fn dim_blue(_: TextureCoords) -> Color {
-    0.1 * BLUE
-}
-
-fn white(_: TextureCoords) -> Color {
-    WHITE
-}
-
-fn bright_gray(_: TextureCoords) -> Color {
-    0.8 * WHITE
-}
-
 fn dim_white(_: TextureCoords) -> Color {
     0.1 * WHITE
 }
@@ -67,7 +43,6 @@ fn checkerboard(tx: TextureCoords) -> Color {
 }
 
 pub fn create_scene(scene: &mut Scene) {
-
     let phong = Rc::new(RefCell::new(Phong::new(
         DIM_WHITE, RED, WHITE, 60., 0.5, 0.,
     )));

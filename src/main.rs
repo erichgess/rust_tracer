@@ -179,28 +179,6 @@ fn build_render_view<'a>(
     btn.set_label("Render");
     vbox.pack_start(&btn, false, false, 0);
 
-    // Setup rendering configuration controls
-    let wbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);
-    vbox.pack_start(&wbox, false, false, 0);
-
-    let label = gtk::Label::new(Some("Width"));
-    wbox.pack_start(&label, false, false, 0);
-    let w_input = gtk::Entry::new();
-    w_input.set_text(&format!("{}", config.width));
-    wbox.pack_start(&w_input, false, false, 4);
-
-    let label = gtk::Label::new(Some("Height"));
-    wbox.pack_start(&label, false, false, 0);
-    let h_input = gtk::Entry::new();
-    h_input.set_text(&format!("{}", config.height));
-    wbox.pack_start(&h_input, false, false, 4);
-
-    let label = gtk::Label::new(Some("Depth"));
-    wbox.pack_start(&label, false, false, 0);
-    let d_input = gtk::Entry::new();
-    d_input.set_text(&format!("{}", config.depth));
-    wbox.pack_start(&d_input, false, false, 4);
-
     {
         let mutated_shapes = Rc::clone(&mutated_shapes);
         let cbox = create_shape_editor(Rc::clone(&scene), mutated_shapes);
@@ -215,25 +193,6 @@ fn build_render_view<'a>(
         let mutated_shapes = Rc::clone(&mutated_shapes);
         let buffer = Rc::clone(&buffer);
         btn.connect_clicked(move |_btn| {
-            let width = w_input
-                .get_text()
-                .map(|v| v.parse::<usize>().unwrap_or(config.width))
-                .unwrap();
-            let height = h_input
-                .get_text()
-                .map(|v| v.parse::<usize>().unwrap_or(config.height))
-                .unwrap();
-            let depth = d_input
-                .get_text()
-                .map(|v| v.parse::<usize>().unwrap_or(config.depth))
-                .unwrap();
-            let config = Config {
-                width,
-                height,
-                depth,
-                ..config
-            };
-
             println!("Rendering...");
             println!("Mutated Shapes: {:?}", mutated_shapes.borrow());
             render_tree::render_forest_filter(
@@ -471,33 +430,6 @@ fn render_to_file(config: &Config, scene: &Scene, dir: &str, file: &str) {
     bmp::save_to_bmp(dir, file, &buffer).expect("Failed to save image to disk");
 }
 
-fn render_to_image_surface(config: &Config, scene: &Scene) -> cairo::ImageSurface {
-    use cairo::{Format, ImageSurface};
-
-    let start = std::time::Instant::now();
-    let buffer = render_scene(config, scene);
-    let duration = start.elapsed();
-    println!("Render and draw time: {}ms", duration.as_millis());
-
-    let mut surface =
-        ImageSurface::create(Format::Rgb24, config.width as i32, config.height as i32)
-            .expect("Failed to crate ImageSurface");
-    {
-        let mut sd = surface.get_data().expect("Could not get SurfaceData");
-        for y in 0..config.height {
-            for x in 0..config.width {
-                let sd_idx = 4 * config.width * y + 4 * x;
-                let (r, g, b) = buffer.buf[x][y].as_u8();
-                sd[sd_idx + 0] = b;
-                sd[sd_idx + 1] = g;
-                sd[sd_idx + 2] = r;
-            }
-        }
-    }
-
-    surface
-}
-
 fn render_forest_to_file(
     config: &Config,
     forest: &RayForest,
@@ -511,59 +443,6 @@ fn render_forest_to_file(
     println!("Render and draw time: {}ms", duration.as_millis());
 
     bmp::save_to_bmp(dir, file, &buffer).expect("Failed to save image to disk");
-}
-
-fn render_forest_to_image_surface(
-    config: &Config,
-    forest: &RayForest,
-    ambient: &crate::scene::Color,
-    surface: Rc<RefCell<cairo::ImageSurface>>,
-) {
-    let start = std::time::Instant::now();
-    let buffer = render_forest(config, forest, ambient);
-    let duration = start.elapsed();
-    println!("Render and draw time: {}ms", duration.as_millis());
-
-    {
-        let mut surface = surface.borrow_mut();
-        let mut sd = surface.get_data().expect("Could not get SurfaceData");
-        for y in 0..config.height {
-            for x in 0..config.width {
-                let sd_idx = 4 * config.width * y + 4 * x;
-                let (r, g, b) = buffer.buf[x][y].as_u8();
-                sd[sd_idx + 0] = b;
-                sd[sd_idx + 1] = g;
-                sd[sd_idx + 2] = r;
-            }
-        }
-    }
-}
-
-fn render_forest_filter_to_image_surface(
-    config: &Config,
-    forest: &RayForest,
-    ambient: &crate::scene::Color,
-    mutated_shapes: Rc<RefCell<HashSet<i32>>>,
-    surface: Rc<RefCell<cairo::ImageSurface>>,
-) {
-    let start = std::time::Instant::now();
-    let buffer = render_forest_filter(config, forest, ambient, mutated_shapes.clone());
-    let duration = start.elapsed();
-    println!("Render and draw time: {}ms", duration.as_millis());
-
-    {
-        let mut surface = surface.borrow_mut();
-        let mut sd = surface.get_data().expect("Could not get SurfaceData");
-        for y in 0..config.height {
-            for x in 0..config.width {
-                let sd_idx = 4 * config.width * y + 4 * x;
-                let (r, g, b) = buffer.buf[x][y].as_u8();
-                sd[sd_idx + 0] = b;
-                sd[sd_idx + 1] = g;
-                sd[sd_idx + 2] = r;
-            }
-        }
-    }
 }
 
 fn render_buffer_to_image_surface(buf: &RenderBuffer) -> cairo::ImageSurface {
@@ -619,22 +498,6 @@ fn render_forest(
     let mut buffer = RenderBuffer::new(x_res, y_res);
 
     render_tree::render_forest(scene, &mut buffer, ambient);
-
-    buffer
-}
-
-fn render_forest_filter(
-    config: &Config,
-    scene: &RayForest,
-    ambient: &crate::scene::Color,
-    mutated_shapes: Rc<RefCell<HashSet<i32>>>,
-) -> RenderBuffer {
-    let x_res = config.width;
-    let y_res = config.height;
-    let mut buffer = RenderBuffer::new(x_res, y_res);
-
-    //render_tree::render(&camera, &scene, &mut buffer, config.depth);
-    render_tree::render_forest_filter(scene, &mut buffer, ambient, mutated_shapes.clone());
 
     buffer
 }

@@ -225,16 +225,8 @@ mod benchmarks {
     use std::rc::Rc;
 
     use super::super::math::Matrix;
-    use super::super::scene::{Phong, Sphere, TextureCoords};
+    use super::super::scene::{Phong, Sphere};
     use super::*;
-
-    fn red(_: TextureCoords) -> Color {
-        RED
-    }
-
-    fn white(_: TextureCoords) -> Color {
-        WHITE
-    }
 
     #[bench]
     fn render_128x128(b: &mut Bencher) {
