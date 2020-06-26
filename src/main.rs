@@ -246,7 +246,18 @@ fn build_render_view<'a>(
                 mutated_shapes.clone(),
                 surface.clone(),
             );
-            img.set_from_surface(Some(&surface.borrow()));
+            let timestamp = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("Invalid time");
+            let filename = format!("./output/{}.png", timestamp.as_secs());
+            println!("Writing to: {}", filename);
+            let mut file =
+                std::fs::File::create(filename.clone()).expect("Could not create image file");
+            surface
+                .borrow()
+                .write_to_png(&mut file)
+                .expect("Failed to write image buffer to file");
+            img.set_from_file(filename);
             mutated_shapes.borrow_mut().clear();
         });
     }
