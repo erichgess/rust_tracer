@@ -16,6 +16,8 @@ mod scene;
 
 use std::cell::RefCell;
 use std::collections::HashSet;
+use std::io;
+use std::io::prelude::*;
 use std::rc::Rc;
 
 use clap::{App, Arg, ArgMatches};
@@ -35,6 +37,7 @@ struct Config {
     to_terminal: bool,
     gui: bool,
     method: Method,
+    interactive: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -53,6 +56,9 @@ fn main() {
     create_scene(&mut scene);
     let scene = Rc::new(RefCell::new(scene));
     println!("Done Creating Scene");
+    if config.interactive {
+        enter_to_proceed();
+    }
 
     if config.gui {
         println!("Generate Forest");
@@ -97,6 +103,10 @@ fn main() {
                 let forest = Rc::new(forest);
                 println!("Done Generating Forest");
 
+                if config.interactive {
+                    enter_to_proceed();
+                }
+
                 let timestamp = std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
                     .expect("Invalid time");
@@ -112,6 +122,14 @@ fn main() {
             }
         }
     }
+}
+
+fn enter_to_proceed() {
+    let stdin = io::stdin();
+    print!("Enter To Proceed: ");
+    io::stdout().flush().unwrap();
+    let mut _buf = String::new();
+    stdin.read_line(&mut _buf).unwrap();
 }
 
 fn build_gui<'a>(
@@ -407,6 +425,12 @@ fn configure_cli<'a, 'b>() -> App<'a, 'b> {
                 .short("t")
                 .help("Render the scene as ASCII art to the terminal")
         )
+        .arg(
+            Arg::with_name("interactive")
+            .long("interactive")
+            .short("i")
+            .help("When in CLI mode, this will block after each stage of the rendering pipeline and wait for the user before proceeding.  Useful for performance analysis and debugging.")
+        )
 }
 
 fn parse_args(args: &ArgMatches) -> Config {
@@ -424,6 +448,7 @@ fn parse_args(args: &ArgMatches) -> Config {
         .unwrap();
     let to_terminal = args.is_present("to-terminal");
     let gui = args.is_present("gui");
+    let interactive = args.is_present("interactive");
     let method = match args.value_of("method").map(|v| v.to_lowercase()) {
         None => Method::Basic,
         Some(x) => {
@@ -443,6 +468,7 @@ fn parse_args(args: &ArgMatches) -> Config {
         to_terminal,
         gui,
         method,
+        interactive,
     }
 }
 
