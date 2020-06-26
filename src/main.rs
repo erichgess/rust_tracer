@@ -449,10 +449,9 @@ fn parse_args(args: &ArgMatches) -> Config {
 fn render_basic_to_file(config: &Config, scene: &Scene, dir: &str, file: &str) {
     let start = std::time::Instant::now();
     let buffer = render_scene_basic(config, scene);
-    let duration = start.elapsed();
-    println!("Render and draw time: {}ms", duration.as_millis());
-
     bmp::save_to_bmp(dir, file, &buffer).expect("Failed to save image to disk");
+    let duration = start.elapsed();
+    println!("render_basic_to_file: {}ms", duration.as_millis());
 }
 
 fn render_forest_to_file(
@@ -464,10 +463,9 @@ fn render_forest_to_file(
 ) {
     let start = std::time::Instant::now();
     let buffer = render_forest(config, forest, ambient);
-    let duration = start.elapsed();
-    println!("Render and draw time: {}ms", duration.as_millis());
-
     bmp::save_to_bmp(dir, file, &buffer).expect("Failed to save image to disk");
+    let duration = start.elapsed();
+    println!("render_forest_to_file: {}ms", duration.as_millis());
 }
 
 fn render_buffer_to_image_surface(buf: &RenderBuffer) -> cairo::ImageSurface {
