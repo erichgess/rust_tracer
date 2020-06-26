@@ -55,15 +55,12 @@ fn main() {
     println!("Done Creating Scene");
 
     if config.gui {
-        use cairo::{Format, ImageSurface};
-        let surface =
-            ImageSurface::create(Format::Rgb24, config.width as i32, config.height as i32)
-                .expect("Failed to crate ImageSurface");
-        let surface = Rc::new(RefCell::new(surface));
         println!("Generate Forest");
         let forest = generate_forest(&config, &scene.borrow());
         println!("Done Generating Forest");
         let forest = Rc::new(forest);
+        let buffer = render_forest(&config, &forest, scene.borrow().ambient());
+        let buffer = Rc::new(RefCell::new(buffer));
         let mutated_shapes = Rc::new(RefCell::new(HashSet::new()));
         let app =
             gtk::Application::new(Some("com.github.erichgess.rust-tracer"), Default::default())
@@ -72,8 +69,8 @@ fn main() {
             let scene = Rc::clone(&scene);
             let forest = Rc::clone(&forest);
             let mutated_shapes = Rc::clone(&mutated_shapes);
-            let surface = Rc::clone(&surface);
-            build_gui(app, config, scene, forest, mutated_shapes, surface);
+            let buffer = Rc::clone(&buffer);
+            build_gui(app, config, scene, forest, mutated_shapes, buffer);
         });
 
         app.run(&vec![]); // Give an empty list of args bc we already processed the args above.
@@ -111,7 +108,7 @@ fn build_gui<'a>(
     scene: Rc<RefCell<Scene>>,
     forest: Rc<RayForest>,
     mutated_shapes: Rc<RefCell<HashSet<i32>>>,
-    surface: Rc<RefCell<cairo::ImageSurface>>,
+    buffer: Rc<RefCell<RenderBuffer>>,
 ) {
     let window = gtk::ApplicationWindow::new(app);
     window.set_title("Rust Tracer");
@@ -122,8 +119,8 @@ fn build_gui<'a>(
     let mut notebook = gui::Notebook::new();
     window.add(&notebook.notebook);
 
-    let surface = Rc::clone(&surface);
-    let render_box = build_render_view(config, Rc::clone(&scene), forest, mutated_shapes, surface);
+    let buffer = Rc::clone(&buffer);
+    let render_box = build_render_view(config, Rc::clone(&scene), forest, mutated_shapes, buffer);
     let title = "Render";
     notebook.create_tab(title, render_box.upcast());
 
@@ -166,7 +163,7 @@ fn build_render_view<'a>(
     scene: Rc<RefCell<Scene>>,
     forest: Rc<RayForest>,
     mutated_shapes: Rc<RefCell<HashSet<i32>>>,
-    surface: Rc<RefCell<cairo::ImageSurface>>,
+    buffer: Rc<RefCell<RenderBuffer>>,
 ) -> gtk::Box {
     let vbox = gtk::Box::new(gtk::Orientation::Vertical, 0);
 
@@ -216,7 +213,7 @@ fn build_render_view<'a>(
         let scene = Rc::clone(&scene);
         let forest = Rc::new(forest);
         let mutated_shapes = Rc::clone(&mutated_shapes);
-        let surface = Rc::clone(&surface);
+        let buffer = Rc::clone(&buffer);
         btn.connect_clicked(move |_btn| {
             let width = w_input
                 .get_text()
@@ -239,25 +236,14 @@ fn build_render_view<'a>(
 
             println!("Rendering...");
             println!("Mutated Shapes: {:?}", mutated_shapes.borrow());
-            render_forest_to_image_surface(
-                &config,
+            render_tree::render_forest_filter(
                 &forest,
+                &mut buffer.borrow_mut(),
                 scene.borrow().ambient(),
                 mutated_shapes.clone(),
-                surface.clone(),
             );
-            let timestamp = std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .expect("Invalid time");
-            let filename = format!("./output/{}.png", timestamp.as_secs());
-            println!("Writing to: {}", filename);
-            let mut file =
-                std::fs::File::create(filename.clone()).expect("Could not create image file");
-            surface
-                .borrow()
-                .write_to_png(&mut file)
-                .expect("Failed to write image buffer to file");
-            img.set_from_file(filename);
+            let surface = render_buffer_to_image_surface(&buffer.borrow());
+            img.set_from_surface(Some(&surface));
             mutated_shapes.borrow_mut().clear();
         });
     }
@@ -531,6 +517,32 @@ fn render_forest_to_image_surface(
     config: &Config,
     forest: &RayForest,
     ambient: &crate::scene::Color,
+    surface: Rc<RefCell<cairo::ImageSurface>>,
+) {
+    let start = std::time::Instant::now();
+    let buffer = render_forest(config, forest, ambient);
+    let duration = start.elapsed();
+    println!("Render and draw time: {}ms", duration.as_millis());
+
+    {
+        let mut surface = surface.borrow_mut();
+        let mut sd = surface.get_data().expect("Could not get SurfaceData");
+        for y in 0..config.height {
+            for x in 0..config.width {
+                let sd_idx = 4 * config.width * y + 4 * x;
+                let (r, g, b) = buffer.buf[x][y].as_u8();
+                sd[sd_idx + 0] = b;
+                sd[sd_idx + 1] = g;
+                sd[sd_idx + 2] = r;
+            }
+        }
+    }
+}
+
+fn render_forest_filter_to_image_surface(
+    config: &Config,
+    forest: &RayForest,
+    ambient: &crate::scene::Color,
     mutated_shapes: Rc<RefCell<HashSet<i32>>>,
     surface: Rc<RefCell<cairo::ImageSurface>>,
 ) {
@@ -554,6 +566,26 @@ fn render_forest_to_image_surface(
     }
 }
 
+fn render_buffer_to_image_surface(buf: &RenderBuffer) -> cairo::ImageSurface {
+    use cairo::{Format, ImageSurface};
+    let mut surface = ImageSurface::create(Format::Rgb24, buf.w as i32, buf.h as i32)
+        .expect("Failed to crate ImageSurface");
+    {
+        let mut sd = surface.get_data().expect("Could not get SurfaceData");
+        for y in 0..buf.h {
+            for x in 0..buf.w {
+                let sd_idx = 4 * buf.w * y + 4 * x;
+                let (r, g, b) = buf.buf[x][y].as_u8();
+                sd[sd_idx + 0] = b;
+                sd[sd_idx + 1] = g;
+                sd[sd_idx + 2] = r;
+            }
+        }
+    }
+
+    surface
+}
+
 fn render_scene(config: &Config, scene: &Scene) -> RenderBuffer {
     let x_res = config.width;
     let y_res = config.height;
@@ -574,7 +606,6 @@ fn generate_forest(config: &Config, scene: &Scene) -> RayForest {
     let y_res = config.height;
     let camera = Camera::new(x_res, y_res);
 
-    //render_tree::render(&camera, &scene, &mut buffer, config.depth);
     render_tree::generate_ray_forest(&camera, scene, x_res, y_res, config.depth)
 }
 
@@ -587,7 +618,6 @@ fn render_forest(
     let y_res = config.height;
     let mut buffer = RenderBuffer::new(x_res, y_res);
 
-    //render_tree::render(&camera, &scene, &mut buffer, config.depth);
     render_tree::render_forest(scene, &mut buffer, ambient);
 
     buffer
