@@ -83,6 +83,7 @@ fn main() {
     } else {
         match config.method {
             Method::Basic => {
+                println!("Rendering in Basic Mode");
                 let timestamp = std::time::SystemTime::now()
                     .duration_since(std::time::UNIX_EPOCH)
                     .expect("Invalid time");
@@ -90,6 +91,7 @@ fn main() {
                 render_to_file(&config, &scene.borrow(), "./output/", &file);
             }
             Method::RayForest => {
+                println!("Rendering in RayForest Mode");
                 println!("Generate Forest");
                 let forest = generate_forest(&config, &scene.borrow());
                 let forest = Rc::new(forest);
@@ -495,7 +497,7 @@ fn render_scene(config: &Config, scene: &Scene) -> RenderBuffer {
     let mut buffer = RenderBuffer::new(x_res, y_res);
 
     let start = std::time::Instant::now();
-    render_tree::render(&camera, &scene, &mut buffer, config.depth);
+    render::render(&camera, &scene, &mut buffer, config.depth);
     let duration = start.elapsed();
     println!("render_scene: {}ms", duration.as_millis());
 

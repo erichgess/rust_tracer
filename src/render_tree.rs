@@ -59,8 +59,8 @@ pub fn render(camera: &Camera, scene: &Scene, buffer: &mut RenderBuffer, depth: 
     render_forest(&ray_forest, buffer, scene.ambient());
     let render_time = start.elapsed();
 
-    println!("Total Time Building: {}", build_time.as_millis());
-    println!("Total Time Rendering: {}", render_time.as_millis());
+    println!("generate_ray_forest: {}", build_time.as_millis());
+    println!("render_forest: {}", render_time.as_millis());
 }
 
 pub fn render_forest(forest: &RayForest, buffer: &mut RenderBuffer, ambient: &Color) {
@@ -71,7 +71,12 @@ pub fn render_forest(forest: &RayForest, buffer: &mut RenderBuffer, ambient: &Co
     }
 }
 
-pub fn render_forest_filter(forest: &RayForest, buffer: &mut RenderBuffer, ambient: &Color, mutated_shapes: Rc<RefCell<HashSet<i32>>>) {
+pub fn render_forest_filter(
+    forest: &RayForest,
+    buffer: &mut RenderBuffer,
+    ambient: &Color,
+    mutated_shapes: Rc<RefCell<HashSet<i32>>>,
+) {
     let mutated_shapes = mutated_shapes.borrow();
     for u in 0..buffer.w {
         for v in 0..buffer.h {
@@ -103,7 +108,12 @@ pub fn generate_ray_forest(
     ray_forest
 }
 
-fn build_ray_tree(scene: &Scene, ray: &Ray, depth: usize, shapes: &mut HashSet<i32>) -> RayTreeNode {
+fn build_ray_tree(
+    scene: &Scene,
+    ray: &Ray,
+    depth: usize,
+    shapes: &mut HashSet<i32>,
+) -> RayTreeNode {
     use std::f32::EPSILON;
 
     if depth == 0 {
