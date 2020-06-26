@@ -57,47 +57,57 @@ fn main() {
     if config.gui {
         println!("Generate Forest");
         let forest = generate_forest(&config, &scene.borrow());
-        println!("Done Generating Forest");
         let forest = Rc::new(forest);
+        println!("Done Generating Forest");
+
         let buffer = render_forest(&config, &forest, scene.borrow().ambient());
         let buffer = Rc::new(RefCell::new(buffer));
+
         let mutated_shapes = Rc::new(RefCell::new(HashSet::new()));
+
         let app =
             gtk::Application::new(Some("com.github.erichgess.rust-tracer"), Default::default())
                 .expect("Initialization failed...");
         app.connect_activate(move |app| {
-            let scene = Rc::clone(&scene);
-            let forest = Rc::clone(&forest);
-            let mutated_shapes = Rc::clone(&mutated_shapes);
-            let buffer = Rc::clone(&buffer);
-            build_gui(app, config, scene, forest, mutated_shapes, buffer);
+            build_gui(
+                app,
+                config,
+                scene.clone(),
+                forest.clone(),
+                mutated_shapes.clone(),
+                buffer.clone(),
+            );
         });
 
         app.run(&vec![]); // Give an empty list of args bc we already processed the args above.
     } else {
-        if config.method == Method::Basic {
-            let timestamp = std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .expect("Invalid time");
-            let file = format!("{}.png", timestamp.as_secs());
-            render_to_file(&config, &scene.borrow(), "./output/", &file);
-        } else if config.method == Method::RayForest {
-            println!("Generate Forest");
-            let forest = generate_forest(&config, &scene.borrow());
-            println!("Done Generating Forest");
-            let forest = Rc::new(forest);
-            let timestamp = std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .expect("Invalid time");
-            let file = format!("{}.png", timestamp.as_secs());
-            let forest = Rc::clone(&forest);
-            render_forest_to_file(
-                &config,
-                &forest,
-                scene.borrow().ambient(),
-                "./output/",
-                &file,
-            );
+        match config.method {
+            Method::Basic => {
+                let timestamp = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .expect("Invalid time");
+                let file = format!("{}.png", timestamp.as_secs());
+                render_to_file(&config, &scene.borrow(), "./output/", &file);
+            }
+            Method::RayForest => {
+                println!("Generate Forest");
+                let forest = generate_forest(&config, &scene.borrow());
+                let forest = Rc::new(forest);
+                println!("Done Generating Forest");
+
+                let timestamp = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .expect("Invalid time");
+                let file = format!("{}.png", timestamp.as_secs());
+
+                render_forest_to_file(
+                    &config,
+                    &forest.clone(),
+                    scene.borrow().ambient(),
+                    "./output/",
+                    &file,
+                );
+            }
         }
     }
 }
