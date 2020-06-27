@@ -69,7 +69,7 @@ fn main() {
         let buffer = render_forest(&config, &forest, scene.borrow().ambient());
         let buffer = Rc::new(RefCell::new(buffer));
 
-        let mutated_shapes = Rc::new(RefCell::new(Vec::new()));
+        let mutated_shapes = Rc::new(RefCell::new(0));
 
         let app =
             gtk::Application::new(Some("com.github.erichgess.rust-tracer"), Default::default())
@@ -137,7 +137,7 @@ fn build_gui<'a>(
     config: Config,
     scene: Rc<RefCell<Scene>>,
     forest: Rc<RayForest>,
-    mutated_shapes: Rc<RefCell<Vec<i32>>>,
+    mutated_shapes: Rc<RefCell<i32>>,
     buffer: Rc<RefCell<RenderBuffer>>,
 ) {
     let window = gtk::ApplicationWindow::new(app);
@@ -192,7 +192,7 @@ fn build_render_view<'a>(
     config: Config,
     scene: Rc<RefCell<Scene>>,
     forest: Rc<RayForest>,
-    mutated_shapes: Rc<RefCell<Vec<i32>>>,
+    mutated_shapes: Rc<RefCell<i32>>,
     buffer: Rc<RefCell<RenderBuffer>>,
 ) -> gtk::Box {
     let vbox = gtk::Box::new(gtk::Orientation::Vertical, 0);
@@ -238,17 +238,14 @@ fn build_render_view<'a>(
 
             let surface = render_buffer_to_image_surface(&buffer.borrow());
             img.set_from_surface(Some(&surface));
-            mutated_shapes.borrow_mut().clear();
+            *mutated_shapes.borrow_mut() = 0;
         });
     }
 
     vbox
 }
 
-fn create_shape_editor(
-    scene: Rc<RefCell<Scene>>,
-    mutated_shapes: Rc<RefCell<Vec<i32>>>,
-) -> gtk::Box {
+fn create_shape_editor(scene: Rc<RefCell<Scene>>, mutated_shapes: Rc<RefCell<i32>>) -> gtk::Box {
     let cbox = gtk::Box::new(gtk::Orientation::Horizontal, 0);
 
     let mut ss = scene.borrow_mut();
@@ -284,7 +281,9 @@ fn create_shape_editor(
             let shape = shape_list.get_active_text().unwrap().to_string();
             let mut ss = scene.borrow_mut();
             let sphere = ss.find_shape_mut(&shape).unwrap();
-            mutated_shapes.borrow_mut().push(sphere.id());
+            //mutated_shapes.borrow_mut().push(sphere.id());
+            let mut shapes = mutated_shapes.borrow_mut();
+            *shapes = *shapes | 1 << sphere.id();
             let m = sphere.get_material_mut();
             let mut m = match m {
                 None => return,
@@ -313,7 +312,10 @@ fn create_shape_editor(
             let shape = shape_list.get_active_text().unwrap().to_string();
             let mut ss = scene.borrow_mut();
             let sphere = ss.find_shape_mut(&shape).unwrap();
-            mutated_shapes.borrow_mut().push(sphere.id());
+
+            let mut shapes = mutated_shapes.borrow_mut();
+            *shapes = *shapes | 1 << sphere.id();
+
             let m = sphere.get_material_mut();
             let mut m = match m {
                 None => return,
@@ -342,7 +344,10 @@ fn create_shape_editor(
             let shape = shape_list.get_active_text().unwrap().to_string();
             let mut ss = scene.borrow_mut();
             let sphere = ss.find_shape_mut(&shape).unwrap();
-            mutated_shapes.borrow_mut().push(sphere.id());
+
+            let mut shapes = mutated_shapes.borrow_mut();
+            *shapes = *shapes | 1 << sphere.id();
+
             let m = sphere.get_material_mut();
             let mut m = match m {
                 None => return,

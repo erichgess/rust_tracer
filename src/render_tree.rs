@@ -23,17 +23,15 @@ enum RayTreeNode {
 #[derive(Clone)]
 struct RayTree {
     dirty: bool,
-    shapes: Vec<bool>,
+    shapes: i32,
     root: RayTreeNode,
 }
 
 impl RayTree {
     pub fn new(size: usize) -> RayTree {
-        let mut v = Vec::new();
-        v.resize(size, false);
         RayTree {
             dirty: false,
-            shapes: v,
+            shapes: 0,
             root: RayTreeNode::None,
         }
     }
@@ -88,13 +86,12 @@ pub fn render_forest_filter(
     forest: &RayForest,
     buffer: &mut RenderBuffer,
     ambient: &Color,
-    mutated_shapes: Rc<RefCell<Vec<i32>>>,
+    mutated_shapes: Rc<RefCell<i32>>,
 ) {
     let mutated_shapes = mutated_shapes.borrow();
     for u in 0..buffer.w {
         for v in 0..buffer.h {
-            //let i = forest.forest[u][v].shapes;
-            if contains_shape(&forest.forest[u][v].shapes, &mutated_shapes) {
+            if forest.forest[u][v].shapes & *mutated_shapes != 0 {
                 buffer.buf[u][v] = render_ray_tree(&forest.forest[u][v].root, ambient).0;
             }
         }
@@ -120,7 +117,7 @@ pub fn generate_ray_forest(
     ray_forest
 }
 
-fn build_ray_tree(scene: &Scene, ray: &Ray, depth: usize, shapes: &mut Vec<bool>) -> RayTreeNode {
+fn build_ray_tree(scene: &Scene, ray: &Ray, depth: usize, shapes: &mut i32) -> RayTreeNode {
     use std::f32::EPSILON;
 
     if depth == 0 {
@@ -131,7 +128,7 @@ fn build_ray_tree(scene: &Scene, ray: &Ray, depth: usize, shapes: &mut Vec<bool>
     match hit {
         None => RayTreeNode::None,
         Some(i) => {
-            shapes[i.id as usize] = true;
+            *shapes = *shapes | 1 << i.id;
             let (n1, n2) = if i.entering {
                 (1., i.material.borrow().refraction_index())
             } else {
