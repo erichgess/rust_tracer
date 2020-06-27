@@ -40,6 +40,11 @@ impl Scene {
     pub fn add_shape(&mut self, shape: Box<dyn Renderable>) {
         let mut shape = shape;
         shape.set_id(self.shapes.len() as i32);
+        println!(
+            "Adding shape to scene: ID: {}, Name {}",
+            shape.id(),
+            shape.get_name()
+        );
         self.shapes.push(shape);
     }
 
@@ -66,7 +71,7 @@ impl Scene {
     pub fn find_shape_mut(&mut self, name: &str) -> Option<&mut dyn Renderable> {
         for i in 0..self.shapes.len() {
             if self.shapes[i].get_name() == name {
-                return Some(&mut (*self.shapes[i]))
+                return Some(&mut (*self.shapes[i]));
             }
         }
 
@@ -76,7 +81,7 @@ impl Scene {
     pub fn find_shape(&self, name: &str) -> Option<&dyn Renderable> {
         for i in 0..self.shapes.len() {
             if self.shapes[i].get_name() == name {
-                return Some(&(*self.shapes[i]))
+                return Some(&(*self.shapes[i]));
             }
         }
 
@@ -89,7 +94,7 @@ impl Renderable for Scene {
         self.id
     }
 
-    fn set_id(&mut self ,id: i32) {
+    fn set_id(&mut self, id: i32) {
         self.id = id;
     }
 

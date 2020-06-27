@@ -96,6 +96,7 @@ impl Renderable for Cube {
                 i.point = i.t * ray;
                 i.eye_dir = -(ray.direction().norm());
                 i.normal = (self.inv_transform.transpose() * i.normal).norm(); // TODO: am I doing the right matrix op?
+                i.id = self.id;
                 Some(i)
             }
         }

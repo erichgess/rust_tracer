@@ -23,15 +23,17 @@ enum RayTreeNode {
 #[derive(Clone)]
 struct RayTree {
     dirty: bool,
-    shapes: HashSet<i32>,
+    shapes: Vec<bool>,
     root: RayTreeNode,
 }
 
 impl RayTree {
-    pub fn new() -> RayTree {
+    pub fn new(size: usize) -> RayTree {
+        let mut v = Vec::new();
+        v.resize(size, false);
         RayTree {
             dirty: false,
-            shapes: HashSet::new(),
+            shapes: v,
             root: RayTreeNode::None,
         }
     }
@@ -42,9 +44,9 @@ pub struct RayForest {
 }
 
 impl RayForest {
-    pub fn new(w: usize, h: usize) -> RayForest {
+    pub fn new(w: usize, h: usize, num_shapes: usize) -> RayForest {
         RayForest {
-            forest: vec![vec![RayTree::new(); h]; w],
+            forest: vec![vec![RayTree::new(num_shapes); h]; w],
         }
     }
 }
@@ -71,18 +73,28 @@ pub fn render_forest(forest: &RayForest, buffer: &mut RenderBuffer, ambient: &Co
     }
 }
 
+fn contains_shape(ray: &Vec<bool>, shapes: &Vec<i32>) -> bool {
+    let l = shapes.len();
+    for i in 0..l {
+        if ray[l] {
+            return true;
+        }
+    }
+
+    false
+}
+
 pub fn render_forest_filter(
     forest: &RayForest,
     buffer: &mut RenderBuffer,
     ambient: &Color,
-    mutated_shapes: Rc<RefCell<HashSet<i32>>>,
+    mutated_shapes: Rc<RefCell<Vec<i32>>>,
 ) {
     let mutated_shapes = mutated_shapes.borrow();
     for u in 0..buffer.w {
         for v in 0..buffer.h {
-            let i = forest.forest[u][v].shapes.intersection(&mutated_shapes);
-            let i: HashSet<_> = i.collect();
-            if !i.is_empty() {
+            //let i = forest.forest[u][v].shapes;
+            if contains_shape(&forest.forest[u][v].shapes, &mutated_shapes) {
                 buffer.buf[u][v] = render_ray_tree(&forest.forest[u][v].root, ambient).0;
             }
         }
@@ -96,7 +108,7 @@ pub fn generate_ray_forest(
     h: usize,
     depth: usize,
 ) -> RayForest {
-    let mut ray_forest = RayForest::new(w, h);
+    let mut ray_forest = RayForest::new(w, h, scene.shapes().len());
     for v in 0..camera.y_res {
         for u in 0..camera.x_res {
             let ray = camera.get_ray(u, v);
@@ -108,12 +120,7 @@ pub fn generate_ray_forest(
     ray_forest
 }
 
-fn build_ray_tree(
-    scene: &Scene,
-    ray: &Ray,
-    depth: usize,
-    shapes: &mut HashSet<i32>,
-) -> RayTreeNode {
+fn build_ray_tree(scene: &Scene, ray: &Ray, depth: usize, shapes: &mut Vec<bool>) -> RayTreeNode {
     use std::f32::EPSILON;
 
     if depth == 0 {
@@ -124,7 +131,7 @@ fn build_ray_tree(
     match hit {
         None => RayTreeNode::None,
         Some(i) => {
-            shapes.insert(i.id);
+            shapes[i.id as usize] = true;
             let (n1, n2) = if i.entering {
                 (1., i.material.borrow().refraction_index())
             } else {
