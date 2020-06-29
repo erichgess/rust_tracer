@@ -10,8 +10,7 @@ mod render;
 mod render_tree;
 mod scene;
 
-use std::cell::RefCell;
-use std::rc::Rc;
+use std::{cell::RefCell, rc::Rc};
 
 use clap::{App, Arg, ArgMatches};
 
@@ -106,7 +105,7 @@ fn main() {
 }
 
 fn configure_cli<'a, 'b>() -> App<'a, 'b> {
-    App::new("Rust Tracer")
+    let app = App::new("Rust Tracer")
         .version(option_env!("CARGO_PKG_VERSION").unwrap_or(""))
         .about("Ray Tracer")
         .arg(
@@ -134,12 +133,6 @@ fn configure_cli<'a, 'b>() -> App<'a, 'b> {
                 .help("Set the maximum depth of reflections and transmissions which the ray tracer will follow when tracing a ray through the scene.")
         )
         .arg(
-            Arg::with_name("gui")
-                .long("gui")
-                .short("g")
-                .help("Open a GUI for interacting with the ray tracer.")
-        )
-        .arg(
             Arg::with_name("method")
             .long("method")
             .takes_value(true)
@@ -151,7 +144,17 @@ fn configure_cli<'a, 'b>() -> App<'a, 'b> {
                 .long("to-terminal")
                 .short("t")
                 .help("Render the scene as ASCII art to the terminal")
-        )
+        );
+
+    #[cfg(target_os = "unix")]
+    app.arg(
+        Arg::with_name("gui")
+            .long("gui")
+            .short("g")
+            .help("Open a GUI for interacting with the ray tracer."),
+    );
+
+    app
 }
 
 fn parse_args(args: &ArgMatches) -> Config {
