@@ -137,7 +137,31 @@ fn main() {
                     duration.as_nanos() as f32 / runs as f32
                 );
             }
-            _ => (),
+            Method::RayForest => {
+                println!("This will benchmark evaluating the complete forest");
+
+                println!("Rendering in RayForest Mode");
+                println!("Generate Forest");
+                let forest = generate_forest(&config, &scene.borrow());
+                let forest = Rc::new(forest);
+                println!("Done Generating Forest");
+
+                let start = std::time::Instant::now();
+                for _ in 0..runs {
+                    render_forest(&config, &forest.clone(), scene.borrow().ambient());
+                }
+                let duration = start.elapsed();
+                println!(
+                    "Total Time: {}ms | {}ns",
+                    duration.as_millis(),
+                    duration.as_nanos()
+                );
+                println!(
+                    "Avg Per Op: {}ms | {}ns",
+                    duration.as_millis() as f32 / runs as f32,
+                    duration.as_nanos() as f32 / runs as f32
+                );
+            }
         }
     }
 }
