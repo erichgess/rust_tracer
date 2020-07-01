@@ -43,7 +43,7 @@ enum Method {
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum Subcommand {
     Normal,
-    Benchmark(i32),
+    Benchmark(i32, bool),
 }
 
 fn main() {
@@ -118,7 +118,7 @@ fn main() {
                 }
             }
         }
-    } else if let Subcommand::Benchmark(runs) = config.subcommand {
+    } else if let Subcommand::Benchmark(runs, filter) = config.subcommand {
         match config.method {
             Method::Basic => {
                 let start = std::time::Instant::now();
@@ -147,8 +147,28 @@ fn main() {
                 println!("Done Generating Forest");
 
                 let start = std::time::Instant::now();
-                for _ in 0..runs {
-                    render_forest(&config, &forest.clone(), scene.borrow().ambient());
+                if !filter {
+                    println!("Render full forest");
+                    for _ in 0..runs {
+                        render_forest(&config, &forest.clone(), scene.borrow().ambient());
+                    }
+                } else {
+                    println!("Render partial forest");
+
+                    let shape_id = scene.borrow().find_shape("blue").unwrap().id();
+                    let mut mutated_shapes = std::collections::HashSet::new();
+                    mutated_shapes.insert(shape_id);
+                    let mutated_shapes = Rc::new(RefCell::new(mutated_shapes));
+                    let buffer = render_forest(&config, &forest, scene.borrow().ambient());
+                    let buffer = Rc::new(RefCell::new(buffer));
+                    for _ in 0..runs {
+                        render_tree::render_forest_filter(
+                            &forest,
+                            &mut buffer.borrow_mut(),
+                            &scene.borrow().ambient(),
+                            mutated_shapes.clone(),
+                        );
+                    }
                 }
                 let duration = start.elapsed();
                 println!(
@@ -231,6 +251,12 @@ fn configure_cli<'a, 'b>() -> App<'a, 'b> {
                 .short("-n")
                 .default_value("10")
             )
+            .arg(
+                Arg::with_name("filter")
+                .help("Test the ray forest render filter method")
+                .long("filter")
+                .short("f")
+            )
         );
 
     #[cfg(target_os = "linux")]
@@ -288,7 +314,8 @@ fn parse_args(args: &ArgMatches) -> Config {
                         .expect("Expected integer for number of runs")
                 })
                 .unwrap();
-            Subcommand::Benchmark(n)
+            let filter = sub.is_present("filter");
+            Subcommand::Benchmark(n, filter)
         });
 
     Config {
