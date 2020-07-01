@@ -18,6 +18,7 @@ impl RenderBuffer {
     }
 }
 
+#[cfg(target_os = "linux")]
 pub fn draw_to_terminal(scene: &Scene) {
     let x_res = 100;
     let y_res = 50;
@@ -184,6 +185,7 @@ impl Camera {
     }
 }
 
+#[cfg(target_os = "linux")]
 mod terminal {
     extern crate termion;
 
