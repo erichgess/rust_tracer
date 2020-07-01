@@ -155,12 +155,15 @@ fn main() {
                 } else {
                     println!("Render partial forest");
 
+                    // Get a shape who's pixels will be re-rendered
                     let shape_id = scene.borrow().find_shape("blue").unwrap().id();
                     let mut mutated_shapes = std::collections::HashSet::new();
                     mutated_shapes.insert(shape_id);
                     let mutated_shapes = Rc::new(RefCell::new(mutated_shapes));
-                    let buffer = render_forest(&config, &forest, scene.borrow().ambient());
+
+                    let buffer = RenderBuffer::new(config.width, config.height);
                     let buffer = Rc::new(RefCell::new(buffer));
+
                     for _ in 0..runs {
                         render_tree::render_forest_filter(
                             &forest,
