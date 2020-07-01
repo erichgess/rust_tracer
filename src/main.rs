@@ -161,9 +161,18 @@ fn main() {
                     mutated_shapes.insert(shape_id);
                     let mutated_shapes = Rc::new(RefCell::new(mutated_shapes));
 
+                    // Print some basic facts
+                    let tree_count = forest.size();
+                    let trees_with = forest.trees_with(shape_id);
+                    println!("Total Trees: {}", tree_count);
+                    println!("Trees with shape: {}", trees_with);
+                    println!("% to render: {}", 100. * trees_with as f32 / tree_count as f32);
+
+                    // Create render buffer
                     let buffer = RenderBuffer::new(config.width, config.height);
                     let buffer = Rc::new(RefCell::new(buffer));
 
+                    // Benchmark execution
                     for _ in 0..runs {
                         render_tree::render_forest_filter(
                             &forest,

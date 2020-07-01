@@ -47,6 +47,16 @@ impl RayForest {
             forest: vec![vec![RayTree::new(); h]; w],
         }
     }
+
+    pub fn size(&self) -> usize {
+        self.forest.iter().map(|f| f.len()).sum()
+    }
+
+    /// Return the number of trees which contain the shape
+    /// with the given id.
+    pub fn trees_with(&self, shape_id: i32) -> usize {
+        self.forest.iter().flatten().filter(|t| t.shapes.contains(&shape_id)).count()
+    }
 }
 
 pub fn render(camera: &Camera, scene: &Scene, buffer: &mut RenderBuffer, depth: usize) {
