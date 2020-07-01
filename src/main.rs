@@ -31,12 +31,19 @@ pub struct Config {
     gui: bool,
     method: Method,
     interactive: bool,
+    subcommand: Subcommand,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum Method {
     Basic,
     RayForest,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum Subcommand {
+    Normal,
+    Benchmark(i32),
 }
 
 fn main() {
@@ -53,61 +60,84 @@ fn main() {
         enter_to_proceed();
     }
 
-    if config.gui {
-        #[cfg(target_os = "linux")]
-        {
-            println!("Generate Forest");
-            let forest = generate_forest(&config, &scene.borrow());
-            let forest = Rc::new(forest);
-            println!("Done Generating Forest");
-
-            let buffer = render_forest(&config, &forest, scene.borrow().ambient());
-            let buffer = Rc::new(RefCell::new(buffer));
-
-            let mutated_shapes = Rc::new(RefCell::new(HashSet::new()));
-
-            start_gui(
-                config,
-                scene.clone(),
-                forest.clone(),
-                mutated_shapes.clone(),
-                buffer.clone(),
-            );
-        }
-    } else {
-        match config.method {
-            Method::Basic => {
-                println!("Rendering in Basic Mode");
-                let timestamp = std::time::SystemTime::now()
-                    .duration_since(std::time::UNIX_EPOCH)
-                    .expect("Invalid time");
-                let file = format!("{}.png", timestamp.as_secs());
-                render_basic_to_file(&config, &scene.borrow(), "./output/", &file);
-            }
-            Method::RayForest => {
-                println!("Rendering in RayForest Mode");
+    if config.subcommand == Subcommand::Normal {
+        if config.gui {
+            #[cfg(target_os = "linux")]
+            {
                 println!("Generate Forest");
                 let forest = generate_forest(&config, &scene.borrow());
                 let forest = Rc::new(forest);
                 println!("Done Generating Forest");
 
-                if config.interactive {
-                    enter_to_proceed();
-                }
+                let buffer = render_forest(&config, &forest, scene.borrow().ambient());
+                let buffer = Rc::new(RefCell::new(buffer));
 
-                let timestamp = std::time::SystemTime::now()
-                    .duration_since(std::time::UNIX_EPOCH)
-                    .expect("Invalid time");
-                let file = format!("{}.png", timestamp.as_secs());
+                let mutated_shapes = Rc::new(RefCell::new(HashSet::new()));
 
-                render_forest_to_file(
-                    &config,
-                    &forest.clone(),
-                    scene.borrow().ambient(),
-                    "./output/",
-                    &file,
+                start_gui(
+                    config,
+                    scene.clone(),
+                    forest.clone(),
+                    mutated_shapes.clone(),
+                    buffer.clone(),
                 );
             }
+        } else {
+            match config.method {
+                Method::Basic => {
+                    println!("Rendering in Basic Mode");
+                    let timestamp = std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .expect("Invalid time");
+                    let file = format!("{}.png", timestamp.as_secs());
+                    render_basic_to_file(&config, &scene.borrow(), "./output/", &file);
+                }
+                Method::RayForest => {
+                    println!("Rendering in RayForest Mode");
+                    println!("Generate Forest");
+                    let forest = generate_forest(&config, &scene.borrow());
+                    let forest = Rc::new(forest);
+                    println!("Done Generating Forest");
+
+                    if config.interactive {
+                        enter_to_proceed();
+                    }
+
+                    let timestamp = std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .expect("Invalid time");
+                    let file = format!("{}.png", timestamp.as_secs());
+
+                    render_forest_to_file(
+                        &config,
+                        &forest.clone(),
+                        scene.borrow().ambient(),
+                        "./output/",
+                        &file,
+                    );
+                }
+            }
+        }
+    } else if let Subcommand::Benchmark(runs) = config.subcommand {
+        match config.method {
+            Method::Basic => {
+                let start = std::time::Instant::now();
+                for _ in 0..runs {
+                    render_scene_basic(&config, &scene.borrow());
+                }
+                let duration = start.elapsed();
+                println!(
+                    "Total Time: {}ms | {}ns",
+                    duration.as_millis(),
+                    duration.as_nanos()
+                );
+                println!(
+                    "Avg Per Op: {}ms | {}ns",
+                    duration.as_millis() as f32 / runs as f32,
+                    duration.as_nanos() as f32 / runs as f32
+                );
+            }
+            _ => (),
         }
     }
 }
@@ -166,6 +196,17 @@ fn configure_cli<'a, 'b>() -> App<'a, 'b> {
             .long("interactive")
             .short("i")
             .help("When in CLI mode, this will block after each stage of the rendering pipeline and wait for the user before proceeding.  Useful for performance analysis and debugging.")
+        )
+        .subcommand(
+            App::new("bench")
+            .about("Runs benchmark tests to aid with performance testing and analysis")
+            .arg(
+                Arg::with_name("runs")
+                .help("How many times to run the test")
+                .long("runs")
+                .short("-n")
+                .default_value("10")
+            )
         );
 
     #[cfg(target_os = "linux")]
@@ -212,6 +253,20 @@ fn parse_args(args: &ArgMatches) -> Config {
             }
         }
     };
+
+    let subcommand = args
+        .subcommand_matches("bench")
+        .map_or(Subcommand::Normal, |sub| {
+            let n = sub
+                .value_of("runs")
+                .map(|n| {
+                    n.parse::<i32>()
+                        .expect("Expected integer for number of runs")
+                })
+                .unwrap();
+            Subcommand::Benchmark(n)
+        });
+
     Config {
         width,
         height,
@@ -220,6 +275,7 @@ fn parse_args(args: &ArgMatches) -> Config {
         gui,
         method,
         interactive,
+        subcommand,
     }
 }
 
