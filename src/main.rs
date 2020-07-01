@@ -166,7 +166,10 @@ fn main() {
                     let trees_with = forest.trees_with(shape_id);
                     println!("Total Trees: {}", tree_count);
                     println!("Trees with shape: {}", trees_with);
-                    println!("% to render: {}", 100. * trees_with as f32 / tree_count as f32);
+                    println!(
+                        "% to render: {}",
+                        100. * trees_with as f32 / tree_count as f32
+                    );
 
                     // Create render buffer
                     let buffer = RenderBuffer::new(config.width, config.height);
@@ -196,14 +199,14 @@ fn main() {
             }
         }
     }
-}
 
-fn enter_to_proceed() {
-    let stdin = io::stdin();
-    print!("Enter To Proceed: ");
-    io::stdout().flush().unwrap();
-    let mut _buf = String::new();
-    stdin.read_line(&mut _buf).unwrap();
+    fn enter_to_proceed() {
+        let stdin = io::stdin();
+        print!("Enter To Proceed: ");
+        io::stdout().flush().unwrap();
+        let mut _buf = String::new();
+        stdin.read_line(&mut _buf).unwrap();
+    }
 }
 
 fn configure_cli<'a, 'b>() -> App<'a, 'b> {
