@@ -56,70 +56,75 @@ fn main() {
     create_scene(&mut scene);
     let scene = Rc::new(RefCell::new(scene));
     println!("Done Creating Scene");
+
+    if config.subcommand == Subcommand::Normal {
+        handle_normal_mode(config, scene.clone());
+    } else if let Subcommand::Benchmark(runs, filter) = config.subcommand {
+        handle_benchmark_mode(config, scene.clone(), runs, filter);
+    }
+}
+
+fn handle_normal_mode(config: Config, scene: Rc<RefCell<Scene>>) {
     if config.interactive {
         enter_to_proceed();
     }
 
-    if config.subcommand == Subcommand::Normal {
-        if config.gui {
-            #[cfg(target_os = "linux")]
-            {
+    if config.gui {
+        #[cfg(target_os = "linux")]
+        {
+            println!("Generate Forest");
+            let forest = generate_forest(&config, &scene.borrow());
+            let forest = Rc::new(forest);
+            println!("Done Generating Forest");
+
+            let buffer = render_forest(&config, &forest, scene.borrow().ambient());
+            let buffer = Rc::new(RefCell::new(buffer));
+
+            let mutated_shapes = Rc::new(RefCell::new(HashSet::new()));
+
+            start_gui(
+                config,
+                scene.clone(),
+                forest.clone(),
+                mutated_shapes.clone(),
+                buffer.clone(),
+            );
+        }
+    } else {
+        match config.method {
+            Method::Basic => {
+                println!("Rendering in Basic Mode");
+                let timestamp = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .expect("Invalid time");
+                let file = format!("{}.png", timestamp.as_secs());
+                render_basic_to_file(&config, &scene.borrow(), "./output/", &file);
+            }
+            Method::RayForest => {
+                println!("Rendering in RayForest Mode");
                 println!("Generate Forest");
                 let forest = generate_forest(&config, &scene.borrow());
                 let forest = Rc::new(forest);
                 println!("Done Generating Forest");
 
-                let buffer = render_forest(&config, &forest, scene.borrow().ambient());
-                let buffer = Rc::new(RefCell::new(buffer));
+                if config.interactive {
+                    enter_to_proceed();
+                }
 
-                let mutated_shapes = Rc::new(RefCell::new(HashSet::new()));
+                let timestamp = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .expect("Invalid time");
+                let file = format!("{}.png", timestamp.as_secs());
 
-                start_gui(
-                    config,
-                    scene.clone(),
-                    forest.clone(),
-                    mutated_shapes.clone(),
-                    buffer.clone(),
+                render_forest_to_file(
+                    &config,
+                    &forest.clone(),
+                    scene.borrow().ambient(),
+                    "./output/",
+                    &file,
                 );
             }
-        } else {
-            match config.method {
-                Method::Basic => {
-                    println!("Rendering in Basic Mode");
-                    let timestamp = std::time::SystemTime::now()
-                        .duration_since(std::time::UNIX_EPOCH)
-                        .expect("Invalid time");
-                    let file = format!("{}.png", timestamp.as_secs());
-                    render_basic_to_file(&config, &scene.borrow(), "./output/", &file);
-                }
-                Method::RayForest => {
-                    println!("Rendering in RayForest Mode");
-                    println!("Generate Forest");
-                    let forest = generate_forest(&config, &scene.borrow());
-                    let forest = Rc::new(forest);
-                    println!("Done Generating Forest");
-
-                    if config.interactive {
-                        enter_to_proceed();
-                    }
-
-                    let timestamp = std::time::SystemTime::now()
-                        .duration_since(std::time::UNIX_EPOCH)
-                        .expect("Invalid time");
-                    let file = format!("{}.png", timestamp.as_secs());
-
-                    render_forest_to_file(
-                        &config,
-                        &forest.clone(),
-                        scene.borrow().ambient(),
-                        "./output/",
-                        &file,
-                    );
-                }
-            }
         }
-    } else if let Subcommand::Benchmark(runs, filter) = config.subcommand {
-        handle_benchmark_cmd(config, scene.clone(), runs, filter);
     }
 
     fn enter_to_proceed() {
@@ -131,7 +136,7 @@ fn main() {
     }
 }
 
-fn handle_benchmark_cmd(config: Config, scene: Rc<RefCell<Scene>>, runs: i32, filter: bool) {
+fn handle_benchmark_mode(config: Config, scene: Rc<RefCell<Scene>>, runs: i32, filter: bool) {
     match config.method {
         Method::Basic => {
             let start = std::time::Instant::now();
