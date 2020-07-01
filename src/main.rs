@@ -119,85 +119,7 @@ fn main() {
             }
         }
     } else if let Subcommand::Benchmark(runs, filter) = config.subcommand {
-        match config.method {
-            Method::Basic => {
-                let start = std::time::Instant::now();
-                for _ in 0..runs {
-                    render_scene_basic(&config, &scene.borrow());
-                }
-                let duration = start.elapsed();
-                println!(
-                    "Total Time: {}ms | {}ns",
-                    duration.as_millis(),
-                    duration.as_nanos()
-                );
-                println!(
-                    "Avg Per Op: {}ms | {}ns",
-                    duration.as_millis() as f32 / runs as f32,
-                    duration.as_nanos() as f32 / runs as f32
-                );
-            }
-            Method::RayForest => {
-                println!("This will benchmark evaluating the complete forest");
-
-                println!("Rendering in RayForest Mode");
-                println!("Generate Forest");
-                let forest = generate_forest(&config, &scene.borrow());
-                let forest = Rc::new(forest);
-                println!("Done Generating Forest");
-
-                let start = std::time::Instant::now();
-                if !filter {
-                    println!("Render full forest");
-                    for _ in 0..runs {
-                        render_forest(&config, &forest.clone(), scene.borrow().ambient());
-                    }
-                } else {
-                    println!("Render partial forest");
-
-                    // Get a shape who's pixels will be re-rendered
-                    let shape_id = scene.borrow().find_shape("blue").unwrap().id();
-                    let mut mutated_shapes = std::collections::HashSet::new();
-                    mutated_shapes.insert(shape_id);
-                    let mutated_shapes = Rc::new(RefCell::new(mutated_shapes));
-
-                    // Print some basic facts
-                    let tree_count = forest.size();
-                    let trees_with = forest.trees_with(shape_id);
-                    println!("Total Trees: {}", tree_count);
-                    println!("Trees with shape: {}", trees_with);
-                    println!(
-                        "% to render: {}",
-                        100. * trees_with as f32 / tree_count as f32
-                    );
-
-                    // Create render buffer
-                    let buffer = RenderBuffer::new(config.width, config.height);
-                    let buffer = Rc::new(RefCell::new(buffer));
-
-                    // Benchmark execution
-                    for _ in 0..runs {
-                        render_tree::render_forest_filter(
-                            &forest,
-                            &mut buffer.borrow_mut(),
-                            &scene.borrow().ambient(),
-                            mutated_shapes.clone(),
-                        );
-                    }
-                }
-                let duration = start.elapsed();
-                println!(
-                    "Total Time: {}ms | {}ns",
-                    duration.as_millis(),
-                    duration.as_nanos()
-                );
-                println!(
-                    "Avg Per Op: {}ms | {}ns",
-                    duration.as_millis() as f32 / runs as f32,
-                    duration.as_nanos() as f32 / runs as f32
-                );
-            }
-        }
+        handle_benchmark_cmd(config, scene.clone(), runs, filter);
     }
 
     fn enter_to_proceed() {
@@ -206,6 +128,88 @@ fn main() {
         io::stdout().flush().unwrap();
         let mut _buf = String::new();
         stdin.read_line(&mut _buf).unwrap();
+    }
+}
+
+fn handle_benchmark_cmd(config: Config, scene: Rc<RefCell<Scene>>, runs: i32, filter: bool) {
+    match config.method {
+        Method::Basic => {
+            let start = std::time::Instant::now();
+            for _ in 0..runs {
+                render_scene_basic(&config, &scene.borrow());
+            }
+            let duration = start.elapsed();
+            println!(
+                "Total Time: {}ms | {}ns",
+                duration.as_millis(),
+                duration.as_nanos()
+            );
+            println!(
+                "Avg Per Op: {}ms | {}ns",
+                duration.as_millis() as f32 / runs as f32,
+                duration.as_nanos() as f32 / runs as f32
+            );
+        }
+        Method::RayForest => {
+            println!("This will benchmark evaluating the complete forest");
+
+            println!("Rendering in RayForest Mode");
+            println!("Generate Forest");
+            let forest = generate_forest(&config, &scene.borrow());
+            let forest = Rc::new(forest);
+            println!("Done Generating Forest");
+
+            let start = std::time::Instant::now();
+            if !filter {
+                println!("Render full forest");
+                for _ in 0..runs {
+                    render_forest(&config, &forest.clone(), scene.borrow().ambient());
+                }
+            } else {
+                println!("Render partial forest");
+
+                // Get a shape who's pixels will be re-rendered
+                let shape_id = scene.borrow().find_shape("blue").unwrap().id();
+                let mut mutated_shapes = std::collections::HashSet::new();
+                mutated_shapes.insert(shape_id);
+                let mutated_shapes = Rc::new(RefCell::new(mutated_shapes));
+
+                // Print some basic facts
+                let tree_count = forest.size();
+                let trees_with = forest.trees_with(shape_id);
+                println!("Total Trees: {}", tree_count);
+                println!("Trees with shape: {}", trees_with);
+                println!(
+                    "% to render: {}",
+                    100. * trees_with as f32 / tree_count as f32
+                );
+
+                // Create render buffer
+                let buffer = RenderBuffer::new(config.width, config.height);
+                let buffer = Rc::new(RefCell::new(buffer));
+
+                // Benchmark execution
+                for _ in 0..runs {
+                    render_tree::render_forest_filter(
+                        &forest,
+                        &mut buffer.borrow_mut(),
+                        &scene.borrow().ambient(),
+                        mutated_shapes.clone(),
+                    );
+                }
+            }
+            let duration = start.elapsed();
+            println!(
+                "Total Time: {}ms | {}ns",
+                duration.as_millis(),
+                duration.as_nanos()
+            );
+            println!(
+                "Avg Per Op: {}ms | {}ns",
+                duration.as_millis() as f32 / runs as f32,
+                duration.as_nanos() as f32 / runs as f32
+            );
+        }
     }
 }
 
