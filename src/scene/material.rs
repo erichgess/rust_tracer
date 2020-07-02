@@ -146,9 +146,7 @@ impl Material for TexturePhong {
         (self.diffuse)(tx)
     }
 
-    fn set_diffuse(&mut self, _: Color) {
-        
-    }
+    fn set_diffuse(&mut self, _: Color) {}
 
     fn ambient(&self, tx: TextureCoords) -> Color {
         (self.ambient)(tx)
