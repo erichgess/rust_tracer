@@ -43,7 +43,13 @@ enum Method {
 #[derive(Debug, Clone, Copy, PartialEq)]
 enum Subcommand {
     Normal,
-    Benchmark(i32, bool),
+    Benchmark(BenchmarkConfig),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct BenchmarkConfig {
+    runs: i32,
+    filter_mode: bool,
 }
 
 fn main() {
@@ -59,8 +65,8 @@ fn main() {
 
     if config.subcommand == Subcommand::Normal {
         handle_normal_mode(config, scene.clone());
-    } else if let Subcommand::Benchmark(runs, filter) = config.subcommand {
-        handle_benchmark_mode(config, scene.clone(), runs, filter);
+    } else if let Subcommand::Benchmark(bench_config) = config.subcommand {
+        handle_benchmark_mode(config, scene.clone(), bench_config.runs, bench_config.filter_mode);
     }
 }
 
@@ -164,12 +170,14 @@ fn handle_benchmark_mode(config: Config, scene: Rc<RefCell<Scene>>, runs: i32, f
             let forest = Rc::new(forest);
             println!("Done Generating Forest");
 
-            let start = std::time::Instant::now();
+            let duration;
             if !filter {
                 println!("Render full forest");
+                let start = std::time::Instant::now();
                 for _ in 0..runs {
                     render_forest(&config, &forest.clone(), scene.borrow().ambient());
                 }
+                duration = start.elapsed();
             } else {
                 println!("Render partial forest");
 
@@ -179,21 +187,13 @@ fn handle_benchmark_mode(config: Config, scene: Rc<RefCell<Scene>>, runs: i32, f
                 mutated_shapes.insert(shape_id);
                 let mutated_shapes = Rc::new(RefCell::new(mutated_shapes));
 
-                // Print some basic facts
-                let tree_count = forest.size();
-                let trees_with = forest.trees_with(shape_id);
-                println!("Total Trees: {}", tree_count);
-                println!("Trees with shape: {}", trees_with);
-                println!(
-                    "% to render: {}",
-                    100. * trees_with as f32 / tree_count as f32
-                );
 
                 // Create render buffer
                 let buffer = RenderBuffer::new(config.width, config.height);
                 let buffer = Rc::new(RefCell::new(buffer));
 
                 // Benchmark execution
+                let start = std::time::Instant::now();
                 for _ in 0..runs {
                     render_tree::render_forest_filter(
                         &forest,
@@ -202,8 +202,19 @@ fn handle_benchmark_mode(config: Config, scene: Rc<RefCell<Scene>>, runs: i32, f
                         mutated_shapes.clone(),
                     );
                 }
+                duration = start.elapsed();
+
+                let tree_count = forest.size();
+                let trees_with = forest.trees_with(shape_id);
+                println!("Forest Size: {}", tree_count);
+                println!("Trees Evaluated: {}", trees_with);
+                // Print some basic facts
+                println!(
+                    "% evaluated: {}",
+                    100. * trees_with as f32 / tree_count as f32
+                );
             }
-            let duration = start.elapsed();
+
             println!(
                 "Total Time: {}ms | {}ns",
                 duration.as_millis(),
@@ -331,15 +342,15 @@ fn parse_args(args: &ArgMatches) -> Config {
     let subcommand = args
         .subcommand_matches("bench")
         .map_or(Subcommand::Normal, |sub| {
-            let n = sub
+            let runs = sub
                 .value_of("runs")
                 .map(|n| {
                     n.parse::<i32>()
                         .expect("Expected integer for number of runs")
                 })
                 .unwrap();
-            let filter = sub.is_present("filter");
-            Subcommand::Benchmark(n, filter)
+            let filter_mode = sub.is_present("filter");
+            Subcommand::Benchmark(BenchmarkConfig{runs, filter_mode})
         });
 
     Config {
