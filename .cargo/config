@@ -1,2 +1,6 @@
-[target.'cfg(any(windows, unix))']
-rustflags = ["-C", "target-cpu=native"]
+[target.'cfg(any(windows, unix, linux)']
+rustflags = ["-C", "target-cpu=native", "x=5"]
+
+[profile.release]
+opt-level = 2
+debug = true
