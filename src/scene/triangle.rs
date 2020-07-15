@@ -113,6 +113,10 @@ impl Renderable for Triangle {
     fn to_string(&self) -> String {
         "Triable".into()
     }
+
+    fn size(&self) -> usize {
+        1
+    }
 }
 
 #[cfg(test)]

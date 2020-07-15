@@ -119,6 +119,10 @@ impl Renderable for Scene {
         self.to_string()
     }
 
+    fn size(&self) -> usize {
+        self.shapes.iter().map(|s| s.size()).sum()
+    }
+
     fn get_material_mut(&mut self) -> Option<RefMut<dyn Material>> {
         None
     }
@@ -152,12 +156,12 @@ pub trait Renderable {
     // and scale the sphere within the scene
     fn set_transform(&mut self, mat: &Matrix);
 
-    fn get_name(&self) -> String;
-
-    fn to_string(&self) -> String;
-
     fn get_material_mut(&mut self) -> Option<RefMut<dyn Material>>;
     fn get_material(&self) -> Option<Ref<dyn Material>>;
+
+    fn get_name(&self) -> String;
+    fn to_string(&self) -> String;
+    fn size(&self) -> usize;
 }
 
 pub type TextureCoords = (f32, f32);

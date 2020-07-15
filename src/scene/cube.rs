@@ -114,6 +114,10 @@ impl Renderable for Cube {
         "Cube".into()
     }
 
+    fn size(&self) -> usize {
+        self.triangles.size()
+    }
+
     fn get_material_mut(&mut self) -> Option<RefMut<dyn Material>> {
         None
     }

@@ -98,6 +98,10 @@ impl Renderable for Plane {
     fn to_string(&self) -> String {
         "Plane".into()
     }
+
+    fn size(&self) -> usize {
+        1
+    }
 }
 
 #[cfg(test)]

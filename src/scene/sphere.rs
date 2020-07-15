@@ -117,6 +117,10 @@ impl Renderable for Sphere {
     fn to_string(&self) -> String {
         format!("Sphere(Name: {}, Material: {})", self.get_name(), self.material.borrow().to_string())
     }
+
+    fn size(&self) -> usize {
+        1
+    }
 }
 
 fn solve_quadratic(a: f32, b: f32, c: f32) -> Option<(f32, f32)> {

@@ -20,7 +20,7 @@ use {gui::gtk_gui::start_gui, std::collections::HashSet};
 use my_scene::*;
 use render::*;
 use render_tree::RayForest;
-use scene::Scene;
+use scene::{Renderable, Scene};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Config {
@@ -118,6 +118,10 @@ fn handle_normal_mode(config: Config, scene: Rc<RefCell<Scene>>) {
                     let stats = forest.stats();
                     println!("Number of Trees: {}", stats.num_trees);
                     println!("Number of Intersections: {}", stats.num_intersections);
+
+                    let num_shapes = scene.borrow().size();
+                    println!("Number of Shapes: {}", num_shapes);
+                    println!("Number of Intersection Tests: {}", num_shapes * stats.num_intersections);
                 }
 
                 if config.interactive {
