@@ -43,7 +43,7 @@ impl RayTree {
     fn traverse_nodes(node: &RayTreeNode) -> usize {
         match node {
             RayTreeNode::None =>  0,
-            RayTreeNode::Branch(_, _, _, _) => 1,
+            RayTreeNode::Branch(_, _, l, r) => 1 + RayTree::traverse_nodes(&l) + RayTree::traverse_nodes(&r),
         }
     }
 }
@@ -250,6 +250,24 @@ mod tests {
 
         t.root = RayTreeNode::Branch(new_int(), vec![], Box::new(RayTreeNode::None), Box::new(RayTreeNode::None));
         assert_eq!(1, t.size());
+
+        let r = RayTreeNode::Branch(new_int(), vec![], Box::new(RayTreeNode::None), Box::new(RayTreeNode::None));
+        t.root = RayTreeNode::Branch(new_int(), vec![], Box::new(RayTreeNode::None), Box::new(r));
+        assert_eq!(2, t.size());
+
+        let l = RayTreeNode::Branch(new_int(), vec![], Box::new(RayTreeNode::None), Box::new(RayTreeNode::None));
+        let r = RayTreeNode::Branch(new_int(), vec![], Box::new(RayTreeNode::None), Box::new(RayTreeNode::None));
+        t.root = RayTreeNode::Branch(new_int(), vec![], Box::new(l), Box::new(r));
+        assert_eq!(3, t.size());
+
+        let ll = RayTreeNode::Branch(new_int(), vec![], Box::new(RayTreeNode::None), Box::new(RayTreeNode::None));
+        let lr = RayTreeNode::Branch(new_int(), vec![], Box::new(RayTreeNode::None), Box::new(RayTreeNode::None));
+        let l = RayTreeNode::Branch(new_int(), vec![], Box::new(ll), Box::new(lr));
+        let rl = RayTreeNode::Branch(new_int(), vec![], Box::new(RayTreeNode::None), Box::new(RayTreeNode::None));
+        let rr = RayTreeNode::Branch(new_int(), vec![], Box::new(RayTreeNode::None), Box::new(RayTreeNode::None));
+        let r = RayTreeNode::Branch(new_int(), vec![], Box::new(rl), Box::new(rr));
+        t.root = RayTreeNode::Branch(new_int(), vec![], Box::new(l), Box::new(r));
+        assert_eq!(7, t.size());
     }
 
     fn new_int() -> Intersection {
