@@ -276,6 +276,11 @@ fn configure_cli<'a, 'b>() -> App<'a, 'b> {
             .short("i")
             .help("When in CLI mode, this will block after each stage of the rendering pipeline and wait for the user before proceeding.  Useful for performance analysis and debugging.")
         )
+        .arg(
+            Arg::with_name("stats")
+            .long("stats")
+            .help("When using \"rayforest\" method, print out stats about the forest")
+        )
         .subcommand(
             App::new("bench")
             .about("Runs benchmark tests to aid with performance testing and analysis")

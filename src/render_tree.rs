@@ -35,6 +35,17 @@ impl RayTree {
             root: RayTreeNode::None,
         }
     }
+
+    pub fn size(&self) -> usize {
+       RayTree:: traverse_nodes(&self.root)
+    }
+
+    fn traverse_nodes(node: &RayTreeNode) -> usize {
+        match node {
+            RayTreeNode::None =>  0,
+            RayTreeNode::Branch(_, _, _, _) => 1,
+        }
+    }
 }
 
 pub struct RayForest {
@@ -57,6 +68,20 @@ impl RayForest {
     pub fn trees_with(&self, shape_id: i32) -> usize {
         self.forest.iter().flatten().filter(|t| t.shapes.contains(&shape_id)).count()
     }
+
+    // Compute stats about the Ray Forest
+    pub fn stats(&self) -> RayForestStats {
+        // compute number of intersections
+
+        // Number of trees
+        RayForestStats{
+            num_trees: self.forest.iter().map(|t| t.len()).sum(),
+        }
+    }
+}
+
+pub struct RayForestStats {
+    pub num_trees: usize,
 }
 
 pub fn render(camera: &Camera, scene: &Scene, buffer: &mut RenderBuffer, depth: usize) {
@@ -205,6 +230,40 @@ fn render_ray_tree(tree: &RayTreeNode, ambient: &Color) -> (Color, Vector3) {
 
             let ambient = (i.material.borrow().ambient(i.tex_coord)) * ambient;
             (ambient + lights + reflected + refracted, -i.eye_dir)
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use super::Intersection;
+    use super::super::scene::*;
+    use super::super::math::*;
+
+    #[test]
+    pub fn ray_tree_size() {
+        let mut t = RayTree::new();
+        t.root = RayTreeNode::None;
+
+        assert_eq!(0, t.size());
+
+        t.root = RayTreeNode::Branch(new_int(), vec![], Box::new(RayTreeNode::None), Box::new(RayTreeNode::None));
+        assert_eq!(1, t.size());
+    }
+
+    fn new_int() -> Intersection {
+        let mat = Phong::new(Color::new(0., 0., 0.), Color::new(0., 0., 0.), Color::new(0., 0., 0.), 1., 1., 1.);
+        let mat = Rc::new(RefCell::new(mat));
+        Intersection{
+            id: 0,
+            t: 0.,
+            entering: false,
+            material: mat,
+            point: Point3::new(0., 0., 0.),
+            eye_dir: Vector3::new(0., 0., 0.),
+            normal: Vector3::new(0., 0., 0.),
+            tex_coord: (0., 0.),
         }
     }
 }
