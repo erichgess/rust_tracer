@@ -71,17 +71,17 @@ impl RayForest {
 
     // Compute stats about the Ray Forest
     pub fn stats(&self) -> RayForestStats {
-        // compute number of intersections
-
         // Number of trees
         RayForestStats{
             num_trees: self.forest.iter().map(|t| t.len()).sum(),
+            num_intersections: self.forest.iter().flatten().map(|t| t.size()).sum(),
         }
     }
 }
 
 pub struct RayForestStats {
     pub num_trees: usize,
+    pub num_intersections: usize,
 }
 
 pub fn render(camera: &Camera, scene: &Scene, buffer: &mut RenderBuffer, depth: usize) {

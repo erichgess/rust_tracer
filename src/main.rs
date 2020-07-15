@@ -32,6 +32,7 @@ pub struct Config {
     method: Method,
     interactive: bool,
     subcommand: Subcommand,
+    print_forest_stats: bool,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -112,6 +113,12 @@ fn handle_normal_mode(config: Config, scene: Rc<RefCell<Scene>>) {
                 let forest = generate_forest(&config, &scene.borrow());
                 let forest = Rc::new(forest);
                 println!("Done Generating Forest");
+
+                if config.print_forest_stats {
+                    let stats = forest.stats();
+                    println!("Number of Trees: {}", stats.num_trees);
+                    println!("Number of Intersections: {}", stats.num_intersections);
+                }
 
                 if config.interactive {
                     enter_to_proceed();
@@ -343,6 +350,7 @@ fn parse_args(args: &ArgMatches) -> Config {
             }
         }
     };
+    let print_forest_stats = args.is_present("stats");
 
     let subcommand = args
         .subcommand_matches("bench")
@@ -367,6 +375,7 @@ fn parse_args(args: &ArgMatches) -> Config {
         method,
         interactive,
         subcommand,
+        print_forest_stats,
     }
 }
 
