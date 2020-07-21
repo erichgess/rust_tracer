@@ -71,10 +71,24 @@ impl RayForest {
 
     // Compute stats about the Ray Forest
     pub fn stats(&self) -> RayForestStats {
+        let mut tree_sizes:Vec<usize> = self.forest.iter().flatten().map(|t| t.size()).collect();
+        tree_sizes.sort();
+        let largest_tree = *tree_sizes.iter().max().unwrap();
+        let smallest_tree = *tree_sizes.iter().min().unwrap();
+        let median = tree_sizes[tree_sizes.len()/2];
+        let p90 = tree_sizes[(0.9 * tree_sizes.len() as f32) as usize];
+        let p95 = tree_sizes[(0.95 * tree_sizes.len() as f32) as usize];
+        let p99 = tree_sizes[(0.99 * tree_sizes.len() as f32) as usize];
         // Number of trees
         RayForestStats{
             num_trees: self.forest.iter().map(|t| t.len()).sum(),
-            num_intersections: self.forest.iter().flatten().map(|t| t.size()).sum(),
+            num_intersections: tree_sizes.iter().sum(),
+            smallest_tree,
+            largest_tree,
+            median,
+            p90,
+            p95,
+            p99,
         }
     }
 }
@@ -82,6 +96,12 @@ impl RayForest {
 pub struct RayForestStats {
     pub num_trees: usize,
     pub num_intersections: usize,
+    pub smallest_tree: usize,
+    pub largest_tree: usize,
+    pub median: usize,
+    pub p90: usize,
+    pub p95: usize,
+    pub p99: usize,
 }
 
 pub fn render(camera: &Camera, scene: &Scene, buffer: &mut RenderBuffer, depth: usize) {

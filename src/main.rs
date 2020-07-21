@@ -117,6 +117,13 @@ fn handle_normal_mode(config: Config, scene: Rc<RefCell<Scene>>) {
                 if config.print_forest_stats {
                     let stats = forest.stats();
                     println!("Number of Trees: {}", stats.num_trees);
+                    println!("Min Tree Size: {}", stats.smallest_tree);
+                    println!("Max Tree Size: {}", stats.largest_tree);
+                    println!("Median Size: {}", stats.median);
+                    println!("p90 Size: {}", stats.p90);
+                    println!("p95 Size: {}", stats.p95);
+                    println!("p99 Size: {}", stats.p99);
+
                     println!("Number of Intersections: {}", stats.num_intersections);
 
                     let num_shapes = scene.borrow().size();
