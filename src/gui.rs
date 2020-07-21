@@ -191,6 +191,7 @@ pub mod gtk_gui {
 
         let mut ss = scene.borrow_mut();
 
+        // Create dropdown list of all shapes in the scene
         let shape_names = ss.shapes().iter().map(|sh| sh.get_name());
         let shape_list = gtk::ComboBoxText::new();
         for (i, n) in shape_names.enumerate() {
